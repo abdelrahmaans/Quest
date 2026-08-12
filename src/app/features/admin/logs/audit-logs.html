@@ -1,0 +1,41 @@
+<!-- Admin Audit Stream Page -->
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Audit Stream</h1>
+      <p class="page-subtitle">Real-time system event stream and security audit logs.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card__title">
+      <app-icon name="shield-check" [size]="16" />
+      System Activity Stream
+    </h2>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        @for (_ of [1,2,3,4,5]; track $index) {
+          <div class="skeleton-row"></div>
+        }
+      </div>
+    } @else if (logs().length === 0) {
+      <p class="empty-text">No system activity logged yet.</p>
+    } @else {
+      <div class="log-stream">
+        @for (log of logs(); track log.id) {
+          <div class="log-item">
+            <span class="log-tag">XP EVENT</span>
+            <div class="log-body">
+              <span class="log-desc">{{ log.description }}</span>
+              <span class="log-actor">By {{ log.actor }}</span>
+            </div>
+            <span class="log-time">{{ log.created_at | date:'short' }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

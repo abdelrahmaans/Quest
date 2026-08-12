@@ -1,0 +1,88 @@
+<!-- Admin Users Management -->
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">User Accounts</h1>
+      <p class="page-subtitle">Manage user roles, access permissions, and account status.</p>
+    </div>
+  </div>
+
+  @if (errorMsg()) {
+    <div class="alert-error">
+      <app-icon name="alert-circle" [size]="15" />{{ errorMsg() }}
+    </div>
+  }
+
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div class="search-wrap">
+      <app-icon name="user" [size]="16" class="search-icon" />
+      <input type="text" class="search-input" placeholder="Search by name…"
+        [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
+    </div>
+
+    <div class="role-tabs">
+      <button type="button" class="tab-btn" [class.tab-btn--active]="roleFilter() === 'all'" (click)="roleFilter.set('all')">
+        All Accounts ({{ users().length }})
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn--active]="roleFilter() === 'instructor'" (click)="roleFilter.set('instructor')">
+        Instructors
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn--active]="roleFilter() === 'admin'" (click)="roleFilter.set('admin')">
+        Admins
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Table / Cards -->
+  @if (isLoading()) {
+    <div class="users-table">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <div class="user-row user-row--skeleton"></div>
+      }
+    </div>
+  } @else if (filteredUsers.length === 0) {
+    <div class="empty">
+      <app-icon name="users" [size]="32" />
+      <h3>No users found</h3>
+      <p>Try adjusting your search or role filter.</p>
+    </div>
+  } @else {
+    <div class="users-table">
+      @for (u of filteredUsers; track u.id) {
+        <div class="user-row" [class.user-row--disabled]="!u.is_active">
+
+          <div class="user-avatar" [class.user-avatar--admin]="u.role === 'admin'">
+            {{ u.full_name.charAt(0) }}
+          </div>
+
+          <div class="user-main">
+            <span class="user-name">{{ u.full_name }}</span>
+            <span class="user-id">ID: {{ u.id.slice(0, 8) }}… · Joined {{ u.created_at | date:'mediumDate' }}</span>
+          </div>
+
+          <span class="status-chip" [class.status-chip--disabled]="!u.is_active">
+            {{ u.is_active ? 'Active' : 'Disabled' }}
+          </span>
+
+          <span class="role-badge" [class.role-badge--admin]="u.role === 'admin'">
+            {{ u.role }}
+          </span>
+
+          <div class="user-actions">
+            <button type="button" class="btn-role" (click)="toggleRole(u)" [title]="'Switch role to ' + (u.role === 'admin' ? 'instructor' : 'admin')">
+              <app-icon name="shield-check" [size]="14" />
+              {{ u.role === 'admin' ? 'Demote' : 'Make Admin' }}
+            </button>
+            <button type="button" class="btn-status" [class.btn-status--enable]="!u.is_active" (click)="toggleStatus(u)">
+              {{ u.is_active ? 'Disable' : 'Enable' }}
+            </button>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>

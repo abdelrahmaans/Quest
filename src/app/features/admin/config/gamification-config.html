@@ -1,0 +1,87 @@
+<!-- Admin Gamification & Level Config -->
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Level & XP Rules</h1>
+      <p class="page-subtitle">Configure system level thresholds, titles, and XP requirements.</p>
+    </div>
+  </div>
+
+  @if (successMsg()) {
+    <div class="alert-success">{{ successMsg() }}</div>
+  }
+  @if (errorMsg()) {
+    <div class="alert-error">
+      <app-icon name="alert-circle" [size]="15" />{{ errorMsg() }}
+    </div>
+  }
+
+  <div class="config-grid">
+
+    <!-- Add Level Form -->
+    <section class="card">
+      <h2 class="card__title">
+        <app-icon name="plus" [size]="16" />
+        Add Level Threshold
+      </h2>
+
+      <div class="form">
+        <div class="form-field">
+          <label class="form-label" for="lvlNum">Level Number</label>
+          <input id="lvlNum" type="number" class="form-input" min="1" [(ngModel)]="newLevelNum" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="lvlXP">XP Required</label>
+          <input id="lvlXP" type="number" class="form-input" min="0" step="50" [(ngModel)]="newXPRequired" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="lvlTitle">Level Title (e.g. Master Apprentice)</label>
+          <input id="lvlTitle" type="text" class="form-input" placeholder="e.g. Novice Explorer" [(ngModel)]="newLevelTitle" />
+        </div>
+
+        <button type="button" class="btn-primary" [disabled]="isSaving()" (click)="addLevel()">
+          @if (isSaving()) {
+            <app-icon name="loader-2" [size]="16" class="spinning" /> Saving…
+          } @else {
+            <app-icon name="plus" [size]="16" /> Add Level
+          }
+        </button>
+      </div>
+    </section>
+
+    <!-- Levels List Table -->
+    <section class="card">
+      <h2 class="card__title">
+        <app-icon name="trophy" [size]="16" />
+        Active Level Hierarchy
+      </h2>
+
+      @if (isLoading()) {
+        <div class="skeleton-list">
+          @for (_ of [1,2,3,4]; track $index) {
+            <div class="skeleton-row"></div>
+          }
+        </div>
+      } @else if (levels().length === 0) {
+        <p class="empty-text">No levels configured yet. Add level 1 above.</p>
+      } @else {
+        <div class="levels-table">
+          @for (l of levels(); track l.id) {
+            <div class="level-row">
+              <div class="level-badge">Lv. {{ l.level_number }}</div>
+              <div class="level-info">
+                <span class="level-title">{{ l.title || 'Level ' + l.level_number }}</span>
+                <span class="level-xp">{{ l.xp_required | number }} XP required</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+  </div>
+
+</div>
