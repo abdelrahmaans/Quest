@@ -1,7 +1,7 @@
 -- =========================================================
 -- MADA QUEST — DEMO / SEED DATA SCRIPT (STEP C)
 -- Safe, additive seed data for internal testing and review.
--- Matches exact column schema defined in 0001_initial_schema.sql
+-- Matches exact column schema and valid Hexadecimal UUID syntax.
 -- =========================================================
 
 -- ── 0. DEMO AUTH USERS ───────────────────────────────────
@@ -34,45 +34,45 @@ ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 -- ── 3. DEMO STUDENTS ─────────────────────────────────────
 INSERT INTO public.students (id, public_code, display_name, full_name, created_at)
 VALUES
-  ('s0000000-0000-0000-0000-000000000001', 'STD-DEMO-01', 'Omar K.',   'Demo: Omar Khaled',   NOW() - INTERVAL '18 days'),
-  ('s0000000-0000-0000-0000-000000000002', 'STD-DEMO-02', 'Laila M.',  'Demo: Laila Mahmoud', NOW() - INTERVAL '18 days'),
-  ('s0000000-0000-0000-0000-000000000003', 'STD-DEMO-03', 'Youssef K.','Demo: Youssef Karim', NOW() - INTERVAL '17 days'),
-  ('s0000000-0000-0000-0000-000000000004', 'STD-DEMO-04', 'Nour E.',   'Demo: Nour El-Din',   NOW() - INTERVAL '16 days'),
-  ('s0000000-0000-0000-0000-000000000005', 'STD-DEMO-05', 'Mariam A.', 'Demo: Mariam Ali',    NOW() - INTERVAL '15 days'),
+  ('f0000000-0000-0000-0000-000000000001', 'STD-DEMO-01', 'Omar K.',   'Demo: Omar Khaled',   NOW() - INTERVAL '18 days'),
+  ('f0000000-0000-0000-0000-000000000002', 'STD-DEMO-02', 'Laila M.',  'Demo: Laila Mahmoud', NOW() - INTERVAL '18 days'),
+  ('f0000000-0000-0000-0000-000000000003', 'STD-DEMO-03', 'Youssef K.','Demo: Youssef Karim', NOW() - INTERVAL '17 days'),
+  ('f0000000-0000-0000-0000-000000000004', 'STD-DEMO-04', 'Nour E.',   'Demo: Nour El-Din',   NOW() - INTERVAL '16 days'),
+  ('f0000000-0000-0000-0000-000000000005', 'STD-DEMO-05', 'Mariam A.', 'Demo: Mariam Ali',    NOW() - INTERVAL '15 days'),
 
-  ('s0000000-0000-0000-0000-000000000006', 'STD-DEMO-06', 'Hamza I.',  'Demo: Hamza Ibrahim', NOW() - INTERVAL '14 days'),
-  ('s0000000-0000-0000-0000-000000000007', 'STD-DEMO-07', 'Hana T.',   'Demo: Hana Tarek',    NOW() - INTERVAL '14 days'),
-  ('s0000000-0000-0000-0000-000000000008', 'STD-DEMO-08', 'Ziyad M.',  'Demo: Ziyad Mostafa', NOW() - INTERVAL '13 days'),
-  ('s0000000-0000-0000-0000-000000000009', 'STD-DEMO-09', 'Salma S.',  'Demo: Salma Sherif',  NOW() - INTERVAL '12 days'),
-  ('s0000000-0000-0000-0000-000000000010', 'STD-DEMO-10', 'Adam B.',   'Demo: Adam Bilal',    NOW() - INTERVAL '10 days'),
+  ('f0000000-0000-0000-0000-000000000006', 'STD-DEMO-06', 'Hamza I.',  'Demo: Hamza Ibrahim', NOW() - INTERVAL '14 days'),
+  ('f0000000-0000-0000-0000-000000000007', 'STD-DEMO-07', 'Hana T.',   'Demo: Hana Tarek',    NOW() - INTERVAL '14 days'),
+  ('f0000000-0000-0000-0000-000000000008', 'STD-DEMO-08', 'Ziyad M.',  'Demo: Ziyad Mostafa', NOW() - INTERVAL '13 days'),
+  ('f0000000-0000-0000-0000-000000000009', 'STD-DEMO-09', 'Salma S.',  'Demo: Salma Sherif',  NOW() - INTERVAL '12 days'),
+  ('f0000000-0000-0000-0000-000000000010', 'STD-DEMO-10', 'Adam B.',   'Demo: Adam Bilal',    NOW() - INTERVAL '10 days'),
 
-  ('s0000000-0000-0000-0000-000000000011', 'STD-DEMO-11', 'Farida A.', 'Demo: Farida Amer',   NOW() - INTERVAL '9 days'),
-  ('s0000000-0000-0000-0000-000000000012', 'STD-DEMO-12', 'Karim N.',  'Demo: Karim Nabil',   NOW() - INTERVAL '9 days'),
-  ('s0000000-0000-0000-0000-000000000013', 'STD-DEMO-13', 'Malak H.',  'Demo: Malak Hany',    NOW() - INTERVAL '8 days'),
-  ('s0000000-0000-0000-0000-000000000014', 'STD-DEMO-14', 'Seif E.',   'Demo: Seif Eldin',    NOW() - INTERVAL '7 days'),
-  ('s0000000-0000-0000-0000-000000000015', 'STD-DEMO-15', 'Habiba S.', 'Demo: Habiba Sameh',  NOW() - INTERVAL '5 days')
+  ('f0000000-0000-0000-0000-000000000011', 'STD-DEMO-11', 'Farida A.', 'Demo: Farida Amer',   NOW() - INTERVAL '9 days'),
+  ('f0000000-0000-0000-0000-000000000012', 'STD-DEMO-12', 'Karim N.',  'Demo: Karim Nabil',   NOW() - INTERVAL '9 days'),
+  ('f0000000-0000-0000-0000-000000000013', 'STD-DEMO-13', 'Malak H.',  'Demo: Malak Hany',    NOW() - INTERVAL '8 days'),
+  ('f0000000-0000-0000-0000-000000000014', 'STD-DEMO-14', 'Seif E.',   'Demo: Seif Eldin',    NOW() - INTERVAL '7 days'),
+  ('f0000000-0000-0000-0000-000000000015', 'STD-DEMO-15', 'Habiba S.', 'Demo: Habiba Sameh',  NOW() - INTERVAL '5 days')
 ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name;
 
 -- ── 4. DEMO CLASS MEMBERS (LINK STUDENTS TO CLASSES) ──────
 INSERT INTO public.class_members (class_id, student_id, status)
 VALUES
-  ('c0000000-0000-0000-0000-000000000001', 's0000000-0000-0000-0000-000000000001', 'active'),
-  ('c0000000-0000-0000-0000-000000000001', 's0000000-0000-0000-0000-000000000002', 'active'),
-  ('c0000000-0000-0000-0000-000000000001', 's0000000-0000-0000-0000-000000000003', 'active'),
-  ('c0000000-0000-0000-0000-000000000001', 's0000000-0000-0000-0000-000000000004', 'active'),
-  ('c0000000-0000-0000-0000-000000000001', 's0000000-0000-0000-0000-000000000005', 'active'),
+  ('c0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 'active'),
+  ('c0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000002', 'active'),
+  ('c0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000003', 'active'),
+  ('c0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000004', 'active'),
+  ('c0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000005', 'active'),
 
-  ('c0000000-0000-0000-0000-000000000002', 's0000000-0000-0000-0000-000000000006', 'active'),
-  ('c0000000-0000-0000-0000-000000000002', 's0000000-0000-0000-0000-000000000007', 'active'),
-  ('c0000000-0000-0000-0000-000000000002', 's0000000-0000-0000-0000-000000000008', 'active'),
-  ('c0000000-0000-0000-0000-000000000002', 's0000000-0000-0000-0000-000000000009', 'active'),
-  ('c0000000-0000-0000-0000-000000000002', 's0000000-0000-0000-0000-000000000010', 'active'),
+  ('c0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000006', 'active'),
+  ('c0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000007', 'active'),
+  ('c0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000008', 'active'),
+  ('c0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000009', 'active'),
+  ('c0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000010', 'active'),
 
-  ('c0000000-0000-0000-0000-000000000003', 's0000000-0000-0000-0000-000000000011', 'active'),
-  ('c0000000-0000-0000-0000-000000000003', 's0000000-0000-0000-0000-000000000012', 'active'),
-  ('c0000000-0000-0000-0000-000000000003', 's0000000-0000-0000-0000-000000000013', 'active'),
-  ('c0000000-0000-0000-0000-000000000003', 's0000000-0000-0000-0000-000000000014', 'active'),
-  ('c0000000-0000-0000-0000-000000000003', 's0000000-0000-0000-0000-000000000015', 'active')
+  ('c0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000011', 'active'),
+  ('c0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000012', 'active'),
+  ('c0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000013', 'active'),
+  ('c0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000014', 'active'),
+  ('c0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000015', 'active')
 ON CONFLICT (class_id, student_id) DO NOTHING;
 
 -- ── 5. DEMO SESSIONS ─────────────────────────────────────
@@ -91,10 +91,10 @@ ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title;
 -- ── 6. DEMO XP EVENTS LEDGER ─────────────────────────────
 INSERT INTO public.xp_events (id, student_id, class_id, source_type, points, reason, created_at)
 VALUES
-  ('x0000000-0000-0000-0000-000000000001', 's0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'quiz', 100, 'Demo: Correct Answer in CSS Quiz', NOW() - INTERVAL '4 days'),
-  ('x0000000-0000-0000-0000-000000000002', 's0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'participation', 50, 'Demo: Active Participation', NOW() - INTERVAL '2 days'),
-  ('x0000000-0000-0000-0000-000000000003', 's0000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000002', 'challenge', 150, 'Demo: Robotics Challenge Winner', NOW() - INTERVAL '3 days'),
-  ('x0000000-0000-0000-0000-000000000004', 's0000000-0000-0000-0000-000000000011', 'c0000000-0000-0000-0000-000000000003', 'homework', 200, 'Demo: Perfect Python Assignment', NOW() - INTERVAL '2 days')
+  ('a0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'quiz', 100, 'Demo: Correct Answer in CSS Quiz', NOW() - INTERVAL '4 days'),
+  ('a0000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'participation', 50, 'Demo: Active Participation', NOW() - INTERVAL '2 days'),
+  ('a0000000-0000-0000-0000-000000000003', 'f0000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000002', 'challenge', 150, 'Demo: Robotics Challenge Winner', NOW() - INTERVAL '3 days'),
+  ('a0000000-0000-0000-0000-000000000004', 'f0000000-0000-0000-0000-000000000011', 'c0000000-0000-0000-0000-000000000003', 'homework', 200, 'Demo: Perfect Python Assignment', NOW() - INTERVAL '2 days')
 ON CONFLICT (id) DO NOTHING;
 
 -- ── 7. DEMO BADGES ───────────────────────────────────────
@@ -108,6 +108,6 @@ ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 -- ── 8. DEMO CHALLENGES ───────────────────────────────────
 INSERT INTO public.challenges (id, public_code, title, description, xp_reward, status, created_at)
 VALUES
-  ('h0000000-0000-0000-0000-000000000001', 'CHAL-DEMO-01', 'Demo: Weekly Flexbox Duel', 'Build the fastest responsive layout using pure CSS flexbox.', 150, 'published', NOW() - INTERVAL '5 days'),
-  ('h0000000-0000-0000-0000-000000000002', 'CHAL-DEMO-02', 'Demo: Algorithmic Sprint', 'Solve 3 sorting algorithms with minimum time complexity.', 250, 'published', NOW() - INTERVAL '3 days')
+  ('10000000-0000-0000-0000-000000000001', 'CHAL-DEMO-01', 'Demo: Weekly Flexbox Duel', 'Build the fastest responsive layout using pure CSS flexbox.', 150, 'published', NOW() - INTERVAL '5 days'),
+  ('10000000-0000-0000-0000-000000000002', 'CHAL-DEMO-02', 'Demo: Algorithmic Sprint', 'Solve 3 sorting algorithms with minimum time complexity.', 250, 'published', NOW() - INTERVAL '3 days')
 ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title;
