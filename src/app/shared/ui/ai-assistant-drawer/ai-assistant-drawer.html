@@ -1,0 +1,169 @@
+@if (isOpen) {
+  <div class="ai-drawer-overlay" (click)="onClose()"></div>
+  <aside class="ai-drawer">
+    <!-- Header -->
+    <header class="ai-drawer__header">
+      <div class="ai-drawer__title">
+        <div class="ai-icon-badge">
+          <app-icon name="sparkles" [size]="20" />
+        </div>
+        <div>
+          <h3>Mada AI Assistant</h3>
+          <span class="ai-subtitle">Educational Gamification Advisor</span>
+        </div>
+      </div>
+      <button type="button" class="ai-btn-close" (click)="onClose()" title="Close Drawer">
+        <app-icon name="x" [size]="20" />
+      </button>
+    </header>
+
+    <!-- Content Body -->
+    <div class="ai-drawer__body">
+      <!-- Context Badge -->
+      @if (className || sessionTitle) {
+        <div class="ai-context-pill">
+          <app-icon name="target" [size]="14" />
+          <span>Context: <strong>{{ className }}</strong> · {{ sessionTitle }}</span>
+        </div>
+      }
+
+      <!-- Quick Presets -->
+      <div class="ai-presets">
+        <span class="ai-label">Quick Prompts</span>
+        <div class="ai-preset-list">
+          @for (p of presets; track p.label) {
+            <button type="button" class="ai-preset-chip" (click)="setPreset(p.text)">
+              {{ p.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Input Form -->
+      <div class="ai-input-wrap">
+        <textarea
+          rows="3"
+          class="ai-textarea"
+          placeholder="Ask AI for custom gamification ideas, challenge rules, or XP suggestions..."
+          [ngModel]="promptText()"
+          (ngModelChange)="promptText.set($event)"
+          [disabled]="isLoading()"
+        ></textarea>
+        <button
+          type="button"
+          class="btn-primary ai-btn-submit"
+          (click)="generate()"
+          [disabled]="isLoading() || !promptText().trim()"
+        >
+          @if (isLoading()) {
+            <app-icon name="loader-2" [size]="18" class="spin" />
+            Generating...
+          } @else {
+            <app-icon name="sparkles" [size]="18" />
+            Generate Suggestion
+          }
+        </button>
+      </div>
+
+      <!-- Success / Error Banner -->
+      @if (actionSuccessMsg()) {
+        <div class="ai-banner ai-banner--success">
+          <app-icon name="check-circle" [size]="18" />
+          <span>{{ actionSuccessMsg() }}</span>
+        </div>
+      }
+      @if (errorMessage()) {
+        <div class="ai-banner ai-banner--error">
+          <app-icon name="alert-circle" [size]="18" />
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- AI Response Output -->
+      @if (response(); as res) {
+        <div class="ai-card">
+          <div class="ai-card__header">
+            <div class="ai-card__title-wrap">
+              <h4 class="ai-card__title">{{ res.title }}</h4>
+              <span class="ai-card__timer">
+                <app-icon name="clock" [size]="14" />
+                {{ res.durationMinutes }}m
+              </span>
+            </div>
+            <div class="ai-xp-badge">
+              <app-icon name="zap" [size]="14" />
+              +{{ res.xpReward }} XP
+            </div>
+          </div>
+
+          <p class="ai-card__objective"><strong>Objective:</strong> {{ res.objective }}</p>
+
+          <div class="ai-card__section">
+            <span class="ai-card__section-label">Gamification Suggestion:</span>
+            <p class="ai-card__text">{{ res.gamificationSuggestion }}</p>
+          </div>
+
+          <div class="ai-card__section">
+            <span class="ai-card__section-label">Instructions:</span>
+            <p class="ai-card__text">{{ res.instructions }}</p>
+          </div>
+
+          @if (res.instructorSteps?.length) {
+            <div class="ai-card__section">
+              <span class="ai-card__section-label">Instructor Steps:</span>
+              <ul class="ai-steps-list">
+                @for (step of res.instructorSteps; track step) {
+                  <li><app-icon name="check" [size]="14" /> {{ step }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Action Buttons with Human Confirmation -->
+          <div class="ai-actions">
+            <button type="button" class="btn-action btn-action--primary" (click)="openConfirm('challenge')">
+              <app-icon name="trophy" [size]="16" />
+              Apply as Challenge
+            </button>
+
+            <button type="button" class="btn-action btn-action--amber" (click)="openConfirm('xp')">
+              <app-icon name="zap" [size]="16" />
+              Award +{{ res.xpReward }} XP Bonus
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </aside>
+
+  <!-- Human Confirmation Modal -->
+  @if (confirmModalType(); as type) {
+    <div class="ai-modal-overlay" (click)="closeConfirm()"></div>
+    <div class="ai-modal">
+      <div class="ai-modal__header">
+        <app-icon name="alert-circle" [size]="24" class="text-amber" />
+        <h4>Confirm AI Action</h4>
+      </div>
+      <div class="ai-modal__body">
+        @if (type === 'challenge') {
+          <p>Are you sure you want to publish <strong>"{{ response()?.title }}"</strong> as a new Challenge to Supabase?</p>
+        } @else {
+          <p>Are you sure you want to award <strong>+{{ response()?.xpReward }} XP</strong> to all students in this class?</p>
+        }
+      </div>
+      <div class="ai-modal__footer">
+        <button type="button" class="btn-secondary" (click)="closeConfirm()" [disabled]="isApplying()">
+          Cancel
+        </button>
+        <button type="button" class="btn-primary" (click)="confirmAction()" [disabled]="isApplying()">
+          @if (isApplying()) {
+            <app-icon name="loader-2" [size]="16" class="spin" />
+            Applying...
+          } @else {
+            Yes, Apply Action
+          }
+        </button>
+      </div>
+    </div>
+  }
+}

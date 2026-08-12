@@ -5,6 +5,7 @@ import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { IconComponent } from '../../../../shared/ui/icon/icon';
+import { AiAssistantDrawerComponent } from '../../../../shared/ui/ai-assistant-drawer/ai-assistant-drawer';
 import type { IconName } from '../../../../shared/ui/icon/icons.constants';
 
 interface LiveStudent {
@@ -27,13 +28,16 @@ interface LiveFeedEvent {
 @Component({
   selector: 'app-live-workspace',
   standalone: true,
-  imports: [RouterLink, FormsModule, DecimalPipe, IconComponent],
+  imports: [RouterLink, FormsModule, DecimalPipe, IconComponent, AiAssistantDrawerComponent],
   templateUrl: './live-workspace.html',
   styleUrl: './live-workspace.css',
 })
 export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   readonly auth     = inject(AuthService);
   readonly supabase = inject(SupabaseService);
+
+  /* AI Assistant State */
+  readonly isAiDrawerOpen = signal<boolean>(false);
   readonly route    = inject(ActivatedRoute);
   readonly router   = inject(Router);
 
@@ -254,4 +258,13 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       this.isEnding.set(false);
     }
   }
+
+  openAiDrawer(): void {
+    this.isAiDrawerOpen.set(true);
+  }
+
+  closeAiDrawer(): void {
+    this.isAiDrawerOpen.set(false);
+  }
 }
+

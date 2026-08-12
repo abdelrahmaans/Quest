@@ -43,7 +43,9 @@ export type IconName =
   | 'radio'
   | 'sparkles'
   | 'user-check'
-  | 'user-x';
+  | 'user-x'
+  | 'bot'
+  | 'send';
 
 export const ICON_PATHS: Record<IconName, string> = {
   mail: `<rect width="20" height="16" x="2" y="4" rx="2"/>
@@ -162,4 +164,14 @@ export const ICON_PATHS: Record<IconName, string> = {
     <circle cx="9" cy="7" r="4"/>
     <line x1="17" x2="22" y1="9" y2="14"/>
     <line x1="22" x2="17" y1="9" y2="14"/>`,
+
+  bot: `<path d="M12 8V4H8"/>
+    <rect width="16" height="12" x="4" y="8" rx="2"/>
+    <path d="M2 14h2"/>
+    <path d="M20 14h2"/>
+    <path d="M15 13v2"/>
+    <path d="M9 13v2"/>`,
+
+  send: `<path d="m22 2-7 20-4-9-9-4Z"/>
+    <path d="M22 2 11 13"/>`,
 };

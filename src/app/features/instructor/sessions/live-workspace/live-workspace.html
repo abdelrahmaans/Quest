@@ -35,6 +35,11 @@
         <span class="hud-stat__val">+{{ totalSessionXP() | number }}</span>
         <span class="hud-stat__lbl">XP Awarded</span>
       </div>
+      <button type="button" class="btn-ai" (click)="openAiDrawer()" title="Open AI Assistant">
+        <app-icon name="sparkles" [size]="16" />
+        AI Assistant
+      </button>
+
       <button type="button" class="btn-end" [disabled]="isEnding()" (click)="endSession()">
         @if (isEnding()) {
           <app-icon name="loader-2" [size]="16" class="spinning" />
@@ -198,3 +203,11 @@
   </div>
 
 </div>
+
+<!-- AI Assistant Drawer -->
+<app-ai-assistant-drawer
+  [isOpen]="isAiDrawerOpen()"
+  [className]="className()"
+  [sessionTitle]="sessionTitle()"
+  (closeDrawer)="closeAiDrawer()"
+/>

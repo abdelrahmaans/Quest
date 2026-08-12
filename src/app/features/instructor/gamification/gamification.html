@@ -6,6 +6,10 @@
       <h1 class="page-title">Gamification Control</h1>
       <p class="page-subtitle">Award XP, track activity, and keep students engaged.</p>
     </div>
+    <button type="button" class="btn-hero btn-hero--primary" (click)="openAiDrawer()">
+      <app-icon name="sparkles" [size]="18" />
+      AI Assistant
+    </button>
   </div>
 
   <div class="panel-grid">
@@ -136,3 +140,10 @@
 
   </div>
 </div>
+
+<!-- AI Assistant Drawer -->
+<app-ai-assistant-drawer
+  [isOpen]="isAiDrawerOpen()"
+  [classId]="selectedClassId"
+  (closeDrawer)="closeAiDrawer()"
+/>

@@ -5,6 +5,7 @@ import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { IconComponent } from '../../../shared/ui/icon/icon';
+import { AiAssistantDrawerComponent } from '../../../shared/ui/ai-assistant-drawer/ai-assistant-drawer';
 
 interface Student { id: string; full_name: string; xp_total: number; level: number; class_id: string; }
 interface ClassItem { id: string; name: string; }
@@ -26,7 +27,7 @@ const XP_REASONS = [
 @Component({
   selector: 'app-gamification',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, IconComponent],
+  imports: [FormsModule, DecimalPipe, IconComponent, AiAssistantDrawerComponent],
   templateUrl: './gamification.html',
   styleUrl: './gamification.css',
 })
@@ -34,6 +35,9 @@ export class GamificationComponent implements OnInit {
   readonly auth     = inject(AuthService);
   readonly supabase = inject(SupabaseService);
   readonly route    = inject(ActivatedRoute);
+
+  /* AI Assistant State */
+  readonly isAiDrawerOpen = signal<boolean>(false);
 
   /* State */
   readonly classes       = signal<ClassItem[]>([]);
@@ -175,4 +179,13 @@ export class GamificationComponent implements OnInit {
     if (h < 24) return `${h}h ago`;
     return `${Math.floor(h / 24)}d ago`;
   }
+
+  openAiDrawer(): void {
+    this.isAiDrawerOpen.set(true);
+  }
+
+  closeAiDrawer(): void {
+    this.isAiDrawerOpen.set(false);
+  }
 }
+

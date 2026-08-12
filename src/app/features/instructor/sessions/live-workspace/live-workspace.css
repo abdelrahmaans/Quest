@@ -78,6 +78,15 @@
 .hud-stat__val { font-size: 1.125rem; font-weight: 800; color: #F8FAFC; line-height: 1; }
 .hud-stat__lbl { font-size: .6875rem; color: var(--clr-dark-muted); margin-top: .125rem; }
 
+.btn-ai {
+  display: inline-flex; align-items: center; gap: .5rem;
+  height: 38px; padding: 0 1rem; border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--clr-primary) 20%, transparent); color: #2DD4BF;
+  border: 1px solid color-mix(in srgb, var(--clr-primary) 40%, transparent); font-size: .875rem; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: all var(--t-fast);
+}
+.btn-ai:hover { background: var(--clr-primary); color: #fff; }
+
 .btn-end {
   display: inline-flex; align-items: center; gap: .5rem;
   height: 38px; padding: 0 1rem; border-radius: var(--radius-md);
