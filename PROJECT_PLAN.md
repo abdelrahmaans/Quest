@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, status updates, and current configuration.
 >
-> **Current status**: Strict Auth Guards (`authGuard` & `roleGuard`) Active 🔒 | Demo Seed Data Retained for Review 🧪 | Realtime & Notifications Ready ✅
+> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | Realtime & Notifications Verified ✅
 
 ---
 
@@ -16,22 +16,20 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 
 ---
 
-## 2. Generic Gamification Platform — Light & Dark Design System Specification
+## 2. Generic Gamification Platform — Official Light & Dark Design System Specification
 
-### 2.1 Core Visual Philosophy
+### 2.1 Core Visual Philosophy (Officially Approved)
 - **Light Mode First Experience**: Warm Off-White main background (`#FAF7F2`), pure white cards (`#FFFFFF`), soft mint/teal secondary surfaces (`#ECFDF5` / `#CCFBF1`).
 - **Dark Mode System**: Obsidian Navy background (`#0F172A`), dark cards (`#111827`), high-contrast text (`#F8FAFC`), mapped `--clr-navy` variable ensuring 100% heading text contrast in dark mode, and seamless glassmorphic Navbar header.
-- **Vibrant Educational Palette**: Primary interaction color upgraded to cheerful Electric Vibrant Teal (`#14B8A6` / hover `#0D9488`).
+- **Official Brand Color**: Cheerful Electric Vibrant Teal (`#14B8A6` / hover `#0D9488`).
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
 - **Strict Auth Guard Protection**: `authGuard` and `roleGuard` actively check Supabase auth sessions and user profile roles. Unauthenticated visits to `/instructor` or `/admin` are immediately redirected to `/auth/login?returnUrl=...`.
 - **Demo Seed Data**: Demo seed records (`temp_demo_seed.sql`) are intentionally retained in the database for UI review and live testing.
-- **Full Arabic & English i18n Across All Shells**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR). Language switcher (`app-lang-toggle`) integrated in Home, Instructor Shell, and Admin Shell topbars.
-- **In-App Notification Engine**: Complete `NotificationService` + `NotificationDropdownComponent` with bell badge, unread counter, type icons (XP, Badge, Level, Challenge), mark as read, and filter tabs integrated into Instructor and Admin topbars.
-- **Instructor Portal Auth Clarity**: Auth header button unified to 1 single `Instructor Portal` CTA and login screen includes explicit `Instructor Portal · بوابة المعلمين` badge and `← Home` button so non-instructors recognize the authentication zone.
-- **Multi-Tenant Security Architecture**: Verified `organization_id` schema isolation columns and created `0004_multi_tenancy_rls_policies.sql` enforcing tenant data isolation across organizations via `get_user_org_id()` helper.
+- **Multi-Tenant Security (Migration 0004 Audit)**: `0004_multi_tenancy_rls_policies.sql` RLS policies explicitly allow `organization_id IS NULL` for smooth backwards compatibility with existing instructor data.
+- **AI Assistant Drawer Security**: Edge function gateway `supabase/functions/ai-gamification-assistant/index.ts` keeps API keys server-side. Zero secret keys exist in `dist/` production bundle. Explicit human confirmation modal required before DB writes.
 - **Realtime Infrastructure Enabled**: Supabase Realtime Channels active on `xp_events`, `attendance`, and `students` tables with clean `ngOnDestroy()` channel unsubscription teardown.
 
-### 2.2 Color System Tokens
+### 2.2 Color System Tokens (Official Final Palette)
 | Semantic Role | Token Variable | Hex Code (Light) | Hex Code (Dark) | Usage |
 |---|---|---|---|---|
 | Primary Interaction | `--clr-primary` | `#14B8A6` | `#14B8A6` | Cheerful Vibrant Teal for primary actions, active nav, progress |
@@ -56,6 +54,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
 | Realtime | Supabase Realtime Channels | Postgres changes listener (`INSERT`, `UPDATE`) |
 | Security | `authGuard` & `roleGuard` | Real Supabase session validation & role verification |
+| AI Gateway | Supabase Edge Function | Server-side secrets via Deno.env (Zero frontend key leak) |
 | Notifications | `NotificationService` + Dropdown | Signal-driven unread count, type icons, mark as read |
 | i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) across all screens |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
@@ -112,7 +111,7 @@ QUEST/
 - 22 core tables (`0001_initial_schema.sql`).
 - RLS + auth trigger (`0002_rls_and_auth_trigger.sql`).
 - `is_admin()` helper, full admin policies, `audit_log` (admin-read-only), `organization_id` columns, `xp_events` corrected to **append-only ledger** (`0003_admin_policies_and_fixes.sql`).
-- Multi-tenancy RLS helper `get_user_org_id()` and tenant isolation policies (`0004_multi_tenancy_rls_policies.sql`).
+- Multi-tenancy RLS helper `get_user_org_id()` and tenant isolation policies (`0004_multi_tenancy_rls_policies.sql`) with explicit `organization_id IS NULL` backwards compatibility.
 - `authGuard` and `roleGuard` strictly active across all protected routes.
 - Demo seed data (`temp_demo_seed.sql`) retained intentionally for review.
 
@@ -122,25 +121,26 @@ QUEST/
 
 ```
 [ Phase 0: Setup ]                          ✅ Complete
-[ Phase 1: Foundation & Auth ]              ✅ Complete (Strict Auth Guards Restored)
+[ Phase 1: Foundation & Auth ]              ✅ Complete (Strict Auth Guards Restored & Verified)
 [ Phase 2: Landing Page ]                   ✅ Complete
 [ Phase 3: Instructor Shell ]               ✅ Complete
 [ Phase 4: Gamification Engine ]            ✅ Complete
 [ Phase 5: Live Session Workspace ]         ✅ Complete
 [ Phase 6: Admin Dashboard ]                ✅ Complete
-[ Interim: Verify / Seed / Brand ]          🔄 Restored Strict Guards / Demo Seed Intentionally Retained for Review
-[ Phase 7: AI Gamification Assistant ]      ✅ Complete (Steps 7.1, 7.2, 7.3)
-[ Light & Dark Systems & i18n Pass ]        ✅ Complete
-[ Phase 8: Advanced / Realtime ]            ✅ Complete
+[ Interim: Verify / Seed / Brand ]          ✅ Complete (Official Palette #14B8A6/#FAF7F2 Approved)
+[ Phase 7: AI Gamification Assistant ]      ✅ Verified (Zero Key Leak in dist + Human Confirmation Modal)
+[ Phase 8: Advanced / Realtime ]            ✅ Verified (Realtime Broadcast + Notification Dropdown)
 ```
 
 ---
 
 ## 8. Detailed Accomplishments Log
 
-- **Strict Security Restoration**: Completely removed temporary auth bypass code in `auth.guard.ts` and `role.guard.ts`. Both guards now validate real Supabase auth sessions and user profile roles before permitting access, redirecting unauthorized traffic to `/auth/login?returnUrl=...`.
-- **Demo Seed Data Policy**: Confirmed retention of `temp_demo_seed.sql` records for live UI review and demonstration.
-- **Branding Audit**: "Powered by Mada · بدعم من مدى" retained as sponsor credit in Home Page footer, while generic core app titles use Quest Engine.
+- **Brand Specification Approval**: Formally registered Electric Teal (`#14B8A6`) and Warm Off-White (`#FAF7F2`) as official final brand tokens in `PROJECT_PLAN.md`.
+- **Migration 0004 Audit**: Confirmed `0004_multi_tenancy_rls_policies.sql` RLS clauses (`organization_id is null OR organization_id = get_user_org_id() OR is_admin()`) allow existing instructors with NULL `organization_id` to view 100% of their classes.
+- **AI Assistant Bundle Audit**: Performed `grep_search` on production bundle `dist/mada-quest`. Confirmed zero AI API key leakage.
+- **Human Confirmation Flow**: Confirmed `openConfirm()` and `confirmAction()` in `AiAssistantDrawerComponent` require explicit instructor modal click before writing challenge or XP bonus to Supabase.
+- **Realtime Infrastructure**: Verified Supabase Realtime Channels (`live_session_${sid}` and `instructor_leaderboard_realtime`) update live session HUD and re-rank leaderboard automatically across open browser tabs upon `xp_events` INSERT.
 
 ---
 *This file is the single source of truth for Mada Quest.*
