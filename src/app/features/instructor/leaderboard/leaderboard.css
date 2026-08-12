@@ -3,8 +3,18 @@
 
 .page { display: flex; flex-direction: column; gap: 1.75rem; }
 .page-header { }
-.page-title  { font-size: 1.5rem; font-weight: 700; color: var(--clr-text); letter-spacing: -.025em; margin-bottom: .25rem; }
+.page-title  { font-size: 1.5rem; font-weight: 700; color: var(--clr-text); letter-spacing: -.025em; margin-bottom: .25rem; display: flex; align-items: center; gap: .75rem; }
 .page-subtitle { font-size: .9375rem; color: var(--clr-text-muted); }
+
+.realtime-badge {
+  font-size: .75rem;
+  font-weight: 700;
+  padding: .25rem .625rem;
+  border-radius: var(--radius-full);
+  background: var(--clr-surface-mint);
+  border: 1px solid var(--clr-primary-light);
+  color: var(--clr-primary);
+}
 
 .alert-error {
   display: flex; align-items: center; gap: .5rem;

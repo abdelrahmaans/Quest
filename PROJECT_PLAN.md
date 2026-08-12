@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: CTA Banner Theme & Full Home Page Polish complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
+> **Current status**: Step 8.1 Realtime Leaderboard & Session Events complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Step 8.2 In-App Notifications
 
 ---
 
@@ -25,7 +25,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
 - **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A` in light, `#F8FAFC` in dark). Zero low-contrast or light gray text on white or dark surfaces.
 - **Full Arabic & English i18n Across All Shells**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR). Language switcher (`app-lang-toggle`) integrated in Home, Instructor Shell, and Admin Shell topbars.
-- **Complete Home Page Experience**: Includes Hero Preview, Public Tracker Search, Gamification Engine Mechanics, How It Works (01-04 Steps), Interactive Class Leaderboards & Podium, Achievers Live Feed, Collectible Badges, Active Challenges, Community Testimonials, and High-Impact CTA Banner (optimized for Light & Dark mode surfaces).
+- **Realtime Infrastructure Enabled**: Supabase Realtime Channels active on `xp_events`, `attendance`, and `students` tables with clean `ngOnDestroy()` channel unsubscription teardown.
 - **Temporary Dev Testing Bypass**: Auth and Role Guards relaxed to allow direct 1-click dev testing across `/instructor`, `/admin`, and all sub-routes.
 
 ### 2.2 Color System Tokens
@@ -43,31 +43,6 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | High Contrast Text | `--clr-text-muted` | `#475569` | `#CBD5E1` | Secondary text, captions, subtitles |
 | Border Token | `--clr-border` | `#E2E8F0` | `#334155` | Soft card & divider borders |
 
-### 2.3 Text Visibility & Button Rules
-- **On Teal Background**: Button text MUST be Pure White (`#FFFFFF`).
-- **On Amber Background**: Button text MUST be Deep Navy (`#0F172A`).
-- **Primary Text**: Deep Navy (`#0F172A` in light, `#F8FAFC` in dark) everywhere — no unreadable text.
-
-### 2.4 Typography System
-- **Arabic**: Cairo (`font-family: var(--font-arabic)`)
-- **English**: Inter (`font-family: var(--font-sans)`)
-- **Monospace/Numbers**: JetBrains Mono (`font-family: var(--font-mono)`)
-- **Hierarchy**: Display (bold impact), H1 (strong title), H2 (section), H3 (card), Body (readable 16px), Caption (13px high contrast).
-
-### 2.5 Border Radii Hierarchy
-- Small: `8px` (`--radius-sm`)
-- Medium: `12px` (`--radius-md`)
-- Large: `16px` (`--radius-lg`)
-- Featured Cards: `20px` (`--radius-xl`)
-- Hero / Major Sections: `24px` (`--radius-hero`)
-
-### 2.6 Shadows & Elevation
-- Extremely subtle, soft low-opacity shadows with large blur (`0 6px 16px rgba(15, 23, 42, 0.06)`).
-
-### 2.7 Brand Usage Rule
-- DO NOT hardcode Mada in routes, DB entities, class names, or component names.
-- "Powered by Mada · بدعم من مدى" sponsor credit appears once, small and subtle, in the public Home Page footer only.
-
 ---
 
 ## 3. Tech Stack & Architecture
@@ -77,6 +52,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Frontend | Angular 22 (Standalone Components) | Signals + Reactive Forms |
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
 | Theme | Dynamic `[data-theme]` | Light Mode First (`#FAF7F2` bg) + Dark System |
+| Realtime | Supabase Realtime Channels | Postgres changes listener (`INSERT`, `UPDATE`) |
 | i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) across all screens |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
 | Backend | Supabase (PostgreSQL + Auth + RLS) | Numbered, documented migrations |
@@ -148,10 +124,9 @@ QUEST/
 [ Phase 6: Admin Dashboard ]                ✅ Complete (Theme + i18n topbar aligned)
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
 [ Phase 7: AI Gamification Assistant ]      ✅ Complete (Steps 7.1, 7.2, 7.3)
-[ Light & Dark Systems & i18n Pass ]        ✅ Complete (Dev Testing Bypass Enabled)
-[ Phase 8: Advanced / Realtime ]            ⏳ Active Phase (Next)
-    Step 8.1 — Realtime Leaderboard         ⏳ Pending
-    Step 8.2 — In-App Notifications         ⏳ Pending
+[ Phase 8: Advanced / Realtime ]            ⏳ Active Phase
+    Step 8.1 — Realtime Leaderboard         ✅ Complete
+    Step 8.2 — In-App Notifications         ⏳ Active Step (Next)
     Step 8.3 — Multi-Tenancy Review         ⏳ Pending
     Step 8.4 — Final Full-Project Review    ⏳ Pending
 ```
@@ -163,11 +138,13 @@ QUEST/
 - **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
 - **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
 - **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
-- **CTA Banner Light & Dark Mode Responsiveness Polish**:
-  - Refactored `.cta-banner` background to use `--clr-surface-mint` with `--clr-primary-light` borders.
-  - In Light Mode: renders a soft mint background (`#ECFDF5`) with Deep Navy title (`#0F172A`) and high-contrast text.
-  - In Dark Mode: renders a rich obsidian dark mint background (`#133D39`) with bright white title (`#F8FAFC`) and high-contrast text.
-  - Verified clean build with 0 TypeScript/HTML/CSS errors.
+- **Phase 8 — Step 8.1 (Realtime Leaderboard & Session Events)**:
+  - Subscribed `LiveWorkspaceComponent` to Supabase Realtime postgres_changes on `xp_events` and `attendance` tables.
+  - Dynamically updated local student XP totals, pushed live feed events, and updated total XP in real time across multiple open browser windows without page refreshes.
+  - Subscribed `LeaderboardComponent` to Realtime postgres_changes on `xp_events` to re-rank leaderboard entries dynamically.
+  - Implemented proper `ngOnDestroy()` teardown via `supabase.client.removeChannel()` to guarantee zero memory leaks.
+  - Added visual `🔴 Realtime Live` status indicator pills to live session HUD header and leaderboard header.
+  - Verified clean build with 0 TypeScript/HTML/CSS compilation errors.
 
 ---
 *This file is the single source of truth for Mada Quest.*

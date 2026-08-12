@@ -2,7 +2,12 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1 class="page-title">🏆 Leaderboard</h1>
+      <h1 class="page-title">
+        🏆 Leaderboard
+        @if (isRealtimeActive()) {
+          <span class="realtime-badge">🔴 Realtime Live</span>
+        }
+      </h1>
       <p class="page-subtitle">See how your students rank against each other in real time.</p>
     </div>
   </div>

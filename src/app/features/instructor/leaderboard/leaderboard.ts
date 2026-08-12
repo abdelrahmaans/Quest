@@ -1,5 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { IconComponent } from '../../../shared/ui/icon/icon';
@@ -22,16 +23,52 @@ interface LeaderboardEntry {
   templateUrl: './leaderboard.html',
   styleUrl: './leaderboard.css',
 })
-export class LeaderboardComponent implements OnInit {
+export class LeaderboardComponent implements OnInit, OnDestroy {
   readonly auth     = inject(AuthService);
   readonly supabase = inject(SupabaseService);
 
-  readonly isLoading = signal(true);
-  readonly entries   = signal<LeaderboardEntry[]>([]);
-  readonly error     = signal<string | null>(null);
+  readonly isLoading        = signal(true);
+  readonly entries          = signal<LeaderboardEntry[]>([]);
+  readonly error            = signal<string | null>(null);
+  readonly isRealtimeActive = signal<boolean>(false);
+
+  private channel: RealtimeChannel | null = null;
 
   async ngOnInit(): Promise<void> {
     await this.loadLeaderboard();
+    this.setupRealtimeSubscription();
+  }
+
+  ngOnDestroy(): void {
+    if (this.channel) {
+      this.supabase.client.removeChannel(this.channel);
+      this.channel = null;
+      this.isRealtimeActive.set(false);
+    }
+  }
+
+  private setupRealtimeSubscription(): void {
+    if (!this.supabase.isConfigured()) return;
+
+    try {
+      this.channel = this.supabase.client
+        .channel('instructor_leaderboard_realtime')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'xp_events' },
+          () => {
+            // Re-fetch rankings in real time when new XP is awarded
+            this.loadLeaderboard();
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            this.isRealtimeActive.set(true);
+          }
+        });
+    } catch {
+      // Fallback
+    }
   }
 
   async loadLeaderboard(): Promise<void> {

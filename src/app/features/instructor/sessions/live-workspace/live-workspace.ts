@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { IconComponent } from '../../../../shared/ui/icon/icon';
@@ -55,8 +56,10 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   readonly totalSessionXP = signal<number>(0);
   readonly elapsedSeconds = signal<number>(0);
 
-  /* Timer handle */
+  /* Realtime & Timer handles */
   private timerInterval: any = null;
+  private channel: RealtimeChannel | null = null;
+  readonly isRealtimeActive = signal<boolean>(false);
 
   /* Live XP Award Form */
   selectedXPPreset = 10;
@@ -103,11 +106,85 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     this.sessionId.set(id);
     await this.loadLiveSessionData(id);
     this.startTimer();
+    this.setupRealtimeSubscription(id);
     this.isLoading.set(false);
   }
 
   ngOnDestroy(): void {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    this.teardownRealtimeSubscription();
+  }
+
+  private setupRealtimeSubscription(sid: string): void {
+    if (!this.supabase.isConfigured()) return;
+
+    try {
+      this.channel = this.supabase.client
+        .channel(`live_session_${sid}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'xp_events' },
+          (payload) => {
+            const event = payload.new as { student_id: string; points: number; reason: string };
+            if (event && event.student_id) {
+              this.handleRealtimeXP(event.student_id, event.points, event.reason);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'attendance', filter: `session_id=eq.${sid}` },
+          (payload) => {
+            const att = payload.new as { student_id: string; status: 'present' | 'absent' | 'late' };
+            if (att && att.student_id) {
+              this.handleRealtimeAttendance(att.student_id, att.status);
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            this.isRealtimeActive.set(true);
+          }
+        });
+    } catch {
+      // Graceful fallback if realtime is unavailable
+    }
+  }
+
+  private teardownRealtimeSubscription(): void {
+    if (this.channel) {
+      this.supabase.client.removeChannel(this.channel);
+      this.channel = null;
+      this.isRealtimeActive.set(false);
+    }
+  }
+
+  private handleRealtimeXP(studentId: string, points: number, reason: string): void {
+    const s = this.students().find(st => st.id === studentId);
+    if (!s) return;
+
+    // Update local student XP total
+    this.students.update(list =>
+      list.map(item => item.id === studentId ? { ...item, xp_total: item.xp_total + points } : item)
+    );
+
+    // Push to live feed stream
+    const feedItem: LiveFeedEvent = {
+      id: Math.random().toString(),
+      studentName: s.full_name,
+      points,
+      reason: reason || 'Live Session Bonus',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    this.feed.update(f => [feedItem, ...f]);
+    this.totalSessionXP.update(tot => tot + points);
+  }
+
+  private handleRealtimeAttendance(studentId: string, status: 'present' | 'absent' | 'late'): void {
+    this.students.update(list =>
+      list.map(item => item.id === studentId ? { ...item, attendance: status } : item)
+    );
   }
 
   startTimer(): void {
