@@ -41,22 +41,22 @@ export class AIService {
    */
   async getGamificationSuggestion(payload: AiRequestPayload): Promise<{ data: AiStructuredResponse | null; error: Error | null }> {
     try {
-      const { data, error } = await this.supabaseService.client.functions.invoke('ai-gamification-assistant', {
+      const res = await this.supabaseService.client.functions.invoke('ai-gamification-assistant', {
         body: payload,
       });
 
-      if (error) {
-        console.error('[AIService] Edge function call failed, fallback response provided:', error);
+      if (res.error) {
+        console.warn('[AIService] Edge function call returned error or is not deployed yet. Using fallback recommendation:', res.error);
         return { data: this.generateClientFallback(payload), error: null };
       }
 
-      if (data?.suggestion) {
-        return { data: data.suggestion as AiStructuredResponse, error: null };
+      if (res.data?.suggestion) {
+        return { data: res.data.suggestion as AiStructuredResponse, error: null };
       }
 
       return { data: this.generateClientFallback(payload), error: null };
     } catch (err: any) {
-      console.warn('[AIService] Exception invoking AI edge function, returning client fallback:', err);
+      console.warn('[AIService] Network or Edge Function call exception (e.g. pre-deployment Failed to fetch). Returning fallback recommendation:', err);
       return { data: this.generateClientFallback(payload), error: null };
     }
   }
