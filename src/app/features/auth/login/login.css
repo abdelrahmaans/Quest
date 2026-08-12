@@ -13,7 +13,8 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 2.5rem;
-  background: linear-gradient(145deg, var(--clr-dark-bg) 0%, var(--clr-soft-teal) 55%, var(--clr-dark-bg) 100%);
+  background: linear-gradient(145deg, #0F172A 0%, #0F766E 55%, #0F172A 100%);
+  color: #FFFFFF;
 }
 
 @media (max-width: 900px) {
@@ -25,8 +26,8 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 60% 50% at 40% 50%, rgba(13,148,136,.22) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 70% 20%, rgba(13,148,136,.10) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at 40% 50%, rgba(20,184,166,.25) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 70% 20%, rgba(245,158,11,.15) 0%, transparent 60%);
 }
 
 .brand-content {
@@ -44,22 +45,22 @@
   margin-bottom: .875rem;
 }
 
-.logo-icon { font-size: 2.75rem; filter: drop-shadow(0 0 18px rgba(13,148,136,.85)); }
+.logo-icon { font-size: 2.75rem; filter: drop-shadow(0 0 18px rgba(20,184,166,.85)); }
 
 .logo-text {
   font-family: var(--font-arabic);
   font-size: 2rem;
-  font-weight: 600;
-  color: var(--clr-dark-text);
+  font-weight: 700;
+  color: #FFFFFF;
   letter-spacing: -.02em;
 }
 
-.logo-text strong { color: var(--clr-primary); font-weight: 800; }
+.logo-text strong { color: #14B8A6; font-weight: 800; }
 
 .brand-tagline {
   font-family: var(--font-arabic);
   font-size: .9375rem;
-  color: var(--clr-dark-muted);
+  color: #CBD5E1;
   margin-bottom: 2rem;
   letter-spacing: .01em;
 }
@@ -80,16 +81,23 @@
   padding: .375rem .875rem;
   border-radius: var(--radius-full);
   font-size: .8125rem;
-  color: var(--clr-primary-light);
-  background: rgba(13,148,136,.12);
-  border: 1px solid rgba(13,148,136,.28);
+  color: #CCFBF1;
+  background: rgba(20,184,166,.18);
+  border: 1px solid rgba(20,184,166,.35);
   transition: background var(--t-fast);
 }
 
-.feature-chip:hover { background: rgba(13,148,136,.2); }
-.feature-chip app-icon { color: var(--clr-primary); }
+.feature-chip:hover { background: rgba(20,184,166,.3); }
+.feature-chip app-icon { color: #14B8A6; }
 
-.brand-quote { font-size: .8125rem; color: #3d5a6b; font-style: italic; }
+.brand-quote {
+  font-family: var(--font-arabic);
+  font-size: .875rem;
+  font-style: italic;
+  color: #94A3B8;
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 1.5rem;
+}
 
 /* ── Form Panel ─────────────────────────────────────────── */
 .form-panel {

@@ -12,7 +12,8 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 2.5rem;
-  background: linear-gradient(145deg, var(--clr-dark-bg) 0%, var(--clr-soft-teal) 55%, var(--clr-dark-bg) 100%);
+  background: linear-gradient(145deg, #0F172A 0%, #0F766E 55%, #0F172A 100%);
+  color: #FFFFFF;
 }
 
 @media (max-width: 900px) {
@@ -23,14 +24,14 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse 60% 50% at 40% 50%, rgba(13,148,136,.22) 0%, transparent 70%);
+  background: radial-gradient(ellipse 60% 50% at 40% 50%, rgba(20,184,166,.25) 0%, transparent 70%);
 }
 
 .brand-content {
   position: relative;
   z-index: 1;
   text-align: center;
-  color: var(--clr-dark-text);
+  color: #FFFFFF;
   animation: fade-in .6s ease both;
 }
 
