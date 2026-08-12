@@ -865,8 +865,10 @@
 /* ── CTA BANNER ─────────────────────────────────────────── */
 .cta-banner {
   padding: 5rem 1.5rem;
-  background: linear-gradient(135deg, var(--clr-navy) 0%, color-mix(in srgb, var(--clr-primary) 35%, var(--clr-navy)) 100%);
-  color: white;
+  background: var(--clr-surface-mint);
+  border-top: 1px solid var(--clr-primary-light);
+  border-bottom: 1px solid var(--clr-primary-light);
+  color: var(--clr-text);
   text-align: center;
 }
 
@@ -882,14 +884,14 @@
 .cta-banner__title {
   font-size: 2.25rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--clr-navy);
   margin: 0;
   letter-spacing: -.02em;
 }
 
 .cta-banner__desc {
   font-size: 1.125rem;
-  color: #CBD5E1;
+  color: var(--clr-text-muted);
   max-width: 620px;
   margin: 0;
   line-height: 1.6;

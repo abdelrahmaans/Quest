@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Complete Home Page Redesign (Leaderboards + Search + How It Works + Testimonials + CTA Banner) ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
+> **Current status**: CTA Banner Theme & Full Home Page Polish complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
 
 ---
 
@@ -25,7 +25,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
 - **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A` in light, `#F8FAFC` in dark). Zero low-contrast or light gray text on white or dark surfaces.
 - **Full Arabic & English i18n Across All Shells**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR). Language switcher (`app-lang-toggle`) integrated in Home, Instructor Shell, and Admin Shell topbars.
-- **Complete Home Page Experience**: Includes Hero Preview, Public Tracker Search, Gamification Engine Mechanics, How It Works (01-04 Steps), Interactive Class Leaderboards & Podium, Achievers Live Feed, Collectible Badges, Active Challenges, Community Testimonials, and High-Impact CTA Banner.
+- **Complete Home Page Experience**: Includes Hero Preview, Public Tracker Search, Gamification Engine Mechanics, How It Works (01-04 Steps), Interactive Class Leaderboards & Podium, Achievers Live Feed, Collectible Badges, Active Challenges, Community Testimonials, and High-Impact CTA Banner (optimized for Light & Dark mode surfaces).
 - **Temporary Dev Testing Bypass**: Auth and Role Guards relaxed to allow direct 1-click dev testing across `/instructor`, `/admin`, and all sub-routes.
 
 ### 2.2 Color System Tokens
@@ -141,7 +141,7 @@ QUEST/
 ```
 [ Phase 0: Setup ]                          ✅ Complete
 [ Phase 1: Foundation & Auth ]              ✅ Complete (Theme + i18n + Left Panel Fix)
-[ Phase 2: Landing Page ]                   ✅ Complete (Full Redesign + Restored How It Works, Testimonials, CTA)
+[ Phase 2: Landing Page ]                   ✅ Complete (Full Redesign + CTA Banner Light/Dark Polish)
 [ Phase 3: Instructor Shell ]               ✅ Complete (Theme + i18n topbar aligned)
 [ Phase 4: Gamification Engine ]            ✅ Complete (Theme + i18n aligned)
 [ Phase 5: Live Session Workspace ]         ✅ Complete (Theme + i18n aligned)
@@ -163,11 +163,10 @@ QUEST/
 - **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
 - **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
 - **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
-- **Home Page Full Redesign & Restored Sections**:
-  - Restored `How It Works` 4-step setup guide (`01 Create Class` → `02 Design Journey` → `03 Launch & Engage` → `04 Track & Improve`).
-  - Restored `Testimonials` community feedback grid with 5-star ratings, educator/parent reviews, and avatar badges.
-  - Restored high-impact `CTA Banner` ("Ready to Transform Your Classroom?") with primary Electric Teal and Amber buttons before Footer.
-  - Maintained all new sections: Hero Preview Card, Public Tracker Search, Gamification Engine Mechanics, Leaderboard Tabs & Top 3 Podium, Achievers Live Feed, Collectible Badges, and Active Challenges.
+- **CTA Banner Light & Dark Mode Responsiveness Polish**:
+  - Refactored `.cta-banner` background to use `--clr-surface-mint` with `--clr-primary-light` borders.
+  - In Light Mode: renders a soft mint background (`#ECFDF5`) with Deep Navy title (`#0F172A`) and high-contrast text.
+  - In Dark Mode: renders a rich obsidian dark mint background (`#133D39`) with bright white title (`#F8FAFC`) and high-contrast text.
   - Verified clean build with 0 TypeScript/HTML/CSS errors.
 
 ---
