@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Direct Dev Testing Enabled (Guards Bypassed) & Auth Theme Fix complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
+> **Current status**: Complete Home Page Redesign (Leaderboards + Search + How It Works + Testimonials + CTA Banner) ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
 
 ---
 
@@ -25,6 +25,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
 - **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A` in light, `#F8FAFC` in dark). Zero low-contrast or light gray text on white or dark surfaces.
 - **Full Arabic & English i18n Across All Shells**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR). Language switcher (`app-lang-toggle`) integrated in Home, Instructor Shell, and Admin Shell topbars.
+- **Complete Home Page Experience**: Includes Hero Preview, Public Tracker Search, Gamification Engine Mechanics, How It Works (01-04 Steps), Interactive Class Leaderboards & Podium, Achievers Live Feed, Collectible Badges, Active Challenges, Community Testimonials, and High-Impact CTA Banner.
 - **Temporary Dev Testing Bypass**: Auth and Role Guards relaxed to allow direct 1-click dev testing across `/instructor`, `/admin`, and all sub-routes.
 
 ### 2.2 Color System Tokens
@@ -140,7 +141,7 @@ QUEST/
 ```
 [ Phase 0: Setup ]                          ✅ Complete
 [ Phase 1: Foundation & Auth ]              ✅ Complete (Theme + i18n + Left Panel Fix)
-[ Phase 2: Landing Page ]                   ✅ Complete (Redesigned with Light & Dark Systems + i18n)
+[ Phase 2: Landing Page ]                   ✅ Complete (Full Redesign + Restored How It Works, Testimonials, CTA)
 [ Phase 3: Instructor Shell ]               ✅ Complete (Theme + i18n topbar aligned)
 [ Phase 4: Gamification Engine ]            ✅ Complete (Theme + i18n aligned)
 [ Phase 5: Live Session Workspace ]         ✅ Complete (Theme + i18n aligned)
@@ -162,14 +163,12 @@ QUEST/
 - **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
 - **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
 - **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
-- **Light & Dark Design Systems, Dev Testing Bypass & Auth Theme Fix**:
-  - Relaxed `authGuard` and `roleGuard` temporarily to return `true` so the user can freely visit and test `/instructor`, `/admin`, `/instructor/gamification`, `/instructor/sessions/s1/live` directly in dev mode without getting redirected to login.
-  - Fixed left brand panel styling in Auth screens (`login.css`, `signup.css`, `forgot-password.css`, `reset-password.css`) using a rich Teal & Navy gradient background with high-contrast `#FFFFFF` typography.
-  - Embedded 45-point Generic Gamification Platform specification in `PROJECT_PLAN.md`.
-  - Applied Light Mode First tokens (`#FAF7F2` warm bg, `#FFFFFF` cards, `#ECFDF5` mint surfaces, `#0F172A` deep navy high-contrast text, `#F59E0B` amber).
-  - Upgraded Primary Teal to vibrant, cheerful `#14B8A6` (Electric Vibrant Teal) for high energy across all components.
-  - Fixed Navbar header background for Dark Mode using `color-mix(in srgb, var(--clr-bg) 85%, transparent)` for seamless dark glassmorphism.
-  - Integrated `app-lang-toggle` into Instructor Shell and Admin Shell topbars alongside `app-theme-toggle` for universal 1-click English/Arabic language switching across all dashboards.
+- **Home Page Full Redesign & Restored Sections**:
+  - Restored `How It Works` 4-step setup guide (`01 Create Class` → `02 Design Journey` → `03 Launch & Engage` → `04 Track & Improve`).
+  - Restored `Testimonials` community feedback grid with 5-star ratings, educator/parent reviews, and avatar badges.
+  - Restored high-impact `CTA Banner` ("Ready to Transform Your Classroom?") with primary Electric Teal and Amber buttons before Footer.
+  - Maintained all new sections: Hero Preview Card, Public Tracker Search, Gamification Engine Mechanics, Leaderboard Tabs & Top 3 Podium, Achievers Live Feed, Collectible Badges, and Active Challenges.
+  - Verified clean build with 0 TypeScript/HTML/CSS errors.
 
 ---
 *This file is the single source of truth for Mada Quest.*

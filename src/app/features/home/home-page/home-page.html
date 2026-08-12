@@ -197,6 +197,25 @@
     </div>
   </section>
 
+  <!-- ── HOW IT WORKS (STEP BY STEP) ────────────────────────── -->
+  <section id="how-it-works" class="section">
+    <div class="section__inner">
+      <div class="section-tag">{{ i18n.t('home.steps.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.steps.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.steps.desc') }}</p>
+
+      <div class="steps-grid">
+        @for (st of steps; track st.num) {
+          <div class="step-card">
+            <div class="step-card__num">{{ st.num }}</div>
+            <h3 class="step-card__title">{{ st.title }}</h3>
+            <p class="step-card__desc">{{ st.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
   <!-- ── INTERACTIVE LEADERBOARD SECTION ────────────────────── -->
   <section id="leaderboard" class="section section--mint">
     <div class="section__inner">
@@ -352,6 +371,50 @@
             </div>
           </div>
         }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TESTIMONIALS (COMMUNITY VOICES) ────────────────────── -->
+  <section id="testimonials" class="section section--mint">
+    <div class="section__inner">
+      <div class="section-tag">{{ i18n.t('home.testimonials.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.testimonials.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.testimonials.desc') }}</p>
+
+      <div class="testimonials-grid">
+        @for (t of testimonials; track t.name) {
+          <div class="testimonial-card">
+            <div class="testimonial-rating">
+              @for (star of [1,2,3,4,5]; track star) { ⭐ }
+            </div>
+            <p class="testimonial-text">"{{ t.text }}"</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">{{ t.avatar }}</div>
+              <div>
+                <strong class="author-name">{{ t.name }}</strong>
+                <span class="author-role">{{ t.role }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA BANNER SECTION ─────────────────────────────────── -->
+  <section class="cta-banner">
+    <div class="cta-banner__inner">
+      <h2 class="cta-banner__title">{{ i18n.t('home.cta.title') }}</h2>
+      <p class="cta-banner__desc">{{ i18n.t('home.cta.desc') }}</p>
+      <div class="cta-banner__actions">
+        <a routerLink="/auth/signup" class="btn-amber btn-hero--lg">
+          {{ i18n.t('home.cta.btn_start') }}
+          <app-icon name="chevron-right" [size]="18" />
+        </a>
+        <a routerLink="/auth/login" class="btn-primary btn-hero--lg">
+          {{ i18n.t('auth.login.submit') }}
+        </a>
       </div>
     </div>
   </section>
