@@ -5,16 +5,24 @@
 -- and 'Demo:' prefix so Step E can remove them cleanly.
 -- =========================================================
 
--- ── 1. DEMO PROFILES (INSTRUCTORS & ADMIN) ───────────────
--- Instructors: d0000000-0000-0000-0000-000000000001, d0000000-0000-0000-0000-000000000002
--- Admin:       d0000000-0000-0000-0000-000000000003
+-- ── 0. DEMO AUTH USERS ───────────────────────────────────
+-- Required because public.profiles.id references auth.users(id)
+INSERT INTO auth.users (
+  id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at
+)
+VALUES
+  ('d0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.instructor1@madaquest.local', '$2a$10$abcdefghijklmnopqrstuu', NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: Prof. Ahmed Hassan"}', false, NOW(), NOW()),
+  ('d0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.instructor2@madaquest.local', '$2a$10$abcdefghijklmnopqrstuu', NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: Eng. Sarah Mansour"}', false, NOW(), NOW()),
+  ('d0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.admin@madaquest.local', '$2a$10$abcdefghijklmnopqrstuu', NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: System Admin Mada"}', false, NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
 
+-- ── 1. DEMO PROFILES (INSTRUCTORS & ADMIN) ───────────────
 INSERT INTO public.profiles (id, full_name, role, is_active, created_at)
 VALUES
   ('d0000000-0000-0000-0000-000000000001', 'Demo: Prof. Ahmed Hassan', 'instructor', true, NOW() - INTERVAL '30 days'),
   ('d0000000-0000-0000-0000-000000000002', 'Demo: Eng. Sarah Mansour', 'instructor', true, NOW() - INTERVAL '25 days'),
   ('d0000000-0000-0000-0000-000000000003', 'Demo: System Admin Mada', 'admin', true, NOW() - INTERVAL '60 days')
-ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name;
+ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name, role = EXCLUDED.role;
 
 -- ── 2. DEMO CLASSES ──────────────────────────────────────
 INSERT INTO public.classes (id, name, subject, grade_level, instructor_id, status, created_at)
