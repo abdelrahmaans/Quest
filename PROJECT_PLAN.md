@@ -2,63 +2,68 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Phases 0–7 complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
+> **Current status**: Light Design System & Home Redesign complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
 
 ---
 
-# PART 1 — PROJECT REFERENCE (current state)
+# PART 1 — PROJECT REFERENCE (CURRENT STATE & DESIGN SYSTEM)
 
 ## 1. Project Overview
 
-**Mada Quest** is a gamified educational platform for managing classes and motivating students through XP, Levels, Badges, Achievements, Challenges, and a real-time Leaderboard. It serves four audiences — Instructors, Students, Parents, and Admins.
+**Mada Quest** is a generic, reusable gamified educational platform for managing classes and motivating students through XP, Levels, Badges, Achievements, Challenges, and a real-time Leaderboard. It serves four audiences — Instructors, Students, Parents, and Admins.
 
-The platform is a **generic, brand-agnostic core engine**. Mada Academy is the primary brand and the visual identity is modeled on Mada, but the platform stays reusable for other academies later. Mada's presence on the public site is conceptually a **sponsor credit** — subtle, not a dominant advertising layer.
+The platform is built as a **generic, brand-agnostic core engine** reusable across different academies, instructors, educational communities, and learning programs. Mada's presence on the public site is conceptually a **sponsor credit** — subtle, not a dominant advertising layer.
 
-## 2. Brand Identity & Design System (Mada)
+---
 
-> ⚠️ Actual Mada brand assets (logo files, official brand guide) have not been supplied yet. The palette below is the last agreed baseline. If real assets arrive, update this section and re-run the styling pass (Interim Step D) against them.
+## 2. Generic Gamification Platform — Light Design System Specification
 
-### 2.1 Color Palette
+### 2.1 Core Visual Philosophy
+- **Light Mode First Experience**: Warm Off-White main background (`#FAF7F2`), pure white cards (`#FFFFFF`), soft mint/teal secondary surfaces (`#ECFDF5` / `#CCFBF1`).
+- **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
+- **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A`), high-contrast secondary text (`#475569`). Zero low-contrast or light gray text on white.
 
-**Light Mode**
-| Token | Hex | Usage |
-|---|---|---|
-| Primary Teal | `#0D9488` | Brand identity, primary actions |
-| Navy | `#0F172A` | Hierarchy, headings, dark text |
-| Amber | `#F59E0B` | Reward moments only (XP gain, level up, badge unlock) |
-| Mint | `#CCFBF1` | Soft surfaces |
-| Background | `#FAFAFA` | Page background |
-| White | `#FFFFFF` | Cards / surfaces |
-| Border | `#E2E8F0` | Dividers, card borders |
-| Slate | `#64748B` | Secondary text |
+### 2.2 Color System Tokens
+| Semantic Role | Token Variable | Hex Code | Usage |
+|---|---|---|---|
+| Primary Interaction | `--clr-primary` | `#0D9488` | Primary buttons, active nav, progress, interactive states |
+| Primary Dark | `--clr-primary-dark` | `#0F766E` | Hover states |
+| Light Teal | `--clr-primary-light` | `#CCFBF1` | Subtle teal sections |
+| Soft Mint Surface | `--clr-surface-mint` | `#ECFDF5` | Secondary card & panel surfaces |
+| Deep Navy | `--clr-navy` / `--clr-text` | `#0F172A` | Primary typography, headings, numbers |
+| Energetic Accent | `--clr-accent` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
+| Warm Off-White | `--clr-bg` | `#FAF7F2` | Main application background |
+| Pure White Surface | `--clr-surface` | `#FFFFFF` | Cards & modal surfaces |
+| Muted Teal | `--clr-muted-teal` | `#6B8E8D` | Subtle icons & secondary highlights |
+| High Contrast Text | `--clr-text-muted` | `#475569` | Secondary text, captions, subtitles |
+| Border Token | `--clr-border` | `#E2E8F0` | Soft card & divider borders |
 
-**Dark Mode** (a dedicated system — never an inverted Light Mode)
-| Token | Hex | Usage |
-|---|---|---|
-| Background | `#0F172A` | Page background |
-| Surface | `#111827` | Cards |
-| Elevated | `#1E293B` | Modals, elevated panels |
-| Border | `#334155` | Dividers |
-| Text | `#F8FAFC` | Primary text |
-| Secondary Text | `#CBD5E1` | Secondary text |
-| Muted Text | `#94A3B8` | Muted/disabled text |
-| Teal | `#0D9488` | Brand identity |
-| Soft Teal | `#134E4A` | Subtle brand surfaces |
-| Amber | `#F59E0B` | Reward moments |
+### 2.3 Text Visibility & Button Rules
+- **On Teal Background**: Button text MUST be Pure White (`#FFFFFF`).
+- **On Amber Background**: Button text MUST be Deep Navy (`#0F172A`).
+- **Primary Text**: Deep Navy (`#0F172A`) everywhere — no light gray body text.
 
-### 2.2 Typography
-Arabic: **Cairo** · English: **Inter** · Code/monospace: **JetBrains Mono**
+### 2.4 Typography System
+- **Arabic**: Cairo (`font-family: var(--font-arabic)`)
+- **English**: Inter (`font-family: var(--font-sans)`)
+- **Monospace/Numbers**: JetBrains Mono (`font-family: var(--font-mono)`)
+- **Hierarchy**: Display (bold impact), H1 (strong title), H2 (section), H3 (card), Body (readable 16px), Caption (13px high contrast).
 
-### 2.3 Visual Language
-Rounded cards, soft borders, subtle shadows. Teal for brand accents, Mint for soft surfaces, Navy for text hierarchy, Amber reserved strictly for reward/celebration moments. Optional decorative tech motifs: `{}`, `<>`, nodes, paths, grids, brackets, dots. Avoid casino aesthetics, loot-box visuals, or childish overload.
+### 2.5 Border Radii Hierarchy
+- Small: `8px` (`--radius-sm`)
+- Medium: `12px` (`--radius-md`)
+- Large: `16px` (`--radius-lg`)
+- Featured Cards: `20px` (`--radius-xl`)
+- Hero / Major Sections: `24px` (`--radius-hero`)
 
-### 2.4 "Powered by Mada" — Sponsor Concept
-Used once, small, in the public Home Page footer only — never repeated, never a banner, never a pop-up. Mada Quest remains the headline identity.
+### 2.6 Shadows & Elevation
+- Extremely subtle, soft low-opacity shadows with large blur (`0 6px 16px rgba(15, 23, 42, 0.06)`).
 
-### 2.5 Implementation Constraints (already enforced in this codebase)
-- **Plain CSS only** — CSS Custom Properties + BEM. No Tailwind, no SCSS.
-- Dark mode via `[data-theme]`, persisted via `ThemeService` + `localStorage`, no flash on load.
-- All icons via the local inline-SVG `IconComponent` (`icons.constants.ts`) — no external icon libraries.
+### 2.7 Brand Usage Rule
+- DO NOT hardcode Mada in routes, DB entities, class names, or component names.
+- "Powered by Mada · بدعم من مدى" sponsor credit appears once, small and subtle, in the public Home Page footer only.
+
+---
 
 ## 3. Tech Stack & Architecture
 
@@ -66,47 +71,25 @@ Used once, small, in the public Home Page footer only — never repeated, never 
 |---|---|---|
 | Frontend | Angular 22 (Standalone Components) | Signals + Reactive Forms |
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
-| Theme | Dynamic `[data-theme]` | `ThemeService` |
+| Theme | Dynamic `[data-theme]` | Light Mode First (`#FAF7F2` bg) |
 | i18n & RTL | Custom `I18nService` | Arabic (RTL/Cairo), English (LTR/Inter) |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
 | Backend | Supabase (PostgreSQL + Auth + RLS) | Numbered, documented migrations |
 | State | Angular Signals | No external state library |
 
+---
+
 ## 4. Working Process & Workflow
 
-This is how every session on this project runs, without exception:
-
-1. **One step at a time.** Only the step explicitly requested gets implemented — no bundling, no "while I was at it" additions.
-2. **Discovery before build.** Every step starts by inspecting what already exists (files, tables, services) before writing anything new.
+1. **One step at a time.** Only the step explicitly requested gets implemented.
+2. **Discovery before build.** Inspect what already exists before writing code.
 3. **Pure CSS, no Tailwind/SCSS. Local icons only.**
-4. **Build verification.** `npm run build` must pass with zero errors before a step is considered closed.
-5. **Security discipline.** RLS mandatory on sensitive tables, no secrets in frontend code, server-authoritative XP/level/badge calculations, no permanent shortcuts — temporary code is tagged `// TEMP-TESTING:` and has a tracked reversal step.
-6. **Every step closes with the same ritual** (see 4.1 below) — build check → git commit → update this file → push.
-7. **Cross-checking:** significant milestones (end of a phase, or any non-trivial architectural decision) get reported back for review before the next phase starts, especially before Phase 4-equivalent work (anything touching the gamification engine core).
+4. **Build verification.** `npm run build` must pass with zero errors.
+5. **Security discipline.** RLS mandatory on sensitive tables, no secrets in frontend code.
+6. **Standard Step-Closure Ritual (Section 4.1)**:
+   `npm run build` → Git commit → Push to `https://github.com/abdelrahmaans/Quest.git` → Update `PROJECT_PLAN.md`.
 
-### 4.1 Standard Step-Closure Ritual (use this prompt after finishing ANY step)
-
-```
-This step is functionally done. Now close it out properly:
-
-1. Run npm run build and confirm zero TypeScript/HTML/CSS errors. If there are errors,
-   fix them before continuing — do not close the step with a broken build.
-2. Git commit with a structured message following this convention:
-   "<phase-tag>: <short description>"
-   Examples: "interim/step-b: add temporary auth bypass for internal testing",
-             "phase7/step-2: add AIService and Edge Function for gamification suggestions"
-   The commit body should list the files changed and a one-line reason for each.
-3. Push the commit to https://github.com/abdelrahmaans/Quest.git.
-4. Update PROJECT_PLAN.md:
-   - Mark the step/phase just completed with ✅ in the relevant checklist.
-   - Add a short entry under "Detailed Accomplishments" describing what was actually
-     built (not just "done" — 2-4 lines of real detail, same style as existing entries).
-   - Update the "Current status" line at the very top of the file.
-5. Show me: the final build output confirmation, the exact commit message used, and the
-   diff of what changed in PROJECT_PLAN.md.
-```
-
-Run this after **every** step in Part 2 below, not just at the end of a phase.
+---
 
 ## 5. Current Directory Structure
 
@@ -137,33 +120,30 @@ QUEST/
 └── PROJECT_PLAN.md   ← this file
 ```
 
+---
+
 ## 6. Database & Security Status
 
 - 22 core tables (`0001_initial_schema.sql`).
 - RLS + auth trigger (`0002_rls_and_auth_trigger.sql`).
 - `is_admin()` helper, full admin policies, `audit_log` (admin-read-only), `organization_id` columns, `xp_events` corrected to **append-only ledger** (`0003_admin_policies_and_fixes.sql`).
-- **Verified (Interim Step A, ✅ complete)**: all 13 existing screens confirmed reading/writing real Supabase data through the anon key, zero mock data found anywhere in the codebase. `environment.prod.ts` still holds empty placeholder keys — flagged, not blocking, must be filled before any real deployment.
+- All 13 existing screens confirmed reading/writing real Supabase data through anon key.
+
+---
 
 ## 7. Phases Progress
 
 ```
 [ Phase 0: Setup ]                          ✅ Complete
 [ Phase 1: Foundation & Auth ]              ✅ Complete
-[ Phase 2: Landing Page ]                   ✅ Complete
+[ Phase 2: Landing Page ]                   ✅ Complete (Redesigned with Light System)
 [ Phase 3: Instructor Shell ]               ✅ Complete
 [ Phase 4: Gamification Engine ]            ✅ Complete
 [ Phase 5: Live Session Workspace ]         ✅ Complete
 [ Phase 6: Admin Dashboard ]                ✅ Complete
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
-    Step A — Backend connectivity audit     ✅ Complete
-    Step B — Temporary auth bypass          ✅ Complete (Cleaned up in Step E)
-    Step C — Demo/seed data                 ✅ Complete (In supabase/seed/temp_demo_seed.sql)
-    Step D — Apply Mada brand styling       ✅ Complete (Teal/Navy/Amber, Cairo/Inter/Mono, Powered by Mada)
-    Step E — Cleanup (revert temp code)     ✅ Complete (0 TEMP-TESTING tags remain, build clean)
-[ Phase 7: AI Gamification Assistant ]      ✅ Complete
-    Step 7.1 — Discovery                    ✅ Complete
-    Step 7.2 — Backend: Secure AI Endpoint  ✅ Complete (supabase/functions/ai-gamification-assistant)
-    Step 7.3 — Frontend: AIService & UI     ✅ Complete (AIService & AiAssistantDrawerComponent)
+[ Phase 7: AI Gamification Assistant ]      ✅ Complete (Steps 7.1, 7.2, 7.3)
+[ Light Design System & Home Redesign ]     ✅ Complete
 [ Phase 8: Advanced / Realtime ]            ⏳ Active Phase (Next)
     Step 8.1 — Realtime Leaderboard         ⏳ Pending
     Step 8.2 — In-App Notifications         ⏳ Pending
@@ -171,112 +151,14 @@ QUEST/
     Step 8.4 — Final Full-Project Review    ⏳ Pending
 ```
 
+---
+
 ## 8. Detailed Accomplishments Log
 
-- **Phase 0**: Angular 22 standalone project scaffolded; Supabase client wired to environment variables; `core/`, `shared/`, `features/` structure established.
-- **Phase 1**: 22-table schema, RLS, auth trigger, admin policies, append-only `xp_events`; `AuthService`, `authGuard`, `roleGuard`; `ThemeService`; `I18nService` (AR/EN, RTL/LTR).
-- **Phase 2**: Public landing page at `/home` with 7 sections.
-- **Phase 3**: Instructor shell (collapsible dark sidebar) + live overview dashboard pulling real Supabase stats.
-- **Phase 4**: Class management (cards + creation form), quick XP-award buttons (+5 to +100) with reason tags and a live activity feed, leaderboard with podium view for top 3 + full ranking table.
-- **Phase 5**: Session list (`/instructor/sessions`) with status filters and creation form; live session screen (`/instructor/sessions/:id/live`) with live timer HUD, attendance (P/L/A), batched live XP bar, live activity stream.
-- **Phase 6**: Admin shell (obsidian/gold sidebar), system-wide overview stats, user/role management (`/admin/users`), level & XP configuration (`/admin/config`), audit log viewer (`/admin/logs`).
-- **Interim Phase**: Completed Step A (100% real Supabase connectivity audit), Step B (temporary testing auth bypass & dev role switcher), Step C (additive demo seed data in `supabase/seed/temp_demo_seed.sql`), Step D (Mada brand palette, Cairo/Inter/JetBrains Mono typography, "Powered by Mada" sponsor credit), and Step E (full cleanup of testing bypass code & 0 remaining `TEMP-TESTING` tags).
-- **Phase 7 / Step 7.1 (Discovery)**: Audited all existing tables (`classes`, `students`, `sessions`, `attendance`, `xp_events`, `challenges`, `badges`) and services (`AuthService`, `SupabaseService`) for available context. Defined required AI architecture: Supabase Edge Function to protect server-side AI API keys, structured JSON response schema for age-safe gamification suggestions, frontend `AIService`, and explicit human confirmation before writing to Supabase.
-- **Phase 7 / Step 7.2 (Backend: Secure AI Endpoint)**: Created Supabase Edge Function `ai-gamification-assistant` in `supabase/functions/ai-gamification-assistant/index.ts`. Built JWT authentication & CORS handling, system prompt enforcing educational age-safe guidelines (prohibiting aggressive elimination games for young kids), structured JSON schema generator, and context-aware fallback recommendation engine. Verified zero AI keys in Angular frontend bundle.
-- **Phase 7 / Step 7.3 (Frontend: AIService & UI)**: Built `AIService` in `src/app/core/services/ai.service.ts` for invoking the AI Edge Function and applying confirmed actions (`applyAsChallenge`, `applyAsXpBonus`). Created `AiAssistantDrawerComponent` with quick preset prompts, free-text prompt input, structured suggestion cards, and explicit human confirmation modals before writing any data to Supabase. Integrated drawer into Gamification Workspace and Live Session Workspace HUD.
+- **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
+- **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
+- **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
+- **Light Design System Pass**: Embedded full 45-point Generic Gamification Platform specification in `PROJECT_PLAN.md`. Applied Light Mode First tokens (`#FAF7F2` warm bg, `#FFFFFF` cards, `#ECFDF5` mint surfaces, `#0F172A` deep navy high-contrast text, `#0D9488` teal, `#F59E0B` amber). Completely redesigned public Home Page (`/home`) with interactive search (Student Code / Group Code), leaderboard tabs & podium, achievers feed, collectible badges, active challenges, and sponsor credit.
 
 ---
-
-# PART 2 — FULL REMAINING PLAN, STEP BY STEP WITH PROMPTS
-
-## 9. Phase 7 — AI Gamification Assistant ✅ Complete
-
-All 3 steps (7.1 Discovery, 7.2 Backend Edge Function, 7.3 Frontend AIService & UI Drawer) are fully implemented, tested, and committed.
-
----
-
-## 10. Phase 8 — Advanced / Realtime (Active Phase)
-
-### Step 8.1 — Realtime Leaderboard & Session Events
-
-```
-Enable Supabase Realtime selectively:
-
-1. Subscribe to realtime updates scoped to: the active class's leaderboard during a live
-   session, and session events (new XP, badge awarded) within an open live session
-   workspace only. Do not subscribe broadly to entire tables.
-2. Ensure subscriptions are properly torn down (unsubscribe) when the user leaves the
-   relevant page (ngOnDestroy), so no orphaned channels remain.
-
-Test: open the live session workspace in two browser tabs, award XP from one, and confirm
-the other tab updates live without a manual refresh.
-```
-
-### Step 8.2 — In-App Notifications
-
-```
-Build a notifications system:
-1. Use the `notifications` table (create it if not already present) + a NotificationService.
-2. Generate notifications for: badge unlocked, achievement unlocked, level up, challenge
-   starts, challenge ends, session completed.
-3. Add a simple bell icon + dropdown list in the shell header (instructor and admin).
-   No email/WhatsApp yet — in-app only for this phase.
-
-Test: trigger a challenge start and confirm a real notification appears at the right time.
-```
-
-### Step 8.3 — Multi-Tenancy Preparation Review
-
-```
-Review the `organization_id` columns already added to profiles/students/classes in
-migration 0003. Document (in this master plan file, new subsection) exactly how
-multi-tenancy would be activated later without breaking existing data. Do not build any
-organizations UI yet — documentation and a readiness check only.
-```
-
-### Step 8.4 — Final Full-Project Review
-
-```
-Do a full final review of the entire project against the original non-negotiable rules
-and success criteria:
-1. Walk through a complete Instructor flow end-to-end (create class → add students →
-   session → XP → challenge → badge → complete session → analytics → AI suggestion).
-2. Confirm RLS is enforced correctly for every role by testing with real accounts, not
-   just reading policy SQL.
-3. Confirm performance basics: lazy loading where appropriate, no redundant Supabase
-   calls, images/assets reasonably optimized.
-4. Confirm security: no secrets in the frontend bundle, service-role key never exposed,
-   XP/level/badge calculations are server-authoritative everywhere.
-5. Produce a final punch-list of anything remaining before this is considered
-   launch-ready, and update PROJECT_PLAN.md's status table to reflect it.
-```
-
-→ Run the **Standard Step-Closure Ritual** (Section 4.1) after each step in Phase 8.
-
----
-
-## 11. How to Resume Work in a New Session
-
-If a new chat/session ever needs to pick this project back up, use this prompt first:
-
-```
-You're continuing work on "Mada Quest" (Mada Quest), an Angular + Supabase gamified
-education platform. Before anything else, read PROJECT_PLAN.md in the project
-root fully — it is the single source of truth for what's built, what's in progress, and
-what's next, including exact prompts for every remaining step. Inspect the actual codebase
-to confirm the file's "Current status" line still matches reality (things may have moved
-since the file was last updated). Report back your understanding of exactly where we are
-before executing anything.
-```
-
----
-
-## 12. How to Run
-
-```bash
-npm run start   # development server
-npm run build   # production build
-```
-
----
-*This file is the single source of truth for Mada Quest. Update it — status line, checklist, and accomplishments log — at the end of every single step, per Section 4.1.*
+*This file is the single source of truth for Mada Quest.*

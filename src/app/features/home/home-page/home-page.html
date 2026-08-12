@@ -1,202 +1,378 @@
-<!-- ══════════════════════════════════════════════════════════
-     Mada Quest — Landing Page
-     ══════════════════════════════════════════════════════════ -->
+<div class="landing">
 
-<!-- ── NAV ─────────────────────────────────────────────── -->
-<nav class="nav">
-  <div class="nav__inner">
-    <a routerLink="/" class="nav__brand">
-      <span class="nav__logo">🎯</span>
-      <span class="nav__name">مدى <strong>Quest</strong></span>
-    </a>
-
-    <div class="nav__actions">
-      <app-lang-toggle />
-      <app-theme-toggle />
-      @if (auth.isAuthenticated()) {
-        <a [routerLink]="auth.postLoginRoute()" class="btn-nav btn-nav--outline">Dashboard</a>
-      } @else {
-        <a routerLink="/auth/login"  class="btn-nav btn-nav--ghost">Sign in</a>
-        <a routerLink="/auth/signup" class="btn-nav btn-nav--primary">Get started</a>
-      }
-    </div>
-  </div>
-</nav>
-
-<!-- ── HERO ─────────────────────────────────────────────── -->
-<section class="hero">
-  <div class="hero__bg">
-    <div class="hero__orb hero__orb--1"></div>
-    <div class="hero__orb hero__orb--2"></div>
-    <div class="hero__orb hero__orb--3"></div>
-    <div class="hero__grid"></div>
-  </div>
-
-  <div class="hero__content">
-    <div class="hero__badge">
-      <app-icon name="zap" [size]="13" />
-      Gamified Learning Platform
-    </div>
-
-    <h1 class="hero__title">
-      Turn Every Lesson<br>
-      Into an <span class="hero__highlight">Epic Quest</span>
-    </h1>
-
-    <p class="hero__desc">
-      Mada Quest brings XP points, badges, leaderboards, and live challenges
-      to your classroom — making learning irresistible for every student.
-    </p>
-
-    <div class="hero__cta">
-      <a routerLink="/auth/signup" class="btn-hero btn-hero--primary">
-        Start for free
-        <app-icon name="chevron-right" [size]="18" />
+  <!-- ── HEADER / NAVBAR ──────────────────────────────────── -->
+  <header class="header">
+    <div class="header__inner">
+      <a routerLink="/" class="header__brand">
+        <span class="header__logo">🎯</span>
+        <span class="header__title">Quest <strong>Engine</strong></span>
       </a>
-      <a routerLink="/auth/login" class="btn-hero btn-hero--ghost">
-        See a demo
-      </a>
-    </div>
 
-    <p class="hero__sub">No credit card required · Free for up to 30 students</p>
-  </div>
+      <nav class="header__nav" [class.header__nav--open]="menuOpen()">
+        <a (click)="scrollToSection('features')" class="nav-link">Features</a>
+        <a (click)="scrollToSection('leaderboard')" class="nav-link">Leaderboard</a>
+        <a (click)="scrollToSection('badges')" class="nav-link">Badges</a>
+        <a (click)="scrollToSection('challenges')" class="nav-link">Challenges</a>
+        <a (click)="scrollToSection('search')" class="nav-link">Track Progress</a>
+      </nav>
 
-  <!-- Floating XP card -->
-  <div class="hero__card hero__card--xp" aria-hidden="true">
-    <div class="xp-card">
-      <div class="xp-card__header">
-        <span class="xp-card__name">Ahmed K.</span>
-        <span class="xp-card__level">Lv. 12</span>
+      <div class="header__actions">
+        <app-theme-toggle />
+        <app-lang-toggle />
+
+        @if (auth.isAuthenticated()) {
+          <a [routerLink]="auth.postLoginRoute()" class="btn-primary">
+            Dashboard
+          </a>
+        } @else {
+          <a routerLink="/auth/login" class="nav-link">Sign in</a>
+          <a routerLink="/auth/signup" class="btn-primary">Get started</a>
+        }
+
+        <button
+          type="button"
+          class="header__hamburger"
+          (click)="menuOpen.set(!menuOpen())"
+          aria-label="Toggle menu"
+        >
+          <app-icon [name]="menuOpen() ? 'x' : 'zap'" [size]="22" />
+        </button>
       </div>
-      <div class="xp-card__bar-wrap">
-        <div class="xp-card__bar" style="width: 72%"></div>
-      </div>
-      <span class="xp-card__text">3,600 / 5,000 XP</span>
     </div>
-  </div>
+  </header>
 
-  <!-- Floating badge card -->
-  <div class="hero__card hero__card--badge" aria-hidden="true">
-    <div class="badge-card">
-      <span class="badge-card__icon">🏅</span>
-      <div>
-        <p class="badge-card__title">Badge Unlocked!</p>
-        <p class="badge-card__name">First Challenge</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── STATS BAR ─────────────────────────────────────────── -->
-<section class="stats">
-  <div class="stats__inner">
-    @for (s of stats; track s.label) {
-      <div class="stat">
-        <span class="stat__value">{{ s.value }}</span>
-        <span class="stat__label">{{ s.label }}</span>
-      </div>
-    }
-  </div>
-</section>
-
-<!-- ── FEATURES ──────────────────────────────────────────── -->
-<section class="section" id="features">
-  <div class="section__inner">
-    <div class="section__header">
-      <span class="section__eyebrow">Everything you need</span>
-      <h2 class="section__title">A full Gamification engine<br>built for education</h2>
-      <p class="section__desc">
-        Everything an instructor needs to create engaging, competitive, and
-        rewarding learning experiences — in one beautiful platform.
-      </p>
-    </div>
-
-    <div class="features-grid">
-      @for (f of features; track f.title) {
-        <article class="feature-card">
-          <div class="feature-card__icon" [style.--fc-color]="f.color">
-            <app-icon [name]="f.icon" [size]="22" />
-          </div>
-          <h3 class="feature-card__title">{{ f.title }}</h3>
-          <p class="feature-card__desc">{{ f.desc }}</p>
-        </article>
-      }
-    </div>
-  </div>
-</section>
-
-<!-- ── HOW IT WORKS ──────────────────────────────────────── -->
-<section class="section section--dark" id="how-it-works">
-  <div class="section__inner">
-    <div class="section__header section__header--light">
-      <span class="section__eyebrow section__eyebrow--teal">Simple process</span>
-      <h2 class="section__title section__title--light">Up and running<br>in four steps</h2>
-    </div>
-
-    <div class="steps-grid">
-      @for (s of steps; track s.num) {
-        <div class="step">
-          <span class="step__num">{{ s.num }}</span>
-          <h3 class="step__title">{{ s.title }}</h3>
-          <p class="step__desc">{{ s.desc }}</p>
+  <!-- ── HERO SECTION ──────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero__inner">
+      <div class="hero__content">
+        <div class="hero__badge">
+          <app-icon name="sparkles" [size]="14" />
+          <span>Generic Gamification Engine</span>
         </div>
-      }
-    </div>
-  </div>
-</section>
 
-<!-- ── TESTIMONIALS ──────────────────────────────────────── -->
-<section class="section" id="testimonials">
-  <div class="section__inner">
-    <div class="section__header">
-      <span class="section__eyebrow">Real stories</span>
-      <h2 class="section__title">Loved by educators<br>across the region</h2>
-    </div>
+        <h1 class="hero__title">
+          Gamified Learning Engine<br>
+          <span class="text-teal">for Every Academy.</span>
+        </h1>
 
-    <div class="testimonials-grid">
-      @for (t of testimonials; track t.name) {
-        <blockquote class="testimonial">
-          <p class="testimonial__text">"{{ t.text }}"</p>
-          <footer class="testimonial__footer">
-            <div class="testimonial__avatar">{{ t.avatar }}</div>
-            <div>
-              <p class="testimonial__name">{{ t.name }}</p>
-              <p class="testimonial__role">{{ t.role }}</p>
+        <p class="hero__desc">
+          Empower students from ages 5 to 16+ through real-time XP, levels, collectible badges, active challenges, and positive leaderboard competition.
+        </p>
+
+        <div class="hero__cta">
+          <button type="button" class="btn-primary btn-hero--lg" (click)="scrollToSection('leaderboard')">
+            Explore Leaderboards
+            <app-icon name="chevron-right" [size]="18" />
+          </button>
+
+          <button type="button" class="btn-amber btn-hero--lg" (click)="scrollToSection('search')">
+            Track Progress
+            <app-icon name="target" [size]="18" />
+          </button>
+        </div>
+
+        <div class="hero__stats">
+          @for (s of stats; track s.label) {
+            <div class="stat-pill">
+              <span class="stat-pill__val">{{ s.value }}</span>
+              <span class="stat-pill__lbl">{{ s.label }}</span>
             </div>
-          </footer>
-        </blockquote>
-      }
-    </div>
-  </div>
-</section>
+          }
+        </div>
+      </div>
 
-<!-- ── CTA ───────────────────────────────────────────────── -->
-<section class="cta-section">
-  <div class="cta-section__inner">
-    <div class="cta-section__orb"></div>
-    <h2 class="cta-section__title">Ready to transform<br>your classroom?</h2>
-    <p class="cta-section__desc">
-      Join 500+ instructors already using Mada Quest to make learning unforgettable.
-    </p>
-    <a routerLink="/auth/signup" class="btn-hero btn-hero--primary btn-hero--lg">
-      Create your free account
-      <app-icon name="chevron-right" [size]="20" />
-    </a>
-  </div>
-</section>
+      <!-- Preview Gamification Card -->
+      <div class="hero__visual">
+        <div class="preview-card">
+          <div class="preview-card__header">
+            <div class="preview-user">
+              <div class="avatar-circle">OK</div>
+              <div>
+                <strong class="user-name">Omar Khaled</strong>
+                <span class="user-track">Web Development & UI Quest</span>
+              </div>
+            </div>
+            <div class="rank-badge">🏆 Rank #4</div>
+          </div>
 
-<!-- ── FOOTER ────────────────────────────────────────────── -->
-<footer class="footer">
-  <div class="footer__inner">
-    <div class="footer__brand">
-      <span class="footer__logo">🎯</span>
-      <span class="footer__name">مدى <strong>Quest</strong></span>
+          <div class="preview-stats-grid">
+            <div class="stat-box">
+              <span class="stat-box__label">XP Points</span>
+              <span class="stat-box__value text-amber">1,450 XP</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-box__label">Current Level</span>
+              <span class="stat-box__value text-teal">Level 4</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-box__label">Streak</span>
+              <span class="stat-box__value text-amber">🔥 7 Days</span>
+            </div>
+          </div>
+
+          <div class="preview-progress">
+            <div class="progress-info">
+              <span>Level 4 Progress</span>
+              <span>1,450 / 2,000 XP</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: 72.5%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <p class="footer__copy">© 2025 Mada Quest · Built for educators, by educators.</p>
-    <span class="footer__sponsor">Powered by Mada · بدعم من مدى</span>
-    <nav class="footer__links">
-      <a routerLink="/auth/login">Sign in</a>
-      <a routerLink="/auth/signup">Get started</a>
-    </nav>
-  </div>
-</footer>
+  </section>
+
+  <!-- ── PUBLIC SEARCH SECTION (TRACK YOUR PROGRESS) ────────── -->
+  <section id="search" class="section section--mint">
+    <div class="section__inner text-center">
+      <div class="section-tag">Public Tracker</div>
+      <h2 class="section-title">Find Your Progress</h2>
+      <p class="section-desc">Search instant rankings and progress by Student Code or Group Code.</p>
+
+      <div class="search-card">
+        <div class="search-tabs">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.tab-btn--active]="searchTab() === 'student'"
+            (click)="searchTab.set('student')"
+          >
+            Student Code (e.g. ST-26-001)
+          </button>
+
+          <button
+            type="button"
+            class="tab-btn"
+            [class.tab-btn--active]="searchTab() === 'group'"
+            (click)="searchTab.set('group')"
+          >
+            Group Code (e.g. GR-26-014)
+          </button>
+        </div>
+
+        <div class="search-input-wrap">
+          <input
+            type="text"
+            class="search-input"
+            [placeholder]="searchTab() === 'student' ? 'Enter Student Code (e.g. ST-26-001)...' : 'Enter Group Code (e.g. GR-26-014)...'"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            (keyup.enter)="performSearch()"
+          />
+          <button type="button" class="btn-primary" (click)="performSearch()">
+            Lookup Progress
+          </button>
+        </div>
+
+        @if (searchFeedback(); as fb) {
+          <div class="search-result-card">
+            <h4><app-icon name="check-circle" [size]="18" /> {{ fb.title }}</h4>
+            <p>{{ fb.details }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURED GAMIFICATION MECHANICS ────────────────────── -->
+  <section id="features" class="section">
+    <div class="section__inner">
+      <div class="section-tag">Gamification Engine</div>
+      <h2 class="section-title">Connected Learning Mechanics</h2>
+      <p class="section-desc">Designed to motivate consistent study habits and active participation.</p>
+
+      <div class="features-grid">
+        @for (f of features; track f.title) {
+          <div class="feature-card">
+            <div class="feature-card__icon" [style.color]="f.color">
+              <app-icon [name]="f.icon" [size]="24" />
+            </div>
+            <h3 class="feature-card__title">{{ f.title }}</h3>
+            <p class="feature-card__desc">{{ f.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INTERACTIVE LEADERBOARD SECTION ────────────────────── -->
+  <section id="leaderboard" class="section section--mint">
+    <div class="section__inner">
+      <div class="section-tag">Live Standings</div>
+      <h2 class="section-title">Class Leaderboards</h2>
+      <p class="section-desc">Positive, educational competition that celebrates improvement and effort.</p>
+
+      <!-- Leaderboard Filter Tabs -->
+      <div class="leaderboard-tabs">
+        <button type="button" class="l-tab" [class.l-tab--active]="leaderboardTab() === 'all'" (click)="leaderboardTab.set('all')">All Time</button>
+        <button type="button" class="l-tab" [class.l-tab--active]="leaderboardTab() === 'week'" (click)="leaderboardTab.set('week')">This Week</button>
+        <button type="button" class="l-tab" [class.l-tab--active]="leaderboardTab() === 'month'" (click)="leaderboardTab.set('month')">This Month</button>
+        <button type="button" class="l-tab" [class.l-tab--active]="leaderboardTab() === 'track'" (click)="leaderboardTab.set('track')">By Track</button>
+      </div>
+
+      <!-- Top 3 Podium View -->
+      <div class="podium-grid">
+        <!-- 2nd Place -->
+        <div class="podium-card podium-card--silver">
+          <div class="podium-rank">2</div>
+          <div class="podium-avatar">HI</div>
+          <h4 class="podium-name">Hamza Ibrahim</h4>
+          <span class="podium-track">Robotics & AI</span>
+          <span class="podium-xp text-amber">1,800 XP</span>
+        </div>
+
+        <!-- 1st Place -->
+        <div class="podium-card podium-card--gold">
+          <div class="crown-icon">👑</div>
+          <div class="podium-rank">1</div>
+          <div class="podium-avatar">FA</div>
+          <h4 class="podium-name">Farida Amer</h4>
+          <span class="podium-track">Advanced Python</span>
+          <span class="podium-xp text-amber">2,100 XP</span>
+        </div>
+
+        <!-- 3rd Place -->
+        <div class="podium-card podium-card--bronze">
+          <div class="podium-rank">3</div>
+          <div class="podium-avatar">KN</div>
+          <h4 class="podium-name">Karim Nabil</h4>
+          <span class="podium-track">Advanced Python</span>
+          <span class="podium-xp text-amber">1,650 XP</span>
+        </div>
+      </div>
+
+      <!-- Full Table -->
+      <div class="table-card">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Student</th>
+              <th>Track</th>
+              <th>Streak</th>
+              <th>Badges</th>
+              <th class="text-end">XP Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of leaderboardUsers; track u.rank) {
+              <tr>
+                <td><span class="rank-chip" [class.rank-chip--top]="u.rank <= 3">#{{ u.rank }}</span></td>
+                <td>
+                  <div class="table-user">
+                    <div class="table-avatar">{{ u.avatar }}</div>
+                    <strong>{{ u.name }}</strong>
+                  </div>
+                </td>
+                <td>{{ u.classOrTrack }}</td>
+                <td><span class="streak-text">🔥 {{ u.streak }} Days</span></td>
+                <td>🏅 {{ u.badgesCount }}</td>
+                <td class="text-end"><strong class="xp-text text-amber">{{ u.xp }} XP</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURED ACHIEVERS (LIVE FEED) ─────────────────────── -->
+  <section class="section">
+    <div class="section__inner">
+      <div class="section-tag">Live Feed</div>
+      <h2 class="section-title">Featured Achievers</h2>
+      <p class="section-desc">Recent student milestones, badge unlocks, and challenge wins.</p>
+
+      <div class="achievers-grid">
+        @for (item of achieversFeed; track item.id) {
+          <div class="achiever-card">
+            <div class="achiever-icon">
+              <app-icon [name]="item.icon" [size]="20" />
+            </div>
+            <div class="achiever-info">
+              <strong class="achiever-name">{{ item.user }}</strong>
+              <span class="achiever-title">{{ item.title }}</span>
+            </div>
+            <div class="achiever-meta">
+              <span class="achiever-xp">+{{ item.xpBonus }} XP</span>
+              <span class="achiever-time">{{ item.timeAgo }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BADGES SHOWCASE ────────────────────────────────────── -->
+  <section id="badges" class="section section--mint">
+    <div class="section__inner">
+      <div class="section-tag">Collectible Rewards</div>
+      <h2 class="section-title">Badges & Achievements</h2>
+      <p class="section-desc">Collectible badges that reward curiosity, punctuality, and peer collaboration.</p>
+
+      <div class="badges-grid">
+        @for (b of badgesList; track b.id) {
+          <div class="badge-card">
+            <div class="badge-card__icon">
+              <app-icon [name]="b.icon" [size]="24" />
+            </div>
+            <span class="badge-rarity" [attr.data-rarity]="b.rarity">{{ b.rarity }}</span>
+            <h4 class="badge-card__name">{{ b.name }}</h4>
+            <p class="badge-card__desc">{{ b.desc }}</p>
+            <span class="badge-card__xp">+{{ b.xp }} XP Reward</span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ACTIVE CHALLENGES ──────────────────────────────────── -->
+  <section id="challenges" class="section">
+    <div class="section__inner">
+      <div class="section-tag">Live Competitions</div>
+      <h2 class="section-title">Active Challenges</h2>
+      <p class="section-desc">Time-sensitive quests created by instructors to boost classroom engagement.</p>
+
+      <div class="challenges-grid">
+        @for (c of activeChallenges; track c.id) {
+          <div class="challenge-card">
+            <div class="challenge-header">
+              <span class="challenge-track">{{ c.track }}</span>
+              <span class="challenge-timer"><app-icon name="clock" [size]="14" /> {{ c.timeLeft }}</span>
+            </div>
+            <h3 class="challenge-title">{{ c.title }}</h3>
+            <div class="challenge-footer">
+              <div class="challenge-rewards">
+                <span class="reward-tag reward-tag--xp">+{{ c.xpReward }} XP</span>
+                <span class="reward-tag reward-tag--badge">🏅 {{ c.badgeName }}</span>
+              </div>
+              <button type="button" class="btn-primary" (click)="scrollToSection('search')">View Challenge</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <span class="footer__logo">🎯</span>
+        <span class="footer__name">Quest <strong>Engine</strong></span>
+      </div>
+      <p class="footer__copy">© 2025 Quest Engine · Generic Gamification Platform.</p>
+      
+      <!-- Subtle Promotional Sponsor Credit -->
+      <span class="footer__sponsor">Powered by Mada · بدعم من مدى</span>
+
+      <nav class="footer__links">
+        <a routerLink="/auth/login">Sign in</a>
+        <a routerLink="/auth/signup">Get started</a>
+      </nav>
+    </div>
+  </footer>
+
+</div>
