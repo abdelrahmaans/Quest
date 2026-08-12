@@ -517,7 +517,7 @@
   gap: .375rem;
 }
 
-.podium-card--gold { border-color: var(--clr-accent); background: #FFFDF5; transform: scale(1.05); }
+.podium-card--gold { border-color: var(--clr-accent); background: color-mix(in srgb, var(--clr-accent) 12%, var(--clr-surface)); transform: scale(1.05); }
 .podium-card--silver { border-color: #94A3B8; }
 .podium-card--bronze { border-color: #D97706; }
 

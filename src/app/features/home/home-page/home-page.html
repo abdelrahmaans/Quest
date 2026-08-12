@@ -47,26 +47,26 @@
       <div class="hero__content">
         <div class="hero__badge">
           <app-icon name="sparkles" [size]="14" />
-          <span>Generic Gamification Engine</span>
+          <span>{{ i18n.t('home.hero.badge') }}</span>
         </div>
 
         <h1 class="hero__title">
-          Gamified Learning Engine<br>
-          <span class="text-teal">for Every Academy.</span>
+          {{ i18n.t('home.hero.title_part1') }}<br>
+          <span class="text-teal">{{ i18n.t('home.hero.title_part2') }}</span>
         </h1>
 
         <p class="hero__desc">
-          Empower students from ages 5 to 16+ through real-time XP, levels, collectible badges, active challenges, and positive leaderboard competition.
+          {{ i18n.t('home.hero.desc') }}
         </p>
 
         <div class="hero__cta">
           <button type="button" class="btn-primary btn-hero--lg" (click)="scrollToSection('leaderboard')">
-            Explore Leaderboards
+            {{ i18n.t('home.hero.btn_leaderboard') }}
             <app-icon name="chevron-right" [size]="18" />
           </button>
 
           <button type="button" class="btn-amber btn-hero--lg" (click)="scrollToSection('search')">
-            Track Progress
+            {{ i18n.t('home.hero.btn_search') }}
             <app-icon name="target" [size]="18" />
           </button>
         </div>
@@ -127,9 +127,9 @@
   <!-- ── PUBLIC SEARCH SECTION (TRACK YOUR PROGRESS) ────────── -->
   <section id="search" class="section section--mint">
     <div class="section__inner text-center">
-      <div class="section-tag">Public Tracker</div>
-      <h2 class="section-title">Find Your Progress</h2>
-      <p class="section-desc">Search instant rankings and progress by Student Code or Group Code.</p>
+      <div class="section-tag">{{ i18n.t('home.search.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.search.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.search.desc') }}</p>
 
       <div class="search-card">
         <div class="search-tabs">
@@ -139,7 +139,7 @@
             [class.tab-btn--active]="searchTab() === 'student'"
             (click)="searchTab.set('student')"
           >
-            Student Code (e.g. ST-26-001)
+            {{ i18n.t('home.search.tab_student') }}
           </button>
 
           <button
@@ -148,7 +148,7 @@
             [class.tab-btn--active]="searchTab() === 'group'"
             (click)="searchTab.set('group')"
           >
-            Group Code (e.g. GR-26-014)
+            {{ i18n.t('home.search.tab_group') }}
           </button>
         </div>
 
@@ -156,13 +156,13 @@
           <input
             type="text"
             class="search-input"
-            [placeholder]="searchTab() === 'student' ? 'Enter Student Code (e.g. ST-26-001)...' : 'Enter Group Code (e.g. GR-26-014)...'"
+            [placeholder]="searchTab() === 'student' ? i18n.t('home.search.placeholder_student') : i18n.t('home.search.placeholder_group')"
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             (keyup.enter)="performSearch()"
           />
           <button type="button" class="btn-primary" (click)="performSearch()">
-            Lookup Progress
+            {{ i18n.t('home.search.btn') }}
           </button>
         </div>
 
@@ -179,9 +179,9 @@
   <!-- ── FEATURED GAMIFICATION MECHANICS ────────────────────── -->
   <section id="features" class="section">
     <div class="section__inner">
-      <div class="section-tag">Gamification Engine</div>
-      <h2 class="section-title">Connected Learning Mechanics</h2>
-      <p class="section-desc">Designed to motivate consistent study habits and active participation.</p>
+      <div class="section-tag">{{ i18n.t('home.features.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.features.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.features.desc') }}</p>
 
       <div class="features-grid">
         @for (f of features; track f.title) {
@@ -200,9 +200,9 @@
   <!-- ── INTERACTIVE LEADERBOARD SECTION ────────────────────── -->
   <section id="leaderboard" class="section section--mint">
     <div class="section__inner">
-      <div class="section-tag">Live Standings</div>
-      <h2 class="section-title">Class Leaderboards</h2>
-      <p class="section-desc">Positive, educational competition that celebrates improvement and effort.</p>
+      <div class="section-tag">{{ i18n.t('home.leaderboard.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.leaderboard.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.leaderboard.desc') }}</p>
 
       <!-- Leaderboard Filter Tabs -->
       <div class="leaderboard-tabs">
@@ -281,9 +281,9 @@
   <!-- ── FEATURED ACHIEVERS (LIVE FEED) ─────────────────────── -->
   <section class="section">
     <div class="section__inner">
-      <div class="section-tag">Live Feed</div>
-      <h2 class="section-title">Featured Achievers</h2>
-      <p class="section-desc">Recent student milestones, badge unlocks, and challenge wins.</p>
+      <div class="section-tag">{{ i18n.t('home.achievers.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.achievers.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.achievers.desc') }}</p>
 
       <div class="achievers-grid">
         @for (item of achieversFeed; track item.id) {
@@ -308,9 +308,9 @@
   <!-- ── BADGES SHOWCASE ────────────────────────────────────── -->
   <section id="badges" class="section section--mint">
     <div class="section__inner">
-      <div class="section-tag">Collectible Rewards</div>
-      <h2 class="section-title">Badges & Achievements</h2>
-      <p class="section-desc">Collectible badges that reward curiosity, punctuality, and peer collaboration.</p>
+      <div class="section-tag">{{ i18n.t('home.badges.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.badges.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.badges.desc') }}</p>
 
       <div class="badges-grid">
         @for (b of badgesList; track b.id) {
@@ -331,9 +331,9 @@
   <!-- ── ACTIVE CHALLENGES ──────────────────────────────────── -->
   <section id="challenges" class="section">
     <div class="section__inner">
-      <div class="section-tag">Live Competitions</div>
-      <h2 class="section-title">Active Challenges</h2>
-      <p class="section-desc">Time-sensitive quests created by instructors to boost classroom engagement.</p>
+      <div class="section-tag">{{ i18n.t('home.challenges.tag') }}</div>
+      <h2 class="section-title">{{ i18n.t('home.challenges.title') }}</h2>
+      <p class="section-desc">{{ i18n.t('home.challenges.desc') }}</p>
 
       <div class="challenges-grid">
         @for (c of activeChallenges; track c.id) {
@@ -363,14 +363,14 @@
         <span class="footer__logo">🎯</span>
         <span class="footer__name">Quest <strong>Engine</strong></span>
       </div>
-      <p class="footer__copy">© 2025 Quest Engine · Generic Gamification Platform.</p>
+      <p class="footer__copy">{{ i18n.t('home.footer.copy') }}</p>
       
       <!-- Subtle Promotional Sponsor Credit -->
-      <span class="footer__sponsor">Powered by Mada · بدعم من مدى</span>
+      <span class="footer__sponsor">{{ i18n.t('home.footer.sponsor') }}</span>
 
       <nav class="footer__links">
-        <a routerLink="/auth/login">Sign in</a>
-        <a routerLink="/auth/signup">Get started</a>
+        <a routerLink="/auth/login">{{ i18n.t('auth.login.submit') }}</a>
+        <a routerLink="/auth/signup">{{ i18n.t('auth.signup.submit') }}</a>
       </nav>
     </div>
   </footer>

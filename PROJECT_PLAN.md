@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Light Design System & Home Redesign complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
+> **Current status**: Light & Dark Systems & Complete Arabic i18n complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
 
 ---
 
@@ -16,32 +16,34 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 
 ---
 
-## 2. Generic Gamification Platform — Light Design System Specification
+## 2. Generic Gamification Platform — Light & Dark Design System Specification
 
 ### 2.1 Core Visual Philosophy
 - **Light Mode First Experience**: Warm Off-White main background (`#FAF7F2`), pure white cards (`#FFFFFF`), soft mint/teal secondary surfaces (`#ECFDF5` / `#CCFBF1`).
+- **Dark Mode System**: Obsidian Navy background (`#0F172A`), dark cards (`#111827`), high-contrast text (`#F8FAFC`), mapped `--clr-navy` variable ensuring 100% heading text contrast in dark mode.
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
-- **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A`), high-contrast secondary text (`#475569`). Zero low-contrast or light gray text on white.
+- **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A` in light, `#F8FAFC` in dark). Zero low-contrast or light gray text on white or dark surfaces.
+- **Full Arabic & English i18n**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR).
 
 ### 2.2 Color System Tokens
-| Semantic Role | Token Variable | Hex Code | Usage |
-|---|---|---|---|
-| Primary Interaction | `--clr-primary` | `#0D9488` | Primary buttons, active nav, progress, interactive states |
-| Primary Dark | `--clr-primary-dark` | `#0F766E` | Hover states |
-| Light Teal | `--clr-primary-light` | `#CCFBF1` | Subtle teal sections |
-| Soft Mint Surface | `--clr-surface-mint` | `#ECFDF5` | Secondary card & panel surfaces |
-| Deep Navy | `--clr-navy` / `--clr-text` | `#0F172A` | Primary typography, headings, numbers |
-| Energetic Accent | `--clr-accent` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
-| Warm Off-White | `--clr-bg` | `#FAF7F2` | Main application background |
-| Pure White Surface | `--clr-surface` | `#FFFFFF` | Cards & modal surfaces |
-| Muted Teal | `--clr-muted-teal` | `#6B8E8D` | Subtle icons & secondary highlights |
-| High Contrast Text | `--clr-text-muted` | `#475569` | Secondary text, captions, subtitles |
-| Border Token | `--clr-border` | `#E2E8F0` | Soft card & divider borders |
+| Semantic Role | Token Variable | Hex Code (Light) | Hex Code (Dark) | Usage |
+|---|---|---|---|---|
+| Primary Interaction | `--clr-primary` | `#0D9488` | `#0D9488` | Primary buttons, active nav, progress, interactive states |
+| Primary Dark | `--clr-primary-dark` | `#0F766E` | `#0F766E` | Hover states |
+| Light Teal | `--clr-primary-light` | `#CCFBF1` | `#1E4E49` | Subtle teal sections |
+| Soft Mint Surface | `--clr-surface-mint` | `#ECFDF5` | `#133D39` | Secondary card & panel surfaces |
+| Deep Navy / High Contrast | `--clr-navy` / `--clr-text` | `#0F172A` | `#F8FAFC` | Primary typography, headings, numbers |
+| Energetic Accent | `--clr-accent` | `#F59E0B` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
+| Main Background | `--clr-bg` | `#FAF7F2` | `#0F172A` | Main application background |
+| Surface / Cards | `--clr-surface` | `#FFFFFF` | `#111827` | Cards & modal surfaces |
+| Muted Teal | `--clr-muted-teal` | `#6B8E8D` | `#6B8E8D` | Subtle icons & secondary highlights |
+| High Contrast Text | `--clr-text-muted` | `#475569` | `#CBD5E1` | Secondary text, captions, subtitles |
+| Border Token | `--clr-border` | `#E2E8F0` | `#334155` | Soft card & divider borders |
 
 ### 2.3 Text Visibility & Button Rules
 - **On Teal Background**: Button text MUST be Pure White (`#FFFFFF`).
 - **On Amber Background**: Button text MUST be Deep Navy (`#0F172A`).
-- **Primary Text**: Deep Navy (`#0F172A`) everywhere — no light gray body text.
+- **Primary Text**: Deep Navy (`#0F172A` in light, `#F8FAFC` in dark) everywhere — no unreadable text.
 
 ### 2.4 Typography System
 - **Arabic**: Cairo (`font-family: var(--font-arabic)`)
@@ -71,8 +73,8 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 |---|---|---|
 | Frontend | Angular 22 (Standalone Components) | Signals + Reactive Forms |
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
-| Theme | Dynamic `[data-theme]` | Light Mode First (`#FAF7F2` bg) |
-| i18n & RTL | Custom `I18nService` | Arabic (RTL/Cairo), English (LTR/Inter) |
+| Theme | Dynamic `[data-theme]` | Light Mode First (`#FAF7F2` bg) + Dark System |
+| i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
 | Backend | Supabase (PostgreSQL + Auth + RLS) | Numbered, documented migrations |
 | State | Angular Signals | No external state library |
@@ -102,7 +104,7 @@ QUEST/
 │   │   │   ├── guards/ (auth.guard.ts, role.guard.ts)
 │   │   │   ├── interceptors/ (auth.interceptor.ts)
 │   │   │   ├── models/ (role.enum.ts, user.model.ts)
-│   │   │   └── services/ (supabase.service.ts, ai.service.ts, theme.service.ts, i18n.service.ts)
+│   │   │   └── services/ (supabase.service.ts, ai.service.ts, theme.service.ts, i18n.service.ts, translations.ts)
 │   │   ├── shared/ui/ (icon/, ai-assistant-drawer/, theme-toggle.ts, lang-toggle.ts)
 │   │   └── features/
 │   │       ├── auth/ (login, signup, forgot-password, reset-password)
@@ -136,14 +138,14 @@ QUEST/
 ```
 [ Phase 0: Setup ]                          ✅ Complete
 [ Phase 1: Foundation & Auth ]              ✅ Complete
-[ Phase 2: Landing Page ]                   ✅ Complete (Redesigned with Light System)
+[ Phase 2: Landing Page ]                   ✅ Complete (Redesigned with Light & Dark Systems + i18n)
 [ Phase 3: Instructor Shell ]               ✅ Complete
 [ Phase 4: Gamification Engine ]            ✅ Complete
 [ Phase 5: Live Session Workspace ]         ✅ Complete
 [ Phase 6: Admin Dashboard ]                ✅ Complete
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
 [ Phase 7: AI Gamification Assistant ]      ✅ Complete (Steps 7.1, 7.2, 7.3)
-[ Light Design System & Home Redesign ]     ✅ Complete
+[ Light & Dark Systems & i18n Pass ]        ✅ Complete
 [ Phase 8: Advanced / Realtime ]            ⏳ Active Phase (Next)
     Step 8.1 — Realtime Leaderboard         ⏳ Pending
     Step 8.2 — In-App Notifications         ⏳ Pending
@@ -158,7 +160,11 @@ QUEST/
 - **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
 - **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
 - **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
-- **Light Design System Pass**: Embedded full 45-point Generic Gamification Platform specification in `PROJECT_PLAN.md`. Applied Light Mode First tokens (`#FAF7F2` warm bg, `#FFFFFF` cards, `#ECFDF5` mint surfaces, `#0F172A` deep navy high-contrast text, `#0D9488` teal, `#F59E0B` amber). Completely redesigned public Home Page (`/home`) with interactive search (Student Code / Group Code), leaderboard tabs & podium, achievers feed, collectible badges, active challenges, and sponsor credit.
+- **Light & Dark Design Systems & Full Arabic i18n Pass**:
+  - Embedded 45-point Generic Gamification Platform specification in `PROJECT_PLAN.md`.
+  - Applied Light Mode First tokens (`#FAF7F2` warm bg, `#FFFFFF` cards, `#ECFDF5` mint surfaces, `#0F172A` deep navy high-contrast text, `#0D9488` teal, `#F59E0B` amber).
+  - Fixed Dark Mode heading contrast by dynamically mapping `--clr-navy` to `#F8FAFC` under `[data-theme="dark"]` and updating dark surfaces (`#133D39` soft dark mint).
+  - Extended `translations.ts` with comprehensive English & Arabic keys and bound `i18n.t(...)` to all home sections for instant, high-contrast Arabic/English switching with Cairo & Inter typography.
 
 ---
 *This file is the single source of truth for Mada Quest.*

@@ -78,6 +78,9 @@
   --clr-text:        #F8FAFC;
   --clr-text-muted:  #CBD5E1;
   --clr-text-subtle: #94A3B8;
+  --clr-navy:        #F8FAFC; /* Maps Deep Navy headings to high-contrast white in Dark Mode */
+  --clr-surface-mint: #133D39; /* High contrast soft teal surface for dark mode */
+  --clr-primary-light: #1E4E49;
   --shadow-sm:  0 2px 4px rgba(0,0,0,.3);
   --shadow-md:  0 6px 16px rgba(0,0,0,.4);
   --shadow-lg:  0 12px 32px rgba(0,0,0,.5);
