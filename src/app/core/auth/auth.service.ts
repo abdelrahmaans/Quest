@@ -46,10 +46,12 @@ export class AuthService {
   // TEMP-TESTING: Setup mock user and profile when testing bypass is active
   setupTempTestingUser(): void {
     const role = tempTestingRole();
-    const mockUser = { id: '00000000-0000-0000-0000-000000000000', email: `testing-${role}@madaquest.com` } as User;
+    const isAdm = role === UserRole.ADMIN;
+    const demoId = isAdm ? 'd0000000-0000-0000-0000-000000000003' : 'd0000000-0000-0000-0000-000000000001';
+    const mockUser = { id: demoId, email: isAdm ? 'admin.demo@madaquest.com' : 'ahmed.demo@madaquest.com' } as User;
     const mockProfile: UserProfile = {
-      id: '00000000-0000-0000-0000-000000000000',
-      full_name: role === UserRole.ADMIN ? 'Demo Testing Admin' : 'Demo Testing Instructor',
+      id: demoId,
+      full_name: isAdm ? 'Demo: System Admin Mada' : 'Demo: Prof. Ahmed Hassan',
       avatar_url: null,
       role,
       is_active: true,
