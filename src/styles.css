@@ -8,8 +8,8 @@
 /* ── Design Tokens ─────────────────────────────────────── */
 :root {
   /* Core Palette */
-  --clr-primary:        #0D9488; /* Deep Teal */
-  --clr-primary-dark:   #0F766E; /* Deep Teal Hover */
+  --clr-primary:        #14B8A6; /* Cheerful Vibrant Teal / Bright Emerald */
+  --clr-primary-dark:   #0D9488; /* Deep Teal Hover */
   --clr-primary-light:  #CCFBF1; /* Light Teal */
   --clr-surface-mint:   #ECFDF5; /* Soft Mint */
   --clr-accent:         #F59E0B; /* Amber Accent */
