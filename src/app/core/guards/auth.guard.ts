@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { isAuthBypassActive } from '../config/temp-testing.flag'; // TEMP-TESTING: import bypass checker
 
 /**
  * Protects routes that require a logged-in user.
@@ -9,11 +8,6 @@ import { isAuthBypassActive } from '../config/temp-testing.flag'; // TEMP-TESTIN
  * preserving the original URL as a returnUrl query param.
  */
 export const authGuard: CanActivateFn = (_route, state) => {
-  // TEMP-TESTING: Allow access if testing bypass is active
-  if (isAuthBypassActive()) {
-    return true; // TEMP-TESTING: bypass auth requirement
-  }
-
   const authService = inject(AuthService);
   const router = inject(Router);
 

@@ -4,7 +4,6 @@ import type { User } from '@supabase/supabase-js';
 import { SupabaseService } from '../services/supabase.service';
 import { UserProfile } from '../models/user.model';
 import { UserRole } from '../models/role.enum';
-import { isAuthBypassActive, tempTestingRole } from '../config/temp-testing.flag'; // TEMP-TESTING: import bypass flag
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -23,13 +22,6 @@ export class AuthService {
 
   // ─── Auth State Listener ──────────────────────────────────────────────────
   private initAuthListener(): void {
-    // TEMP-TESTING: Handle bypass mode for dev testing
-    if (isAuthBypassActive()) {
-      this.setupTempTestingUser();
-      return;
-    }
-    // TEMP-TESTING: End bypass setup
-
     this.supabaseService.client.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         this.currentUser.set(session.user);
@@ -41,29 +33,6 @@ export class AuthService {
       }
       this.isLoading.set(false);
     });
-  }
-
-  // TEMP-TESTING: Setup mock user and profile when testing bypass is active
-  setupTempTestingUser(): void {
-    const role = tempTestingRole();
-    const isAdm = role === UserRole.ADMIN;
-    const demoId = isAdm ? 'd0000000-0000-0000-0000-000000000003' : 'd0000000-0000-0000-0000-000000000001';
-    const mockUser = { id: demoId, email: isAdm ? 'admin.demo@madaquest.com' : 'ahmed.demo@madaquest.com' } as User;
-    const mockProfile: UserProfile = {
-      id: demoId,
-      full_name: isAdm ? 'Demo: System Admin Mada' : 'Demo: Prof. Ahmed Hassan',
-      avatar_url: null,
-      role,
-      is_active: true,
-      organization_id: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    this.currentUser.set(mockUser);
-    this.currentProfile.set(mockProfile);
-    this.currentRole.set(role);
-    this.isLoading.set(false);
   }
 
   // ─── Profile Loader ───────────────────────────────────────────────────────

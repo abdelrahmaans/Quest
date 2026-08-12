@@ -2,7 +2,6 @@ import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { UserRole } from '../models/role.enum';
-import { isAuthBypassActive } from '../config/temp-testing.flag'; // TEMP-TESTING: import bypass checker
 
 /**
  * Factory that returns a CanActivateFn checking whether the current user
@@ -13,11 +12,6 @@ import { isAuthBypassActive } from '../config/temp-testing.flag'; // TEMP-TESTIN
  */
 export const roleGuard = (requiredRoles: UserRole[]): CanActivateFn => {
   return (_route, state) => {
-    // TEMP-TESTING: Allow access if testing bypass is active
-    if (isAuthBypassActive()) {
-      return true; // TEMP-TESTING: bypass role requirement
-    }
-
     const authService = inject(AuthService);
     const router = inject(Router);
 
