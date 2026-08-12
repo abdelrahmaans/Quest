@@ -1,0 +1,28 @@
+<div class="dash-wrap">
+  <div class="dash-card">
+    <div class="dash-logo">
+      <span class="dash-glyph">🎯</span>
+      <span class="dash-name">مدى <strong>Quest</strong></span>
+    </div>
+
+    @if (authService.currentProfile(); as profile) {
+      <div class="dash-role" [class.dash-role--admin]="authService.isAdmin()">
+        <app-icon [name]="authService.isAdmin() ? 'shield-check' : 'graduation-cap'" [size]="15" />
+        {{ authService.isAdmin() ? 'Admin' : 'Instructor' }}
+      </div>
+
+      <p class="dash-username">{{ profile.full_name }}</p>
+      <p class="dash-email">{{ authService.currentUser()?.email }}</p>
+    }
+
+    <div class="dash-notice">
+      ✅ Auth working! Full dashboard coming in
+      <strong>{{ authService.isAdmin() ? 'Phase 6' : 'Phase 3' }}</strong>.
+    </div>
+
+    <button type="button" class="btn-logout" (click)="logout()">
+      <app-icon name="log-out" [size]="16" />
+      Sign out
+    </button>
+  </div>
+</div>

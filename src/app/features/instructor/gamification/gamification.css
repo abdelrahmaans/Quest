@@ -1,0 +1,214 @@
+/* gamification.css */
+:host { display: block; }
+
+.page { display: flex; flex-direction: column; gap: 1.75rem; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.page-title  { font-size: 1.5rem; font-weight: 700; color: var(--clr-text); letter-spacing: -.025em; margin-bottom: .25rem; }
+.page-subtitle { font-size: .9375rem; color: var(--clr-text-muted); }
+
+/* ── Panel Grid ─────────────────────────────────────────── */
+.panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.25rem;
+  align-items: start;
+}
+@media (max-width: 960px) { .panel-grid { grid-template-columns: 1fr; } }
+
+/* ── Panel common ───────────────────────────────────────── */
+.xp-panel, .events-panel {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--clr-text);
+  margin-bottom: .25rem;
+}
+
+.panel-title__icon { font-size: 1.125rem; }
+
+/* ── Alerts ─────────────────────────────────────────────── */
+.alert {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .75rem 1rem; border-radius: var(--radius-md); font-size: .875rem;
+}
+.alert--success { background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; }
+.alert--error   { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; }
+
+/* ── Form elements ──────────────────────────────────────── */
+.form-group { display: flex; flex-direction: column; gap: .5rem; }
+.form-label { font-size: .875rem; font-weight: 600; color: var(--clr-text); }
+.required { color: var(--clr-danger); }
+
+.form-select, .form-input {
+  height: 42px;
+  padding: 0 .875rem;
+  border: 1.5px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  font-size: .9375rem;
+  font-family: inherit;
+  color: var(--clr-text);
+  background: var(--clr-surface);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  outline: none;
+  width: 100%;
+}
+
+.form-select:focus, .form-input:focus {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+}
+
+.form-input::placeholder { color: #94A3B8; }
+
+/* ── XP Presets ─────────────────────────────────────────── */
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
+  width: 70px;
+  padding: .625rem .375rem;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--clr-border);
+  background: var(--clr-surface);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  font-family: inherit;
+}
+
+.preset-btn:hover { border-color: rgba(13,148,136,.4); background: rgba(13,148,136,.06); }
+
+.preset-btn--active {
+  border-color: var(--clr-primary);
+  background: rgba(13,148,136,.1);
+  box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+}
+
+.preset-btn__emoji { font-size: 1.25rem; line-height: 1; }
+.preset-btn__label { font-size: .75rem; font-weight: 700; color: var(--clr-primary); }
+
+/* ── Reason Chips ───────────────────────────────────────── */
+.reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .375rem;
+}
+
+.reason-chip {
+  height: 32px;
+  padding: 0 .875rem;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--clr-border);
+  background: var(--clr-surface);
+  color: var(--clr-text-muted);
+  font-size: .8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+
+.reason-chip:hover { border-color: rgba(13,148,136,.4); color: var(--clr-primary); }
+
+.reason-chip--active {
+  border-color: var(--clr-primary);
+  background: rgba(13,148,136,.1);
+  color: var(--clr-primary);
+  font-weight: 700;
+}
+
+/* ── Award Button ───────────────────────────────────────── */
+.award-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .625rem;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dark));
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--t-normal);
+  box-shadow: 0 4px 14px rgba(13,148,136,.4);
+  margin-top: .5rem;
+}
+
+.award-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,148,136,.5); }
+.award-btn:active:not(:disabled) { transform: translateY(0); }
+.award-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Events List ────────────────────────────────────────── */
+.events-list { list-style: none; display: flex; flex-direction: column; gap: 0; }
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem .5rem;
+  border-bottom: 1px solid var(--clr-border);
+  transition: background var(--t-fast);
+}
+
+.event-item:last-child { border-bottom: none; }
+.event-item:hover { background: var(--clr-bg); border-radius: var(--radius-md); }
+
+.event-item__xp {
+  font-size: .9375rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dark));
+  width: 44px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: .8125rem;
+}
+
+.event-item__body { flex: 1; min-width: 0; }
+.event-item__name   { display: block; font-size: .875rem; font-weight: 600; color: var(--clr-text); }
+.event-item__reason { display: block; font-size: .75rem; color: var(--clr-text-muted); }
+.event-item__time   { font-size: .75rem; color: var(--clr-text-muted); white-space: nowrap; }
+
+/* ── Empty ──────────────────────────────────────────────── */
+.events-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--clr-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+}
+
+.events-empty app-icon { color: var(--clr-border); }
+.events-empty p { font-size: .9375rem; }
+
+/* ── Spinner ────────────────────────────────────────────── */
+.spinning { animation: spin .7s linear infinite; }

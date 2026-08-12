@@ -1,0 +1,201 @@
+<!-- ══════════════════════════════════════════════════════════
+     Mada Quest — Landing Page
+     ══════════════════════════════════════════════════════════ -->
+
+<!-- ── NAV ─────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav__inner">
+    <a routerLink="/" class="nav__brand">
+      <span class="nav__logo">🎯</span>
+      <span class="nav__name">مدى <strong>Quest</strong></span>
+    </a>
+
+    <div class="nav__actions">
+      <app-lang-toggle />
+      <app-theme-toggle />
+      @if (auth.isAuthenticated()) {
+        <a [routerLink]="auth.postLoginRoute()" class="btn-nav btn-nav--outline">Dashboard</a>
+      } @else {
+        <a routerLink="/auth/login"  class="btn-nav btn-nav--ghost">Sign in</a>
+        <a routerLink="/auth/signup" class="btn-nav btn-nav--primary">Get started</a>
+      }
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero__bg">
+    <div class="hero__orb hero__orb--1"></div>
+    <div class="hero__orb hero__orb--2"></div>
+    <div class="hero__orb hero__orb--3"></div>
+    <div class="hero__grid"></div>
+  </div>
+
+  <div class="hero__content">
+    <div class="hero__badge">
+      <app-icon name="zap" [size]="13" />
+      Gamified Learning Platform
+    </div>
+
+    <h1 class="hero__title">
+      Turn Every Lesson<br>
+      Into an <span class="hero__highlight">Epic Quest</span>
+    </h1>
+
+    <p class="hero__desc">
+      Mada Quest brings XP points, badges, leaderboards, and live challenges
+      to your classroom — making learning irresistible for every student.
+    </p>
+
+    <div class="hero__cta">
+      <a routerLink="/auth/signup" class="btn-hero btn-hero--primary">
+        Start for free
+        <app-icon name="chevron-right" [size]="18" />
+      </a>
+      <a routerLink="/auth/login" class="btn-hero btn-hero--ghost">
+        See a demo
+      </a>
+    </div>
+
+    <p class="hero__sub">No credit card required · Free for up to 30 students</p>
+  </div>
+
+  <!-- Floating XP card -->
+  <div class="hero__card hero__card--xp" aria-hidden="true">
+    <div class="xp-card">
+      <div class="xp-card__header">
+        <span class="xp-card__name">Ahmed K.</span>
+        <span class="xp-card__level">Lv. 12</span>
+      </div>
+      <div class="xp-card__bar-wrap">
+        <div class="xp-card__bar" style="width: 72%"></div>
+      </div>
+      <span class="xp-card__text">3,600 / 5,000 XP</span>
+    </div>
+  </div>
+
+  <!-- Floating badge card -->
+  <div class="hero__card hero__card--badge" aria-hidden="true">
+    <div class="badge-card">
+      <span class="badge-card__icon">🏅</span>
+      <div>
+        <p class="badge-card__title">Badge Unlocked!</p>
+        <p class="badge-card__name">First Challenge</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS BAR ─────────────────────────────────────────── -->
+<section class="stats">
+  <div class="stats__inner">
+    @for (s of stats; track s.label) {
+      <div class="stat">
+        <span class="stat__value">{{ s.value }}</span>
+        <span class="stat__label">{{ s.label }}</span>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ── FEATURES ──────────────────────────────────────────── -->
+<section class="section" id="features">
+  <div class="section__inner">
+    <div class="section__header">
+      <span class="section__eyebrow">Everything you need</span>
+      <h2 class="section__title">A full Gamification engine<br>built for education</h2>
+      <p class="section__desc">
+        Everything an instructor needs to create engaging, competitive, and
+        rewarding learning experiences — in one beautiful platform.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      @for (f of features; track f.title) {
+        <article class="feature-card">
+          <div class="feature-card__icon" [style.--fc-color]="f.color">
+            <app-icon [name]="f.icon" [size]="22" />
+          </div>
+          <h3 class="feature-card__title">{{ f.title }}</h3>
+          <p class="feature-card__desc">{{ f.desc }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ──────────────────────────────────────── -->
+<section class="section section--dark" id="how-it-works">
+  <div class="section__inner">
+    <div class="section__header section__header--light">
+      <span class="section__eyebrow section__eyebrow--teal">Simple process</span>
+      <h2 class="section__title section__title--light">Up and running<br>in four steps</h2>
+    </div>
+
+    <div class="steps-grid">
+      @for (s of steps; track s.num) {
+        <div class="step">
+          <span class="step__num">{{ s.num }}</span>
+          <h3 class="step__title">{{ s.title }}</h3>
+          <p class="step__desc">{{ s.desc }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ──────────────────────────────────────── -->
+<section class="section" id="testimonials">
+  <div class="section__inner">
+    <div class="section__header">
+      <span class="section__eyebrow">Real stories</span>
+      <h2 class="section__title">Loved by educators<br>across the region</h2>
+    </div>
+
+    <div class="testimonials-grid">
+      @for (t of testimonials; track t.name) {
+        <blockquote class="testimonial">
+          <p class="testimonial__text">"{{ t.text }}"</p>
+          <footer class="testimonial__footer">
+            <div class="testimonial__avatar">{{ t.avatar }}</div>
+            <div>
+              <p class="testimonial__name">{{ t.name }}</p>
+              <p class="testimonial__role">{{ t.role }}</p>
+            </div>
+          </footer>
+        </blockquote>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="cta-section__inner">
+    <div class="cta-section__orb"></div>
+    <h2 class="cta-section__title">Ready to transform<br>your classroom?</h2>
+    <p class="cta-section__desc">
+      Join 500+ instructors already using Mada Quest to make learning unforgettable.
+    </p>
+    <a routerLink="/auth/signup" class="btn-hero btn-hero--primary btn-hero--lg">
+      Create your free account
+      <app-icon name="chevron-right" [size]="20" />
+    </a>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <span class="footer__logo">🎯</span>
+      <span class="footer__name">مدى <strong>Quest</strong></span>
+    </div>
+    <p class="footer__copy">© 2025 Mada Quest · Built for educators, by educators.</p>
+    <nav class="footer__links">
+      <a routerLink="/auth/login">Sign in</a>
+      <a routerLink="/auth/signup">Get started</a>
+    </nav>
+  </div>
+</footer>

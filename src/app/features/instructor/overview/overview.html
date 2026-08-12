@@ -1,0 +1,104 @@
+<!-- Instructor Overview -->
+<div class="overview">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+      Good {{ getGreeting() }}, {{ (auth.currentProfile()?.full_name ?? 'Instructor').split(' ')[0] }} 👋
+      </h1>
+      <p class="page-subtitle">Here's what's happening in your classes today.</p>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  @if (isLoading()) {
+    <div class="stats-grid">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="stat-card stat-card--skeleton"></div>
+      }
+    </div>
+  } @else {
+    <div class="stats-grid">
+      @for (s of stats(); track s.label) {
+        <div class="stat-card" [style.--sc-color]="s.color">
+          <div class="stat-card__icon">
+            <app-icon [name]="s.icon" [size]="20" />
+          </div>
+          <div class="stat-card__body">
+            <span class="stat-card__value">{{ s.value }}</span>
+            <span class="stat-card__label">{{ s.label }}</span>
+          </div>
+          @if (s.change) {
+            <span class="stat-card__change">{{ s.change }}</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Bottom grid -->
+  <div class="bottom-grid">
+
+    <!-- Top Students -->
+    <section class="card">
+      <h2 class="card__title">
+        <app-icon name="trophy" [size]="16" />
+        Top Students
+      </h2>
+
+      @if (isLoading()) {
+        <div class="skeleton-list">
+          @for (_ of [1,2,3,4,5]; track $index) {
+            <div class="skeleton-row"></div>
+          }
+        </div>
+      } @else if (recentStudents().length === 0) {
+        <div class="empty-state">
+          <p>No students yet. <a href="/instructor/classes">Create a class</a> to get started.</p>
+        </div>
+      } @else {
+        <ul class="student-list">
+          @for (s of recentStudents(); track s.name; let i = $index) {
+            <li class="student-row">
+              <span class="student-rank">#{{ i + 1 }}</span>
+              <div class="student-avatar">{{ s.name.charAt(0) }}</div>
+              <div class="student-info">
+                <span class="student-name">{{ s.name }}</span>
+                <span class="student-xp">{{ s.xp.toLocaleString() }} XP</span>
+              </div>
+              <span class="student-level">Lv. {{ s.level }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="card">
+      <h2 class="card__title">
+        <app-icon name="zap" [size]="16" />
+        Quick Actions
+      </h2>
+      <div class="quick-actions">
+        <a href="/instructor/classes" class="action-btn">
+          <app-icon name="graduation-cap" [size]="18" />
+          <span>New Class</span>
+        </a>
+        <a href="/instructor/challenges" class="action-btn">
+          <app-icon name="target" [size]="18" />
+          <span>Launch Challenge</span>
+        </a>
+        <a href="/instructor/gamification" class="action-btn">
+          <app-icon name="zap" [size]="18" />
+          <span>Award XP</span>
+        </a>
+        <a href="/instructor/leaderboard" class="action-btn">
+          <app-icon name="bar-chart-2" [size]="18" />
+          <span>Leaderboard</span>
+        </a>
+      </div>
+    </section>
+
+  </div>
+</div>

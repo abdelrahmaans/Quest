@@ -1,0 +1,98 @@
+<!-- Leaderboard -->
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🏆 Leaderboard</h1>
+      <p class="page-subtitle">See how your students rank against each other in real time.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error">
+      <app-icon name="alert-circle" [size]="15" />{{ error() }}
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="lb-table">
+      @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
+        <div class="lb-row lb-row--skeleton"></div>
+      }
+    </div>
+
+  } @else if (entries().length === 0) {
+    <div class="empty">
+      <div class="empty__icon">🏅</div>
+      <h3>No students yet</h3>
+      <p>Add students to your classes to see the leaderboard.</p>
+    </div>
+
+  } @else {
+
+    <!-- Podium (top 3) -->
+    @if (entries().length >= 3) {
+      <div class="podium">
+        <!-- 2nd -->
+        <div class="podium__place podium__place--2">
+          <div class="podium__avatar">{{ entries()[1].full_name.charAt(0) }}</div>
+          <div class="podium__medal">🥈</div>
+          <div class="podium__name">{{ entries()[1].full_name.split(' ')[0] }}</div>
+          <div class="podium__xp">{{ entries()[1].xp_total | number }} XP</div>
+          <div class="podium__bar podium__bar--2"></div>
+        </div>
+        <!-- 1st -->
+        <div class="podium__place podium__place--1">
+          <div class="podium__crown">👑</div>
+          <div class="podium__avatar podium__avatar--1">{{ entries()[0].full_name.charAt(0) }}</div>
+          <div class="podium__medal">🥇</div>
+          <div class="podium__name">{{ entries()[0].full_name.split(' ')[0] }}</div>
+          <div class="podium__xp">{{ entries()[0].xp_total | number }} XP</div>
+          <div class="podium__bar podium__bar--1"></div>
+        </div>
+        <!-- 3rd -->
+        <div class="podium__place podium__place--3">
+          <div class="podium__avatar">{{ entries()[2].full_name.charAt(0) }}</div>
+          <div class="podium__medal">🥉</div>
+          <div class="podium__name">{{ entries()[2].full_name.split(' ')[0] }}</div>
+          <div class="podium__xp">{{ entries()[2].xp_total | number }} XP</div>
+          <div class="podium__bar podium__bar--3"></div>
+        </div>
+      </div>
+    }
+
+    <!-- Full Table -->
+    <div class="lb-table">
+      @for (entry of entries(); track entry.id) {
+        <div class="lb-row"
+          [class.lb-row--gold]="entry.rank === 1"
+          [class.lb-row--silver]="entry.rank === 2"
+          [class.lb-row--bronze]="entry.rank === 3">
+
+          <span class="lb-rank">{{ getMedal(entry.rank) }}</span>
+
+          <div class="lb-avatar" [class.lb-avatar--top]="entry.rank <= 3">
+            {{ entry.full_name.charAt(0) }}
+          </div>
+
+          <div class="lb-info">
+            <span class="lb-name">{{ entry.full_name }}</span>
+            <span class="lb-class">{{ entry.class_name }}</span>
+          </div>
+
+          <div class="lb-xp-wrap">
+            <div class="lb-xp-bar-bg">
+              <div class="lb-xp-bar" [style.width]="getXPBarWidth(entry.xp_total)"></div>
+            </div>
+            <span class="lb-xp-val">{{ entry.xp_total | number }} XP</span>
+          </div>
+
+          <span class="lb-level">Lv. {{ entry.level }}</span>
+
+          @if (entry.streak > 0) {
+            <span class="lb-streak">🔥 {{ entry.streak }}d</span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

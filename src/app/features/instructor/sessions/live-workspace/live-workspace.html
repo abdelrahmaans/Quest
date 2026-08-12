@@ -1,0 +1,200 @@
+<!-- Live Session Workspace HUD -->
+<div class="workspace">
+
+  <!-- ── LIVE TOP HUD BAR ─────────────────────────────────── -->
+  <header class="hud-bar">
+    <div class="hud-left">
+      <a routerLink="/instructor/sessions" class="btn-back" title="Back to Sessions">
+        <app-icon name="arrow-left" [size]="18" />
+      </a>
+
+      <div class="live-tag">
+        <span class="live-dot"></span>
+        <span class="live-text">LIVE</span>
+      </div>
+
+      <div class="hud-title-wrap">
+        <h1 class="hud-title">{{ sessionTitle() }}</h1>
+        <span class="hud-class-badge">{{ className() }}</span>
+      </div>
+    </div>
+
+    <div class="hud-center">
+      <div class="hud-timer" title="Elapsed Time">
+        <app-icon name="clock" [size]="16" />
+        <span>{{ formatTimer(elapsedSeconds()) }}</span>
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <div class="hud-stat">
+        <span class="hud-stat__val">{{ presentCount }} / {{ students().length }}</span>
+        <span class="hud-stat__lbl">Present</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-stat__val">+{{ totalSessionXP() | number }}</span>
+        <span class="hud-stat__lbl">XP Awarded</span>
+      </div>
+      <button type="button" class="btn-end" [disabled]="isEnding()" (click)="endSession()">
+        @if (isEnding()) {
+          <app-icon name="loader-2" [size]="16" class="spinning" />
+        } @else {
+          <app-icon name="square" [size]="15" />
+          End Session
+        }
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MAIN LIVE CONTENT ────────────────────────────────── -->
+  <div class="live-grid">
+
+    <!-- ── LEFT PANEL: Live Roster & Attendance ─────────── -->
+    <section class="roster-panel">
+      <div class="panel-header">
+        <div class="panel-header__title">
+          <app-icon name="users" [size]="18" />
+          <h2>Student Roster</h2>
+          <span class="count-chip">{{ students().length }}</span>
+        </div>
+
+        <div class="batch-select">
+          <button type="button" class="btn-text" (click)="selectAll(true)">Select All</button>
+          <span class="sep">·</span>
+          <button type="button" class="btn-text" (click)="selectAll(false)">Deselect All</button>
+        </div>
+      </div>
+
+      @if (isLoading()) {
+        <div class="skeleton-grid">
+          @for (_ of [1,2,3,4,5,6]; track $index) {
+            <div class="skeleton-card"></div>
+          }
+        </div>
+      } @else {
+        <div class="roster-grid">
+          @for (s of students(); track s.id) {
+            <div class="student-card"
+              [class.student-card--selected]="s.selected"
+              [class.student-card--absent]="s.attendance === 'absent'">
+
+              <div class="student-card__top">
+                <input type="checkbox" class="student-check"
+                  [checked]="s.selected"
+                  (change)="toggleSelectStudent(s)" />
+
+                <div class="student-avatar">{{ s.full_name.charAt(0) }}</div>
+
+                <div class="student-meta">
+                  <span class="student-name">{{ s.full_name }}</span>
+                  <span class="student-xp-lvl">Lv. {{ s.level }} · {{ s.xp_total | number }} XP</span>
+                </div>
+              </div>
+
+              <!-- Attendance Toggles -->
+              <div class="att-row">
+                <button type="button" class="att-btn att-btn--present"
+                  [class.att-btn--active]="s.attendance === 'present'"
+                  (click)="toggleAttendance(s, 'present')" title="Present">
+                  <app-icon name="user-check" [size]="14" /> P
+                </button>
+                <button type="button" class="att-btn att-btn--late"
+                  [class.att-btn--active]="s.attendance === 'late'"
+                  (click)="toggleAttendance(s, 'late')" title="Late">
+                  <app-icon name="clock" [size]="14" /> L
+                </button>
+                <button type="button" class="att-btn att-btn--absent"
+                  [class.att-btn--active]="s.attendance === 'absent'"
+                  (click)="toggleAttendance(s, 'absent')" title="Absent">
+                  <app-icon name="user-x" [size]="14" /> A
+                </button>
+              </div>
+
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ── RIGHT PANEL: Live XP Control & Feed ───────────── -->
+    <aside class="control-panel">
+
+      <!-- Live XP Action Box -->
+      <div class="xp-action-box">
+        <h3 class="box-title">
+          <span class="sparkle-icon">⚡</span>
+          Quick Live XP Award
+        </h3>
+
+        <p class="target-summary">
+          Targeting <strong>{{ selectedCount }}</strong> student(s) selected
+        </p>
+
+        <!-- Presets -->
+        <div class="preset-row">
+          @for (p of xpPresets; track p.val) {
+            <button type="button" class="preset-pill"
+              [class.preset-pill--active]="!useCustomXP && selectedXPPreset === p.val"
+              (click)="selectedXPPreset = p.val; useCustomXP = false">
+              <span class="preset-icon">{{ p.icon }}</span>
+              <span class="preset-val">{{ p.label }}</span>
+            </button>
+          }
+        </div>
+
+        <!-- Reasons -->
+        <div class="reason-select-wrap">
+          <select class="form-select" [(ngModel)]="awardReason">
+            @for (r of reasonOptions; track r) {
+              <option [value]="r">{{ r }}</option>
+            }
+          </select>
+          @if (awardReason === 'Custom…') {
+            <input type="text" class="form-input" placeholder="Custom reason…" [(ngModel)]="customReason" style="margin-top:.5rem" />
+          }
+        </div>
+
+        <!-- Big Launch Award Button -->
+        <button type="button" class="btn-award-live"
+          [disabled]="selectedCount === 0 || finalXP <= 0 || isAwarding()"
+          (click)="awardLiveXP()">
+          @if (isAwarding()) {
+            <app-icon name="loader-2" [size]="18" class="spinning" /> Awarding…
+          } @else {
+            <span>⚡ Award +{{ finalXP }} XP to {{ selectedCount }} Student(s)</span>
+          }
+        </button>
+      </div>
+
+      <!-- Live Feed Log -->
+      <div class="feed-box">
+        <h3 class="box-title">
+          <app-icon name="sparkles" [size]="16" />
+          Live XP Stream
+        </h3>
+
+        @if (feed().length === 0) {
+          <div class="feed-empty">
+            <p>Select students and award XP to see live activity stream.</p>
+          </div>
+        } @else {
+          <div class="feed-list">
+            @for (item of feed(); track item.id) {
+              <div class="feed-item">
+                <span class="feed-item__badge">+{{ item.points }}</span>
+                <div class="feed-item__info">
+                  <span class="feed-item__name">{{ item.studentName }}</span>
+                  <span class="feed-item__reason">{{ item.reason }}</span>
+                </div>
+                <span class="feed-item__time">{{ item.timestamp }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </aside>
+
+  </div>
+
+</div>

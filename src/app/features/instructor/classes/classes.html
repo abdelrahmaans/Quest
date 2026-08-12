@@ -1,0 +1,129 @@
+<!-- Classes Page -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Classes</h1>
+      <p class="page-subtitle">Manage your classes and enrolled students.</p>
+    </div>
+    <button class="btn-create" (click)="showCreate.update(v => !v)">
+      <app-icon [name]="showCreate() ? 'x' : 'plus'" [size]="16" />
+      {{ showCreate() ? 'Cancel' : 'New Class' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="alert-error">
+      <app-icon name="alert-circle" [size]="15" />
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Create Form -->
+  @if (showCreate()) {
+    <div class="create-card">
+      <h2 class="create-card__title">
+        <app-icon name="graduation-cap" [size]="16" />
+        Create New Class
+      </h2>
+      <div class="create-form">
+        <div class="form-field">
+          <label class="form-label" for="className">Class Name <span class="required">*</span></label>
+          <input id="className" type="text" class="form-input"
+            placeholder="e.g. Mathematics — Grade 10A"
+            [(ngModel)]="className" />
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="classSubject">Subject</label>
+            <input id="classSubject" type="text" class="form-input"
+              placeholder="e.g. Algebra"
+              [(ngModel)]="classSubject" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="classGrade">Grade Level</label>
+            <input id="classGrade" type="text" class="form-input"
+              placeholder="e.g. Grade 10"
+              [(ngModel)]="classGrade" />
+          </div>
+        </div>
+        <div class="create-actions">
+          <button class="btn-primary" [disabled]="!className.trim() || creating()" (click)="createClass()">
+            @if (creating()) {
+              <app-icon name="loader-2" [size]="15" class="spinning" />
+              Creating…
+            } @else {
+              <app-icon name="plus" [size]="15" />
+              Create Class
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Classes List -->
+  @if (isLoading()) {
+    <div class="classes-grid">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="class-card class-card--skeleton"></div>
+      }
+    </div>
+  } @else if (classes().length === 0) {
+    <div class="empty">
+      <div class="empty__icon">
+        <app-icon name="graduation-cap" [size]="28" />
+      </div>
+      <h3 class="empty__title">No classes yet</h3>
+      <p class="empty__desc">Create your first class to start managing students and awarding XP.</p>
+      <button class="btn-primary" (click)="showCreate.set(true)">
+        <app-icon name="plus" [size]="15" />
+        Create First Class
+      </button>
+    </div>
+  } @else {
+    <div class="classes-grid">
+      @for (cls of classes(); track cls.id) {
+        <article class="class-card">
+          <div class="class-card__header">
+            <div class="class-card__icon">
+              <app-icon name="graduation-cap" [size]="20" />
+            </div>
+            <div class="class-card__meta">
+              @if (cls.subject) { <span class="class-card__subject">{{ cls.subject }}</span> }
+              @if (cls.grade_level) { <span class="class-card__grade">{{ cls.grade_level }}</span> }
+            </div>
+          </div>
+          <h3 class="class-card__name">{{ cls.name }}</h3>
+          <div class="class-card__stats">
+            <span class="class-card__stat">
+              <app-icon name="users" [size]="13" />
+              {{ cls.student_count }} students
+            </span>
+            <span class="class-card__stat">
+              <app-icon name="calendar" [size]="13" />
+              {{ formatDate(cls.created_at) }}
+            </span>
+          </div>
+          <div class="class-card__actions">
+            <a [routerLink]="['/instructor/students']"
+               [queryParams]="{ class: cls.id }"
+               class="btn-sm btn-sm--outline">
+              <app-icon name="users" [size]="13" />
+              Students
+            </a>
+            <a [routerLink]="['/instructor/gamification']"
+               [queryParams]="{ class: cls.id }"
+               class="btn-sm btn-sm--primary">
+              <app-icon name="zap" [size]="13" />
+              Award XP
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+</div>

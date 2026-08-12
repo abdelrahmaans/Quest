@@ -1,0 +1,257 @@
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SupabaseService } from '../../../../core/services/supabase.service';
+import { IconComponent } from '../../../../shared/ui/icon/icon';
+import type { IconName } from '../../../../shared/ui/icon/icons.constants';
+
+interface LiveStudent {
+  id: string;
+  full_name: string;
+  xp_total: number;
+  level: number;
+  attendance: 'present' | 'absent' | 'late';
+  selected: boolean;
+}
+
+interface LiveFeedEvent {
+  id: string;
+  studentName: string;
+  points: number;
+  reason: string;
+  timestamp: string;
+}
+
+@Component({
+  selector: 'app-live-workspace',
+  standalone: true,
+  imports: [RouterLink, FormsModule, DecimalPipe, IconComponent],
+  templateUrl: './live-workspace.html',
+  styleUrl: './live-workspace.css',
+})
+export class LiveWorkspaceComponent implements OnInit, OnDestroy {
+  readonly auth     = inject(AuthService);
+  readonly supabase = inject(SupabaseService);
+  readonly route    = inject(ActivatedRoute);
+  readonly router   = inject(Router);
+
+  readonly isLoading    = signal(true);
+  readonly isEnding     = signal(false);
+  readonly isAwarding   = signal(false);
+  readonly sessionId    = signal<string>('');
+  readonly sessionTitle = signal<string>('Live Session Workspace');
+  readonly className    = signal<string>('');
+  readonly classId      = signal<string>('');
+
+  /* Session Stats */
+  readonly students       = signal<LiveStudent[]>([]);
+  readonly feed           = signal<LiveFeedEvent[]>([]);
+  readonly totalSessionXP = signal<number>(0);
+  readonly elapsedSeconds = signal<number>(0);
+
+  /* Timer handle */
+  private timerInterval: any = null;
+
+  /* Live XP Award Form */
+  selectedXPPreset = 10;
+  customXP         = '';
+  useCustomXP      = false;
+  awardReason      = 'Active Participation';
+  customReason     = '';
+
+  readonly xpPresets = [
+    { label: '+5',   val: 5,   icon: '⭐' },
+    { label: '+10',  val: 10,  icon: '⚡' },
+    { label: '+25',  val: 25,  icon: '🔥' },
+    { label: '+50',  val: 50,  icon: '💎' },
+  ];
+
+  readonly reasonOptions = [
+    'Active Participation', 'Quick Response', 'Correct Answer',
+    'Great Collaboration', 'Live Challenge Winner', 'Custom…',
+  ];
+
+  get presentCount(): number {
+    return this.students().filter(s => s.attendance === 'present' || s.attendance === 'late').length;
+  }
+
+  get selectedCount(): number {
+    return this.students().filter(s => s.selected).length;
+  }
+
+  get finalXP(): number {
+    return this.useCustomXP ? (parseInt(this.customXP, 10) || 0) : this.selectedXPPreset;
+  }
+
+  get finalReason(): string {
+    return this.awardReason === 'Custom…' ? this.customReason : this.awardReason;
+  }
+
+  async ngOnInit(): Promise<void> {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) {
+      await this.router.navigate(['/instructor/sessions']);
+      return;
+    }
+
+    this.sessionId.set(id);
+    await this.loadLiveSessionData(id);
+    this.startTimer();
+    this.isLoading.set(false);
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+  }
+
+  startTimer(): void {
+    this.timerInterval = setInterval(() => {
+      this.elapsedSeconds.update(s => s + 1);
+    }, 1000);
+  }
+
+  formatTimer(totalSecs: number): string {
+    const h = Math.floor(totalSecs / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    const s = totalSecs % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  }
+
+  async loadLiveSessionData(sid: string): Promise<void> {
+    try {
+      // 1. Load Session & Class Name
+      const { data: sess, error: sessErr } = await this.supabase.client
+        .from('sessions')
+        .select('id, title, class_id, status, class:classes(name)')
+        .eq('id', sid)
+        .single();
+
+      if (sessErr || !sess) throw sessErr;
+
+      this.sessionTitle.set(sess.title);
+      this.classId.set(sess.class_id);
+      const cName = Array.isArray(sess.class) ? sess.class[0]?.name : (sess.class as { name: string } | null)?.name;
+      this.className.set(cName ?? 'Class');
+
+      // 2. Load Students in Class
+      const { data: studData } = await this.supabase.client
+        .from('students')
+        .select('id, full_name, xp_total, level')
+        .eq('class_id', sess.class_id)
+        .order('full_name');
+
+      // 3. Load Existing Attendance for this session
+      const { data: attData } = await this.supabase.client
+        .from('attendance')
+        .select('student_id, status')
+        .eq('session_id', sid);
+
+      const attMap = new Map((attData ?? []).map((a: { student_id: string; status: string }) => [a.student_id, a.status]));
+
+      const list: LiveStudent[] = (studData ?? []).map((s: { id: string; full_name: string; xp_total: number; level: number }) => ({
+        id:         s.id,
+        full_name:  s.full_name,
+        xp_total:   s.xp_total ?? 0,
+        level:      s.level     ?? 1,
+        attendance: (attMap.get(s.id) as 'present' | 'absent' | 'late') ?? 'present',
+        selected:   true,
+      }));
+
+      this.students.set(list);
+    } catch {
+      // Fallback redirect if session invalid
+      await this.router.navigate(['/instructor/sessions']);
+    }
+  }
+
+  async toggleAttendance(student: LiveStudent, status: 'present' | 'absent' | 'late'): Promise<void> {
+    this.students.update(list =>
+      list.map(s => s.id === student.id ? { ...s, attendance: status } : s),
+    );
+
+    // Save attendance change to Supabase
+    try {
+      await this.supabase.client.from('attendance').upsert({
+        session_id: this.sessionId(),
+        student_id: student.id,
+        status,
+      });
+    } catch {
+      // Non-critical background save
+    }
+  }
+
+  selectAll(select: boolean): void {
+    this.students.update(list => list.map(s => ({ ...s, selected: select })));
+  }
+
+  toggleSelectStudent(student: LiveStudent): void {
+    this.students.update(list =>
+      list.map(s => s.id === student.id ? { ...s, selected: !s.selected } : s),
+    );
+  }
+
+  async awardLiveXP(): Promise<void> {
+    const selected = this.students().filter(s => s.selected);
+    if (selected.length === 0 || this.finalXP <= 0) return;
+
+    this.isAwarding.set(true);
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    const points = this.finalXP;
+    const reason = this.finalReason;
+
+    try {
+      // Insert XP events for each selected student
+      const inserts = selected.map(s => ({
+        student_id: s.id,
+        awarded_by: user.id,
+        points,
+        reason: `[Live Session] ${reason}`,
+        event_type: 'live_session',
+      }));
+
+      await this.supabase.client.from('xp_events').insert(inserts);
+
+      // Update local state XP totals
+      this.students.update(list =>
+        list.map(s => s.selected ? { ...s, xp_total: s.xp_total + points } : s),
+      );
+
+      // Push events to live feed
+      const newFeedEvents: LiveFeedEvent[] = selected.map(s => ({
+        id:          Math.random().toString(),
+        studentName: s.full_name,
+        points,
+        reason,
+        timestamp:  new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }));
+
+      this.feed.update(f => [...newFeedEvents, ...f]);
+      this.totalSessionXP.update(tot => tot + (points * selected.length));
+    } catch {
+      // Handle error gracefully
+    } finally {
+      this.isAwarding.set(false);
+    }
+  }
+
+  async endSession(): Promise<void> {
+    this.isEnding.set(true);
+
+    try {
+      await this.supabase.client
+        .from('sessions')
+        .update({ status: 'completed' })
+        .eq('id', this.sessionId());
+
+      await this.router.navigate(['/instructor/sessions']);
+    } catch {
+      this.isEnding.set(false);
+    }
+  }
+}

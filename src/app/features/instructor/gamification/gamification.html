@@ -1,0 +1,138 @@
+<!-- Gamification Control Panel -->
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Gamification Control</h1>
+      <p class="page-subtitle">Award XP, track activity, and keep students engaged.</p>
+    </div>
+  </div>
+
+  <div class="panel-grid">
+
+    <!-- ── XP Award Panel ──────────────────────────────── -->
+    <section class="xp-panel">
+      <h2 class="panel-title">
+        <span class="panel-title__icon">⚡</span>
+        Award XP
+      </h2>
+
+      @if (successMsg()) {
+        <div class="alert alert--success">{{ successMsg() }}</div>
+      }
+      @if (errorMsg()) {
+        <div class="alert alert--error">
+          <app-icon name="alert-circle" [size]="14" />
+          {{ errorMsg() }}
+        </div>
+      }
+
+      <!-- Class filter -->
+      <div class="form-group">
+        <label class="form-label">Class</label>
+        <select class="form-select" [(ngModel)]="selectedClassId" (change)="onClassChange()">
+          <option value="">All classes</option>
+          @for (cls of classes(); track cls.id) {
+            <option [value]="cls.id">{{ cls.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Student picker -->
+      <div class="form-group">
+        <label class="form-label">Student <span class="required">*</span></label>
+        <select class="form-select" [(ngModel)]="selectedStudentId">
+          <option value="">Select a student…</option>
+          @for (s of filteredStudents; track s.id) {
+            <option [value]="s.id">{{ s.full_name }} — Lv.{{ s.level }} · {{ s.xp_total | number }} XP</option>
+          }
+        </select>
+      </div>
+
+      <!-- XP Amount presets -->
+      <div class="form-group">
+        <label class="form-label">Amount <span class="required">*</span></label>
+        <div class="presets">
+          @for (p of presets; track p.value) {
+            <button type="button" class="preset-btn"
+              [class.preset-btn--active]="!useCustomXP && selectedXP === p.value"
+              (click)="selectPreset(p.value)">
+              <span class="preset-btn__emoji">{{ p.icon }}</span>
+              <span class="preset-btn__label">{{ p.label }}</span>
+            </button>
+          }
+          <button type="button" class="preset-btn"
+            [class.preset-btn--active]="useCustomXP"
+            (click)="useCustomXP = true">
+            <span class="preset-btn__emoji">✏️</span>
+            <span class="preset-btn__label">Custom</span>
+          </button>
+        </div>
+
+        @if (useCustomXP) {
+          <input type="number" class="form-input" placeholder="Enter XP amount"
+            min="1" max="1000" [(ngModel)]="customXP" style="margin-top: .625rem;" />
+        }
+      </div>
+
+      <!-- Reason -->
+      <div class="form-group">
+        <label class="form-label">Reason <span class="required">*</span></label>
+        <div class="reason-chips">
+          @for (r of reasons; track r) {
+            <button type="button" class="reason-chip"
+              [class.reason-chip--active]="selectedReason === r"
+              (click)="selectedReason = r">
+              {{ r }}
+            </button>
+          }
+        </div>
+        @if (selectedReason === 'Custom…') {
+          <input type="text" class="form-input" placeholder="Describe the reason…"
+            [(ngModel)]="customReason" style="margin-top: .625rem;" />
+        }
+      </div>
+
+      <!-- Submit -->
+      <button class="award-btn"
+        [disabled]="!selectedStudentId || finalXP <= 0 || !finalReason || isAwarding()"
+        (click)="awardXP()">
+        @if (isAwarding()) {
+          <app-icon name="loader-2" [size]="18" class="spinning" />
+          Awarding…
+        } @else {
+          <span>⚡ Award {{ finalXP }} XP</span>
+        }
+      </button>
+    </section>
+
+    <!-- ── Recent Events ───────────────────────────────── -->
+    <section class="events-panel">
+      <h2 class="panel-title">
+        <span class="panel-title__icon">📋</span>
+        Recent XP Events
+      </h2>
+
+      @if (recentEvents().length === 0) {
+        <div class="events-empty">
+          <app-icon name="zap" [size]="24" />
+          <p>No XP events yet. Award your first XP!</p>
+        </div>
+      } @else {
+        <ul class="events-list">
+          @for (ev of recentEvents(); track ev.id) {
+            <li class="event-item">
+              <div class="event-item__xp">+{{ ev.points }}</div>
+              <div class="event-item__body">
+                <span class="event-item__name">{{ ev.student_name }}</span>
+                <span class="event-item__reason">{{ ev.reason }}</span>
+              </div>
+              <span class="event-item__time">{{ timeAgo(ev.created_at) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+  </div>
+</div>

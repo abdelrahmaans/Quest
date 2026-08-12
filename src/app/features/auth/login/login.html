@@ -1,0 +1,122 @@
+<div class="auth-layout">
+
+  <!-- ── Brand Panel ──────────────────────────────────── -->
+  <aside class="brand-panel" aria-hidden="true">
+    <div class="brand-glow"></div>
+    <div class="brand-content">
+      <div class="brand-logo">
+        <span class="logo-icon">🎯</span>
+        <span class="logo-text">مدى <strong>Quest</strong></span>
+      </div>
+      <p class="brand-tagline">{{ i18n.t('brand.tagline_ar') }}</p>
+
+      <ul class="brand-features">
+        @for (f of features; track f.label) {
+          <li class="feature-chip">
+            <app-icon [name]="f.icon" [size]="15" />
+            {{ f.label }}
+          </li>
+        }
+      </ul>
+
+      <p class="brand-quote">{{ i18n.t('brand.quote') }}</p>
+    </div>
+  </aside>
+
+  <!-- ── Form Panel ───────────────────────────────────── -->
+  <main class="form-panel">
+    <div class="form-wrap">
+
+      <!-- Top bar: theme + lang toggles -->
+      <div class="form-top-bar">
+        <app-lang-toggle />
+        <app-theme-toggle />
+      </div>
+
+      <header class="form-header">
+        <h1 class="form-title">{{ i18n.t('auth.login.title') }}</h1>
+        <p class="form-subtitle">{{ i18n.t('auth.login.subtitle') }}</p>
+      </header>
+
+      @if (errorMessage()) {
+        <div class="alert alert--error" role="alert">
+          <app-icon name="alert-circle" [size]="16" />
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="form">
+
+        <div class="field">
+          <label class="field__label" for="email">{{ i18n.t('auth.login.email') }}</label>
+          <div class="field__input-wrap">
+            <app-icon name="mail" [size]="16" class="field__icon" />
+            <input id="email" type="email" class="field__input"
+              [class.field__input--error]="emailCtrl.invalid && emailCtrl.touched"
+              formControlName="email"
+              [placeholder]="i18n.t('common.email_placeholder')"
+              autocomplete="email" inputmode="email" />
+          </div>
+          @if (emailCtrl.invalid && emailCtrl.touched) {
+            <span class="field__error">
+              @if (emailCtrl.hasError('required')) { {{ i18n.t('required.email') }} }
+              @else { {{ i18n.t('invalid.email') }} }
+            </span>
+          }
+        </div>
+
+        <div class="field">
+          <div class="field__label-row">
+            <label class="field__label" for="password">{{ i18n.t('auth.login.password') }}</label>
+            <a routerLink="/auth/forgot-password" class="field__link">{{ i18n.t('auth.login.forgot') }}</a>
+          </div>
+          <div class="field__input-wrap">
+            <app-icon name="lock" [size]="16" class="field__icon" />
+            <input id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              class="field__input field__input--padded-right"
+              [class.field__input--error]="passwordCtrl.invalid && passwordCtrl.touched"
+              formControlName="password"
+              [placeholder]="i18n.t('common.password_placeholder')"
+              autocomplete="current-password" />
+            <button type="button" class="field__toggle"
+              [attr.aria-label]="showPassword() ? 'Hide' : 'Show'"
+              (click)="showPassword.update(v => !v)">
+              <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="16" />
+            </button>
+          </div>
+          @if (passwordCtrl.invalid && passwordCtrl.touched) {
+            <span class="field__error">{{ i18n.t('min_length.password') }}</span>
+          }
+        </div>
+
+        <button type="submit" class="btn btn--primary" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <app-icon name="loader-2" [size]="16" class="spinning" />
+            {{ i18n.t('auth.login.signing_in') }}
+          } @else {
+            {{ i18n.t('auth.login.submit') }}
+          }
+        </button>
+      </form>
+
+      <div class="divider"><span>or continue with</span></div>
+
+      <button type="button" class="btn btn--google" [disabled]="isGoogleLoading()" (click)="loginWithGoogle()">
+        <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        @if (isGoogleLoading()) { Redirecting… } @else { {{ i18n.t('auth.login.google') }} }
+      </button>
+
+      <p class="signup-prompt">
+        {{ i18n.t('auth.login.no_account') }}
+        <a routerLink="/auth/signup">{{ i18n.t('auth.login.signup') }}</a>
+      </p>
+
+    </div>
+  </main>
+</div>

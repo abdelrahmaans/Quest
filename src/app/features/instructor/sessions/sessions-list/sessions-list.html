@@ -1,0 +1,158 @@
+<!-- Sessions List Page -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Live Sessions</h1>
+      <p class="page-subtitle">Schedule, launch, and manage interactive class sessions.</p>
+    </div>
+    <button class="btn-primary" (click)="showCreate.update(v => !v)">
+      <app-icon [name]="showCreate() ? 'x' : 'plus'" [size]="16" />
+      {{ showCreate() ? 'Cancel' : 'New Session' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error">
+      <app-icon name="alert-circle" [size]="15" />{{ error() }}
+    </div>
+  }
+
+  <!-- Create Session Form -->
+  @if (showCreate()) {
+    <div class="create-card">
+      <h2 class="create-card__title">
+        <app-icon name="radio" [size]="16" />
+        Create Session
+      </h2>
+
+      <div class="create-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="sessClass">Class <span class="required">*</span></label>
+            <select id="sessClass" class="form-select" [(ngModel)]="selectedClassId">
+              <option value="">Select a class…</option>
+              @for (c of classes(); track c.id) {
+                <option [value]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="sessTitle">Session Title <span class="required">*</span></label>
+            <input id="sessTitle" type="text" class="form-input" placeholder="e.g. Chapter 4 Review & Quiz" [(ngModel)]="sessionTitle" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="sessDate">Scheduled Time (Optional)</label>
+            <input id="sessDate" type="datetime-local" class="form-input" [(ngModel)]="scheduledDate" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="sessDuration">Est. Duration (Minutes)</label>
+            <input id="sessDuration" type="number" class="form-input" placeholder="45" [(ngModel)]="durationMins" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="sessDesc">Description / Objectives</label>
+          <input id="sessDesc" type="text" class="form-input" placeholder="Brief notes for students…" [(ngModel)]="sessionDesc" />
+        </div>
+
+        <div class="create-actions">
+          <button class="btn-primary" [disabled]="!sessionTitle.trim() || !selectedClassId || isCreating()" (click)="createSession()">
+            @if (isCreating()) {
+              <app-icon name="loader-2" [size]="15" class="spinning" /> Creating…
+            } @else {
+              <app-icon name="plus" [size]="15" /> Save Session
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Filter Tabs -->
+  <div class="tabs">
+    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'all'" (click)="activeTab.set('all')">
+      All Sessions
+    </button>
+    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'live'" (click)="activeTab.set('live')">
+      <span class="pulse-dot"></span> Live Now
+    </button>
+    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'scheduled'" (click)="activeTab.set('scheduled')">
+      Scheduled
+    </button>
+    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'completed'" (click)="activeTab.set('completed')">
+      Completed
+    </button>
+  </div>
+
+  <!-- Sessions List Grid -->
+  @if (isLoading()) {
+    <div class="sessions-grid">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="session-card session-card--skeleton"></div>
+      }
+    </div>
+  } @else if (filteredSessions.length === 0) {
+    <div class="empty">
+      <div class="empty__icon">📡</div>
+      <h3>No sessions found</h3>
+      <p>Create a session to start managing live interactions and XP awards.</p>
+    </div>
+  } @else {
+    <div class="sessions-grid">
+      @for (s of filteredSessions; track s.id) {
+        <article class="session-card" [class.session-card--live]="s.status === 'live'">
+
+          <div class="session-card__top">
+            <span class="status-badge" [class]="getStatusBadgeClass(s.status)">
+              @if (s.status === 'live') { <span class="pulse-dot"></span> }
+              {{ s.status | uppercase }}
+            </span>
+            <span class="session-card__class">{{ s.class_name }}</span>
+          </div>
+
+          <h3 class="session-card__title">{{ s.title }}</h3>
+
+          @if (s.description) {
+            <p class="session-card__desc">{{ s.description }}</p>
+          }
+
+          <div class="session-card__meta">
+            @if (s.scheduled_at) {
+              <span class="meta-item">
+                <app-icon name="calendar" [size]="13" />
+                {{ s.scheduled_at | date:'short' }}
+              </span>
+            }
+            <span class="meta-item">
+              <app-icon name="clock" [size]="13" />
+              {{ s.duration_minutes ?? 45 }} mins
+            </span>
+          </div>
+
+          <div class="session-card__actions">
+            @if (s.status === 'live') {
+              <a [routerLink]="['/instructor/sessions', s.id, 'live']" class="btn-action btn-action--live">
+                <app-icon name="radio" [size]="15" /> Join Live Room
+              </a>
+            } @else if (s.status === 'scheduled' || s.status === 'draft') {
+              <button type="button" class="btn-action btn-action--start" (click)="startLiveSession(s)">
+                <app-icon name="play" [size]="15" /> Launch Live Session
+              </button>
+            } @else {
+              <a [routerLink]="['/instructor/sessions', s.id, 'live']" class="btn-action btn-action--outline">
+                <app-icon name="eye" [size]="15" /> View Session Summary
+              </a>
+            }
+          </div>
+
+        </article>
+      }
+    </div>
+  }
+
+</div>
