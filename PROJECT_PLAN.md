@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Step 8.1 Realtime Leaderboard & Session Events complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Step 8.2 In-App Notifications
+> **Current status**: Step 8.2 In-App Notifications & Auth Instructor Portal Tag complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Step 8.3 Multi-Tenancy Review
 
 ---
 
@@ -25,6 +25,8 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
 - **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A` in light, `#F8FAFC` in dark). Zero low-contrast or light gray text on white or dark surfaces.
 - **Full Arabic & English i18n Across All Shells**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR). Language switcher (`app-lang-toggle`) integrated in Home, Instructor Shell, and Admin Shell topbars.
+- **In-App Notification Engine**: Complete `NotificationService` + `NotificationDropdownComponent` with bell badge, unread counter, type icons (XP, Badge, Level, Challenge), mark as read, and filter tabs integrated into Instructor and Admin topbars.
+- **Instructor Portal Auth Clarity**: Auth login screen includes explicit `👨‍🏫 Instructor Portal · بوابة المعلمين` badge and `← Home` button so non-instructors recognize the authentication zone.
 - **Realtime Infrastructure Enabled**: Supabase Realtime Channels active on `xp_events`, `attendance`, and `students` tables with clean `ngOnDestroy()` channel unsubscription teardown.
 - **Temporary Dev Testing Bypass**: Auth and Role Guards relaxed to allow direct 1-click dev testing across `/instructor`, `/admin`, and all sub-routes.
 
@@ -51,8 +53,8 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 |---|---|---|
 | Frontend | Angular 22 (Standalone Components) | Signals + Reactive Forms |
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
-| Theme | Dynamic `[data-theme]` | Light Mode First (`#FAF7F2` bg) + Dark System |
 | Realtime | Supabase Realtime Channels | Postgres changes listener (`INSERT`, `UPDATE`) |
+| Notifications | `NotificationService` + Dropdown | Signal-driven unread count, type icons, mark as read |
 | i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) across all screens |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
 | Backend | Supabase (PostgreSQL + Auth + RLS) | Numbered, documented migrations |
@@ -83,8 +85,8 @@ QUEST/
 │   │   │   ├── guards/ (auth.guard.ts, role.guard.ts)
 │   │   │   ├── interceptors/ (auth.interceptor.ts)
 │   │   │   ├── models/ (role.enum.ts, user.model.ts)
-│   │   │   └── services/ (supabase.service.ts, ai.service.ts, theme.service.ts, i18n.service.ts, translations.ts)
-│   │   ├── shared/ui/ (icon/, ai-assistant-drawer/, theme-toggle.ts, lang-toggle.ts)
+│   │   │   └── services/ (supabase.service.ts, ai.service.ts, notification.service.ts, theme.service.ts, i18n.service.ts, translations.ts)
+│   │   ├── shared/ui/ (icon/, ai-assistant-drawer/, notification-dropdown/, theme-toggle.ts, lang-toggle.ts)
 │   │   └── features/
 │   │       ├── auth/ (login, signup, forgot-password, reset-password)
 │   │       ├── home/ (home-page, dashboard)
@@ -116,18 +118,18 @@ QUEST/
 
 ```
 [ Phase 0: Setup ]                          ✅ Complete
-[ Phase 1: Foundation & Auth ]              ✅ Complete (Theme + i18n + Left Panel Fix)
+[ Phase 1: Foundation & Auth ]              ✅ Complete (Theme + i18n + Instructor Portal Tag)
 [ Phase 2: Landing Page ]                   ✅ Complete (Full Redesign + CTA Banner Light/Dark Polish)
-[ Phase 3: Instructor Shell ]               ✅ Complete (Theme + i18n topbar aligned)
+[ Phase 3: Instructor Shell ]               ✅ Complete (Theme + i18n topbar + Notification Dropdown)
 [ Phase 4: Gamification Engine ]            ✅ Complete (Theme + i18n aligned)
 [ Phase 5: Live Session Workspace ]         ✅ Complete (Theme + i18n aligned)
-[ Phase 6: Admin Dashboard ]                ✅ Complete (Theme + i18n topbar aligned)
+[ Phase 6: Admin Dashboard ]                ✅ Complete (Theme + i18n topbar + Notification Dropdown)
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
 [ Phase 7: AI Gamification Assistant ]      ✅ Complete (Steps 7.1, 7.2, 7.3)
 [ Phase 8: Advanced / Realtime ]            ⏳ Active Phase
     Step 8.1 — Realtime Leaderboard         ✅ Complete
-    Step 8.2 — In-App Notifications         ⏳ Active Step (Next)
-    Step 8.3 — Multi-Tenancy Review         ⏳ Pending
+    Step 8.2 — In-App Notifications         ✅ Complete
+    Step 8.3 — Multi-Tenancy Review         ⏳ Active Step (Next)
     Step 8.4 — Final Full-Project Review    ⏳ Pending
 ```
 
@@ -138,12 +140,12 @@ QUEST/
 - **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
 - **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
 - **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
-- **Phase 8 — Step 8.1 (Realtime Leaderboard & Session Events)**:
-  - Subscribed `LiveWorkspaceComponent` to Supabase Realtime postgres_changes on `xp_events` and `attendance` tables.
-  - Dynamically updated local student XP totals, pushed live feed events, and updated total XP in real time across multiple open browser windows without page refreshes.
-  - Subscribed `LeaderboardComponent` to Realtime postgres_changes on `xp_events` to re-rank leaderboard entries dynamically.
-  - Implemented proper `ngOnDestroy()` teardown via `supabase.client.removeChannel()` to guarantee zero memory leaks.
-  - Added visual `🔴 Realtime Live` status indicator pills to live session HUD header and leaderboard header.
+- **Phase 8 — Step 8.1 (Realtime Leaderboard & Session Events)**: Subscribed `LiveWorkspaceComponent` and `LeaderboardComponent` to Supabase Realtime postgres_changes on `xp_events`, `attendance`, and `students` with clean `ngOnDestroy()` channel unsubscription teardown.
+- **Phase 8 — Step 8.2 (In-App Notifications) & Auth Portal Clarity**:
+  - Built `NotificationService` (`notification.service.ts`) with Signal-driven unread counter, type categories (`xp`, `badge`, `level`, `challenge`, `system`), and action methods (`markAsRead`, `markAllAsRead`, `addNotification`, `clearAll`).
+  - Created `NotificationDropdownComponent` (`notification-dropdown.ts/html/css`) with unread badge (`🔴`), dropdown panel, click-outside auto-close, and filter tabs (All / Unread).
+  - Integrated `<app-notification-dropdown />` into `InstructorShellComponent` and `AdminShellComponent` topbar headers.
+  - Enhanced Auth Login screen (`login.html`/`login.css`) with explicit `👨‍🏫 Instructor Portal · بوابة المعلمين` badge and `← Home` navigation button.
   - Verified clean build with 0 TypeScript/HTML/CSS compilation errors.
 
 ---

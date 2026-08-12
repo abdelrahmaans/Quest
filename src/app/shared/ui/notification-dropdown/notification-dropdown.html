@@ -1,0 +1,96 @@
+<div class="notif-wrap">
+  <!-- Bell Button -->
+  <button
+    type="button"
+    class="bell-btn"
+    (click)="toggleOpen()"
+    [attr.aria-expanded]="isOpen()"
+    title="In-App Notifications"
+  >
+    <app-icon name="bell" [size]="18" />
+    @if (notifService.unreadCount() > 0) {
+      <span class="unread-badge">{{ notifService.unreadCount() }}</span>
+    }
+  </button>
+
+  <!-- Dropdown Panel -->
+  @if (isOpen()) {
+    <div class="notif-dropdown">
+      <!-- Header -->
+      <div class="notif-header">
+        <div class="notif-title-wrap">
+          <h4 class="notif-title">Notifications</h4>
+          <span class="notif-count">{{ notifService.unreadCount() }} unread</span>
+        </div>
+
+        @if (notifService.unreadCount() > 0) {
+          <button type="button" class="mark-all-btn" (click)="notifService.markAllAsRead()">
+            Mark all read
+          </button>
+        }
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="notif-tabs">
+        <button
+          type="button"
+          class="tab-item"
+          [class.tab-item--active]="filter() === 'all'"
+          (click)="filter.set('all')"
+        >
+          All ({{ notifService.notifications().length }})
+        </button>
+        <button
+          type="button"
+          class="tab-item"
+          [class.tab-item--active]="filter() === 'unread'"
+          (click)="filter.set('unread')"
+        >
+          Unread ({{ notifService.unreadCount() }})
+        </button>
+      </div>
+
+      <!-- Notifications List -->
+      <div class="notif-body">
+        @if (filteredNotifications.length === 0) {
+          <div class="notif-empty">
+            <app-icon name="bell" [size]="24" />
+            <p>No notifications right now.</p>
+          </div>
+        } @else {
+          @for (n of filteredNotifications; track n.id) {
+            <a
+              [routerLink]="n.link || null"
+              class="notif-item"
+              [class.notif-item--unread]="!n.read"
+              (click)="onNotificationClick(n)"
+            >
+              <div class="notif-icon-box" [attr.data-type]="n.type">
+                <app-icon [name]="getIconName(n.type)" [size]="16" />
+              </div>
+
+              <div class="notif-content">
+                <div class="notif-item-header">
+                  <strong class="notif-item-title">{{ n.title }}</strong>
+                  <span class="notif-time">{{ n.timestamp }}</span>
+                </div>
+                <p class="notif-msg">{{ n.message }}</p>
+              </div>
+
+              @if (!n.read) {
+                <span class="unread-dot" title="Unread"></span>
+              }
+            </a>
+          }
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="notif-footer">
+        <button type="button" class="clear-btn" (click)="notifService.clearAll()">
+          Clear All
+        </button>
+      </div>
+    </div>
+  }
+</div>

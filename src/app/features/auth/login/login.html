@@ -27,13 +27,20 @@
   <main class="form-panel">
     <div class="form-wrap">
 
-      <!-- Top bar: theme + lang toggles -->
+      <!-- Top bar: home button + theme + lang toggles -->
       <div class="form-top-bar">
-        <app-lang-toggle />
-        <app-theme-toggle />
+        <a routerLink="/home" class="btn-home-link" title="Back to Home Page">
+          <app-icon name="arrow-left" [size]="16" />
+          <span>Home</span>
+        </a>
+        <div class="form-top-actions">
+          <app-lang-toggle />
+          <app-theme-toggle />
+        </div>
       </div>
 
       <header class="form-header">
+        <div class="instructor-tag">👨‍🏫 Instructor Portal · بوابة المعلمين</div>
         <h1 class="form-title">{{ i18n.t('auth.login.title') }}</h1>
         <p class="form-subtitle">{{ i18n.t('auth.login.subtitle') }}</p>
       </header>

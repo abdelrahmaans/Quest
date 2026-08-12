@@ -59,6 +59,7 @@
         <span class="topbar__pill">🛡️ System Administration</span>
       </div>
       <div class="topbar__right">
+        <app-notification-dropdown />
         <app-lang-toggle />
         <app-theme-toggle />
         @if (auth.currentProfile(); as profile) {

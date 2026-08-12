@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { IconComponent } from '../../../shared/ui/icon/icon';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle';
 import { LangToggleComponent } from '../../../shared/ui/lang-toggle';
+import { NotificationDropdownComponent } from '../../../shared/ui/notification-dropdown/notification-dropdown';
 import type { IconName } from '../../../shared/ui/icon/icons.constants';
 
 interface AdminNavItem { icon: IconName; label: string; route: string; }
@@ -11,7 +12,7 @@ interface AdminNavItem { icon: IconName; label: string; route: string; }
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ThemeToggleComponent, LangToggleComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ThemeToggleComponent, LangToggleComponent, NotificationDropdownComponent],
   templateUrl: './admin-shell.html',
   styleUrl: './admin-shell.css',
 })
