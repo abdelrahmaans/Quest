@@ -58,6 +58,7 @@
         </button>
       </div>
       <div class="topbar__right">
+        <app-lang-toggle />
         <app-theme-toggle />
         @if (auth.currentProfile(); as profile) {
           <span class="topbar__greeting">{{ profile.full_name }}</span>

@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Light & Dark Systems, Vibrant Palette, Full i18n & Generic Brand Alignment complete ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
+> **Current status**: All Previous Phases 0-7 Fully Aligned with Light/Dark Systems & i18n ✅ | **Active phase**: Phase 8 (Advanced / Realtime) ⏳ | **Next up**: Phase 8 (8.1 Realtime Leaderboard, 8.2 Notifications, 8.3 Multi-Tenancy Review, 8.4 Final Review)
 
 ---
 
@@ -24,7 +24,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Vibrant Educational Palette**: Primary interaction color upgraded to cheerful Electric Vibrant Teal (`#14B8A6` / hover `#0D9488`).
 - **Target Audience**: Appeals to age 5 to 16+ without becoming childish ("Premium educational technology platform + playful gamification").
 - **High Text Visibility & Contrast**: Primary text Deep Navy (`#0F172A` in light, `#F8FAFC` in dark). Zero low-contrast or light gray text on white or dark surfaces.
-- **Full Arabic & English i18n**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR).
+- **Full Arabic & English i18n Across All Shells**: Built-in translation dictionary (`translations.ts`) supporting Cairo font (Arabic RTL) and Inter font (English LTR). Language switcher (`app-lang-toggle`) integrated in Home, Instructor Shell, and Admin Shell topbars.
 
 ### 2.2 Color System Tokens
 | Semantic Role | Token Variable | Hex Code (Light) | Hex Code (Dark) | Usage |
@@ -75,7 +75,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Frontend | Angular 22 (Standalone Components) | Signals + Reactive Forms |
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
 | Theme | Dynamic `[data-theme]` | Light Mode First (`#FAF7F2` bg) + Dark System |
-| i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) |
+| i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) across all screens |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
 | Backend | Supabase (PostgreSQL + Auth + RLS) | Numbered, documented migrations |
 | State | Angular Signals | No external state library |
@@ -138,15 +138,15 @@ QUEST/
 
 ```
 [ Phase 0: Setup ]                          ✅ Complete
-[ Phase 1: Foundation & Auth ]              ✅ Complete
+[ Phase 1: Foundation & Auth ]              ✅ Complete (Theme + i18n aligned)
 [ Phase 2: Landing Page ]                   ✅ Complete (Redesigned with Light & Dark Systems + i18n)
-[ Phase 3: Instructor Shell ]               ✅ Complete (Brand aligned to Quest Engine)
-[ Phase 4: Gamification Engine ]            ✅ Complete
-[ Phase 5: Live Session Workspace ]         ✅ Complete
-[ Phase 6: Admin Dashboard ]                ✅ Complete (Brand aligned to Quest Engine)
+[ Phase 3: Instructor Shell ]               ✅ Complete (Theme + i18n topbar aligned)
+[ Phase 4: Gamification Engine ]            ✅ Complete (Theme + i18n aligned)
+[ Phase 5: Live Session Workspace ]         ✅ Complete (Theme + i18n aligned)
+[ Phase 6: Admin Dashboard ]                ✅ Complete (Theme + i18n topbar aligned)
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
 [ Phase 7: AI Gamification Assistant ]      ✅ Complete (Steps 7.1, 7.2, 7.3)
-[ Light & Dark Systems & i18n Pass ]        ✅ Complete (Navbar Dark Fix & Vibrant Teal #14B8A6)
+[ Light & Dark Systems & i18n Pass ]        ✅ Complete (Universal across all screens)
 [ Phase 8: Advanced / Realtime ]            ⏳ Active Phase (Next)
     Step 8.1 — Realtime Leaderboard         ⏳ Pending
     Step 8.2 — In-App Notifications         ⏳ Pending
@@ -161,13 +161,14 @@ QUEST/
 - **Phase 0 to 6**: Scaffolded Angular 22 standalone app, Supabase client, RLS migrations, Auth, Instructor dashboard, Live workspace, Admin dashboard.
 - **Interim Phase**: Verified real Supabase connectivity, created additive seed data in `supabase/seed/temp_demo_seed.sql`, and cleaned up testing bypass code.
 - **Phase 7 (AI Assistant)**: Built secure Supabase Edge Function `ai-gamification-assistant`, `AIService`, and `AiAssistantDrawerComponent` with explicit human-confirmation modals.
-- **Light & Dark Design Systems, Brand Alignment & Full Arabic i18n Pass**:
+- **Light & Dark Design Systems, Universal i18n & Brand Alignment Pass**:
   - Embedded 45-point Generic Gamification Platform specification in `PROJECT_PLAN.md`.
   - Applied Light Mode First tokens (`#FAF7F2` warm bg, `#FFFFFF` cards, `#ECFDF5` mint surfaces, `#0F172A` deep navy high-contrast text, `#F59E0B` amber).
   - Upgraded Primary Teal to vibrant, cheerful `#14B8A6` (Electric Vibrant Teal) for high energy across all components.
   - Fixed Navbar header background for Dark Mode using `color-mix(in srgb, var(--clr-bg) 85%, transparent)` for seamless dark glassmorphism.
+  - Integrated `app-lang-toggle` into Instructor Shell and Admin Shell topbars alongside `app-theme-toggle` for universal 1-click English/Arabic language switching across all dashboards.
   - Aligned Instructor Shell and Admin Shell sidebar brand titles to generic `Quest Engine` to fulfill brand-agnostic architecture rules.
-  - Extended `translations.ts` with comprehensive English & Arabic keys and bound `i18n.t(...)` to all home sections for instant, high-contrast Arabic/English switching with Cairo & Inter typography.
+  - Extended `translations.ts` with comprehensive English & Arabic keys and bound `i18n.t(...)` for instant, high-contrast Arabic/English switching with Cairo & Inter typography across all screens.
 
 ---
 *This file is the single source of truth for Mada Quest.*
