@@ -1,6 +1,6 @@
 # 🎯 مدى Quest (Mada Quest) — Master Project Documentation & Roadmap
 
-> **حالة المشروع الحالية**: المرحلة 5 مكتملة بنجاح ✅ | **الخطوة القادمة**: المرحلة 6 (Admin Dashboard) ⏳
+> **حالة المشروع الحالية**: المرحلة 6 مكتملة بنجاح ✅ | **الخطوة القادمة**: المرحلة 7 (AI Assistant) ⏳
 
 ---
 
@@ -36,8 +36,8 @@
    - استخدام المكون المحترس `<app-icon name="..." />` المحمّل من `icons.constants.ts`. يُمنع استدعاء مكتبات خارجية.
 5. **التحقق البرمجي التلقائي (Build Verification)**:
    - تشغيل `npm run build` بعد كل خطوة للتأكد من عدم وجود أية أخطاء TypeScript أو HTML أو CSS.
-6. **التحديث المستمر لهذا الملف (Automatic Document Update)**:
-   - يتم تحديث ملف [`PROJECT_PLAN.md`](file:///d:/Full%20Stack/Frontend/QUEST/PROJECT_PLAN.md) تلقائياً في نهاية كل خطوة أو مرحلة ليكون دائماً المرجع الحقيقي واللحظي لتقدم المشروع.
+6. **التحديث المستمر وتزامن GitHub (Automatic Doc Update & Git Commit)**:
+   - يتم تحديث ملف [`PROJECT_PLAN.md`](file:///d:/Full%20Stack/Frontend/QUEST/PROJECT_PLAN.md) وعمل Git Commit وصفي موثق مرفوع على GitHub [`https://github.com/abdelrahmaans/Quest.git`](https://github.com/abdelrahmaans/Quest.git) بنهاية كل مرحلة.
 
 ---
 
@@ -62,7 +62,7 @@ d:/Full Stack/Frontend/QUEST/
 │   │       ├── auth/ (login, signup, forgot-password, reset-password)
 │   │       ├── home/ (home-page, dashboard)
 │   │       ├── instructor/ (shell, overview, classes, gamification, leaderboard, sessions)
-│   │       └── admin/ (admin.routes.ts)
+│   │       └── admin/ (shell, overview, users, config, logs)
 │   ├── styles.css (Global Design Tokens & Reset)
 │   └── environments/ (environment.ts, environment.prod.ts)
 ├── supabase/
@@ -86,8 +86,8 @@ d:/Full Stack/Frontend/QUEST/
 [ Phase 3: Instructor Shell ] ───► ✅ مكتملة
 [ Phase 4: Gamification Engine] ─► ✅ مكتملة
 [ Phase 5: Live Session Workspace]►✅ مكتملة
-[ Phase 6: Admin Dashboard ] ───► ⏳ قيد الانتظار (الخطوة القادمة)
-[ Phase 7: AI Assistant ] ───────► ⏳ قيد الانتظار
+[ Phase 6: Admin Dashboard ] ───► ✅ مكتملة
+[ Phase 7: AI Assistant ] ───────► ⏳ قيد الانتظار (الخطوة القادمة)
 [ Phase 8: Advanced Realtime ] ──► ⏳ قيد الانتظار
 ```
 
@@ -122,24 +122,29 @@ d:/Full Stack/Frontend/QUEST/
 - [x] **قائمة المتصدرين (`leaderboard`)**: منصة التتويج البصرية (Podium) لأول 3 طلاب وجدول الترتيب الكامل.
 
 ### ✅ Phase 5 — مساحة عمل الحصة المباشرة (Live Session Workspace)
-- [x] **جدول الحصص المباشرة (`/instructor/sessions`)**:
-  - تصفية الحصص حسب الحالة (الكل، جارية Live، مجدولة، مكتملة).
-  - نموذج إنشاء حصة جديدة (ربط الفصل، العنوان، التاريخ والمدة).
-  - زر إطلاق وإدارة الحصة الحية.
+- [x] **جدول الحصص المباشرة (`/instructor/sessions`)**: تصفية الحصص حسب الحالة، نموذج الإنشاء، زر إطلاق الحصة.
 - [x] **شاشة الحصة المباشرة الجارية (`/instructor/sessions/:id/live`)**:
-  - **الـ Top HUD**: شريط علوي يحتوي على شارة `LIVE` النابضة، مؤقت حي بدقة الثواني (`HH:MM:SS`)، إحصائيات الحضور والـ XP، وزر إنهاء الحصة.
-  - **قائمة الطلاب والتأكيدات الحية (Live Roster)**: كروت الطلاب مع مفاتيح تبديل سريعة للحضور والغياب والتأخير (`P`, `L`, `A`) وحساب الإحصائيات لحظياً.
-  - **شريط الـ Live XP السريع**: تحديد جميع أو جزء من الطلاب الحاضرين ومنح نقاط XP دفعة واحدة بنقرة واحدة مع شريط الفئات والأسباب.
-  - **سجل الأحداث الحي (Live XP Stream Feed)**: تدفق تنبيهات حية لحظية بجميع النقاط الممنوحة أثناء الحصة.
+  - الـ Top HUD مع مؤقت حي ومؤشرات حالة الـ LIVE.
+  - تسجيل الحضور والغياب الحي (P/L/A).
+  - شريط الـ Live XP الدفعي ونشاط البث الحي المباشر (Live Stream Feed).
+
+### ✅ Phase 6 — لوحة تحكم الأدمن (Admin Dashboard)
+- [x] **شريط الأدمن الهيكلي (`AdminShellComponent` عند `/admin`)**:
+  - شريط جانبي أوبسيديان داكن بلمسات ذهبية للأدمن، ترويسة علوية بـ Admin Badge، وملاحة سلسة.
+- [x] **لوحة إحصائيات النظام الشاملة (`AdminOverviewComponent` عند `/admin`)**:
+  - إحصائيات حية من Supabase: إجمالي الحسابات، عدد المعلمين، عدد الأدمنز، إجمالي الفصول، إجمالي الطلاب، وإجمالي الـ XP الممنوحة بالنظام.
+  - سجل أحدث الحسابات المسجلة بالمنصة وتوزيع الأدوار.
+- [x] **إدارة الحسابات والأدوار (`AdminUsersComponent` عند `/admin/users`)**:
+  - بحث بالاسم، تصفية حسب الدور (الكل، معلم، أدمن).
+  - تغيير دور المستخدم فورياً (ترقية لأدمن / تنزيل لمعلم)، وتفعيل/تعطيل الحسابات.
+- [x] **إعدادات المستويات والـ XP (`GamificationConfigComponent` عند `/admin/config`)**:
+  - جدول شجرة المستويات، نموذج إضافة مستوى جديد وحد النقاط المطلوبة والعنوان.
+- [x] **سجل العمليات والأمان (`AdminAuditLogsComponent` عند `/admin/logs`)**:
+  - تدفق أحداث النظام وسجل العمليات الأمنية.
 
 ---
 
 ## 🎯 7. الخطة المستقبلية والخطوات القادمة (Next Phases & Roadmap)
-
-### ⏳ Phase 6 — لوحة تحكم الأدمن (Admin Dashboard)
-- [ ] إدارة كافة المستخدمين والمدرسين والطلاب في المنصة.
-- [ ] ضبط شجرة المستويات (Level thresholds) ومسارات التعلم (Tracks).
-- [ ] مراجعة سجلات العمليات والأمان (Audit Logs).
 
 ### ⏳ Phase 7 — المساعد الذكي (AI Assistant)
 - [ ] محرك اقتراحات الـ Gamification الذكي بناءً على أداء الفصول.
@@ -162,4 +167,4 @@ npm run build
 ```
 
 ---
-*تم تحديث هذا المستند تلقائياً في نهاية المرحلة 5 ويُمثّل المرجع الرئيسي للمشروع.*
+*تم تحديث هذا المستند تلقائياً في نهاية المرحلة 6 ويُمثّل المرجع الرئيسي للمشروع.*
