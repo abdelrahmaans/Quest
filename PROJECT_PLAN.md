@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, exactly what remains, the prompts to execute each remaining step, and the process for closing out every step (build → commit → update this file → push).
 >
-> **Current status**: Phases 0–6 & Interim Phase complete ✅ | **Active phase**: Phase 7 (AI Assistant) — Step 7.1 done ✅, Step 7.2 in progress ⏳ | **Next up**: Phase 7.2 Backend Edge Function → 7.3 Frontend UI → Phase 8 (Realtime & Notifications)
+> **Current status**: Phases 0–6 & Interim Phase complete ✅ | **Active phase**: Phase 7 (AI Assistant) — Steps 7.1 & 7.2 done ✅, Step 7.3 in progress ⏳ | **Next up**: Phase 7.3 Frontend UI → Phase 8 (Realtime & Notifications)
 
 ---
 
@@ -129,6 +129,8 @@ QUEST/
 │   ├── styles.css
 │   └── environments/ (environment.ts, environment.prod.ts)
 ├── supabase/
+│   ├── functions/
+│   │   └── ai-gamification-assistant/ (index.ts)
 │   ├── migrations/ (0001_initial_schema.sql, 0002_rls_and_auth_trigger.sql, 0003_admin_policies_and_fixes.sql)
 │   └── seed/ (temp_demo_seed.sql)
 ├── angular.json / package.json
@@ -160,8 +162,8 @@ QUEST/
     Step E — Cleanup (revert temp code)     ✅ Complete (0 TEMP-TESTING tags remain, build clean)
 [ Phase 7: AI Gamification Assistant ]      ⏳ Active Phase
     Step 7.1 — Discovery                    ✅ Complete
-    Step 7.2 — Backend: Secure AI Endpoint  ⏳ Active (Next)
-    Step 7.3 — Frontend: AIService & UI     ⏳ Pending
+    Step 7.2 — Backend: Secure AI Endpoint  ✅ Complete (supabase/functions/ai-gamification-assistant)
+    Step 7.3 — Frontend: AIService & UI     ⏳ Active (Next)
 [ Phase 8: Advanced / Realtime ]            ⏳ Pending
 ```
 
@@ -175,7 +177,8 @@ QUEST/
 - **Phase 5**: Session list (`/instructor/sessions`) with status filters and creation form; live session screen (`/instructor/sessions/:id/live`) with live timer HUD, attendance (P/L/A), batched live XP bar, live activity stream.
 - **Phase 6**: Admin shell (obsidian/gold sidebar), system-wide overview stats, user/role management (`/admin/users`), level & XP configuration (`/admin/config`), audit log viewer (`/admin/logs`).
 - **Interim Phase**: Completed Step A (100% real Supabase connectivity audit), Step B (temporary testing auth bypass & dev role switcher), Step C (additive demo seed data in `supabase/seed/temp_demo_seed.sql`), Step D (Mada brand palette, Cairo/Inter/JetBrains Mono typography, "Powered by Mada" sponsor credit), and Step E (full cleanup of testing bypass code & 0 remaining `TEMP-TESTING` tags).
-- **Phase 7 / Step 7.1 (Discovery)**: Audited all existing tables (`classes`, `students`, `sessions`, `attendance`, `xp_events`, `challenges`, `badges`) and services (`AuthService`, `SupabaseService`) for available context. Determined required AI architecture: Supabase Edge Function to protect server-side AI API keys, structured JSON response schema for age-safe gamification suggestions, frontend `AIService`, and explicit human confirmation before writing to Supabase.
+- **Phase 7 / Step 7.1 (Discovery)**: Audited all existing tables (`classes`, `students`, `sessions`, `attendance`, `xp_events`, `challenges`, `badges`) and services (`AuthService`, `SupabaseService`) for available context. Defined required AI architecture: Supabase Edge Function to protect server-side AI API keys, structured JSON response schema for age-safe gamification suggestions, frontend `AIService`, and explicit human confirmation before writing to Supabase.
+- **Phase 7 / Step 7.2 (Backend: Secure AI Endpoint)**: Created Supabase Edge Function `ai-gamification-assistant` in `supabase/functions/ai-gamification-assistant/index.ts`. Built JWT authentication & CORS handling, system prompt enforcing educational age-safe guidelines (prohibiting aggressive elimination games for young kids), structured JSON schema generator, and context-aware fallback recommendation engine. Verified zero AI keys in Angular frontend bundle.
 
 ---
 
@@ -187,31 +190,9 @@ QUEST/
 
 Audited all existing data models and services to define the context payload and Edge Function requirements.
 
-### Step 7.2 — Backend: Secure AI Endpoint
+### Step 7.2 — Backend: Secure AI Endpoint ✅ Complete
 
-```
-Build the AI integration server-side, never calling the Claude/AI API directly from the
-Angular frontend with an exposed key:
-
-1. Create a Supabase Edge Function (e.g. `ai-gamification-assistant`) that receives a
-   request from the frontend containing: session context (class, age group, track, level,
-   objectives, active gamification profile), recent performance data (attendance, XP
-   distribution, challenge history, engagement trend), and the instructor's free-text
-   question.
-2. The Edge Function holds the AI API key as a server-side secret (never shipped to the
-   client), builds a system prompt that constrains the assistant to be an educational
-   gamification advisor only, and explicitly instructs it to consider age, track,
-   difficulty, session duration, student maturity, and competition intensity — and to
-   never recommend aggressive competition for young children.
-3. The function returns a structured JSON response: title, objective, duration,
-   instructions, gamification suggestion, xp_reward, badge suggestion, challenge
-   suggestion, materials, instructor_steps, expected_student_behavior.
-4. Add basic rate limiting / auth check so only authenticated instructors can call this
-   function (verify the Supabase session token server-side).
-
-Confirm the API key is not present anywhere in the Angular bundle (check the built
-output, not just the source).
-```
+Created Supabase Edge Function `ai-gamification-assistant` with server-side AI key protection, age-safe system prompt, and structured JSON output.
 
 ### Step 7.3 — Frontend: AIService + Assistant UI
 
