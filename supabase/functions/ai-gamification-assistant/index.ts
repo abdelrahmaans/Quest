@@ -1,5 +1,6 @@
 // Supabase Edge Function: ai-gamification-assistant
 // Serves as a secure backend gateway for AI-powered gamification suggestions.
+// Uses Google Gemini API (gemini-2.0-flash) with structured JSON response generation.
 // API Keys are kept strictly as server-side secrets (Deno.env) and NEVER exposed to frontend.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -80,58 +81,85 @@ serve(async (req) => {
       });
     }
 
-    const aiApiKey = Deno.env.get("AI_API_KEY") || Deno.env.get("CLAUDE_API_KEY");
+    // Primary env var: GEMINI_API_KEY, fallback: AI_API_KEY
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || Deno.env.get("AI_API_KEY");
 
-    // ── 3. BUILD SYSTEM PROMPT ────────────────────────────────
-    const systemPrompt = `You are an expert Educational Gamification Advisor for the Mada Quest platform.
+    // ── 3. BUILD SYSTEM PROMPT & INSTRUCTIONS ─────────────────
+    const systemPrompt = `You are an expert Educational Gamification Advisor for the Quest Engine platform.
 Your task is to analyze class context and instructor prompts to generate safe, highly engaging, age-appropriate gamification ideas.
 
 GUIDELINES:
 - Tailor difficulty, duration, and tone to the specified age group (${body.sessionContext?.ageGroup || 'General'}).
 - Emphasize positive reinforcement, teamwork, and mastery over toxic competition.
 - For young children, NEVER recommend aggressive zero-sum elimination games.
-- Output MUST strictly be valid JSON matching the specified schema without conversational markdown formatting.`;
+- You MUST output strictly valid JSON matching this exact structure without markdown or backticks:
+{
+  "title": string,
+  "objective": string,
+  "durationMinutes": number,
+  "instructions": string,
+  "gamificationSuggestion": string,
+  "xpReward": number,
+  "badgeSuggestion": string or null,
+  "challengeSuggestion": string or null,
+  "materials": string[],
+  "instructorSteps": string[],
+  "expectedStudentBehavior": string
+}`;
 
-    // ── 4. EXECUTE AI CALL OR FALLBACK SIMULATION ────────────
+    // ── 4. EXECUTE GEMINI API CALL OR FALLBACK SIMULATION ─────
     let structuredResponse: AiStructuredResponse;
 
-    if (aiApiKey) {
-      // Direct Anthropic / AI API Call
-      const apiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    if (geminiApiKey) {
+      // Google Gemini 2.0 Flash API Endpoint
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
+
+      const apiRes = await fetch(geminiUrl, {
         method: "POST",
         headers: {
-          "x-api-key": aiApiKey,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 1024,
-          system: systemPrompt,
-          messages: [
+          system_instruction: {
+            parts: [{ text: systemPrompt }],
+          },
+          contents: [
             {
               role: "user",
-              content: `Class: ${body.sessionContext?.className || 'General'}, Session: ${body.sessionContext?.sessionTitle || 'General'}. Instructor Question: ${body.prompt}`,
+              parts: [
+                {
+                  text: `Class: ${body.sessionContext?.className || 'General'}, Session: ${body.sessionContext?.sessionTitle || 'General'}. Instructor Prompt: ${body.prompt}`,
+                },
+              ],
             },
           ],
+          generationConfig: {
+            response_mime_type: "application/json",
+            temperature: 0.7,
+            maxOutputTokens: 1024,
+          },
         }),
       });
 
       if (!apiRes.ok) {
         const errTxt = await apiRes.text();
-        console.error("AI API Error:", errTxt);
+        console.error("Gemini API Error:", errTxt);
         structuredResponse = generateFallbackResponse(body);
       } else {
         const result = await apiRes.json();
-        const rawContent = result.content?.[0]?.text || "";
+        // Extract raw JSON text from Gemini response structure
+        const rawContent = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
         try {
-          structuredResponse = JSON.parse(rawContent);
+          // Clean potential markdown fencing if returned by Gemini
+          const cleanedText = rawContent.replace(/```json/g, "").replace(/```/g, "").trim();
+          structuredResponse = JSON.parse(cleanedText);
         } catch (_e) {
+          console.error("Failed to parse Gemini response JSON, using fallback:", rawContent);
           structuredResponse = generateFallbackResponse(body);
         }
       }
     } else {
-      // Server-side fallback generator when AI API key secret is not set in Deno env
+      // Server-side fallback generator when GEMINI_API_KEY is not set in Deno env
       structuredResponse = generateFallbackResponse(body);
     }
 

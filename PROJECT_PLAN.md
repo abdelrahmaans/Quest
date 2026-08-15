@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, status updates, and current configuration.
 >
-> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | AI Edge Function Claude Model Updated (`claude-sonnet-4-5-20250929`) 🤖
+> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | AI Edge Function Switch to Google Gemini 2.0 Flash API (`gemini-2.0-flash`) 🤖
 
 ---
 
@@ -26,7 +26,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Strict Auth Guard Protection**: `authGuard` and `roleGuard` actively check Supabase auth sessions and user profile roles. Unauthenticated visits to `/instructor` or `/admin` are immediately redirected to `/auth/login?returnUrl=...`.
 - **Demo Seed Data**: Demo seed records (`temp_demo_seed.sql`) are intentionally retained in the database for UI review and live testing.
 - **Multi-Tenant Security (Migration 0004 Audit)**: `0004_multi_tenancy_rls_policies.sql` RLS policies explicitly allow `organization_id IS NULL` for smooth backwards compatibility with existing instructor data.
-- **AI Assistant Edge Function**: Edge function gateway `supabase/functions/ai-gamification-assistant/index.ts` updated to Anthropic Claude Model `claude-sonnet-4-5-20250929`. Server-side secrets kept via `Deno.env` (Zero key leaks in `dist/` bundle). Explicit human confirmation modal required before DB writes.
+- **AI Assistant Edge Function**: Edge function gateway `supabase/functions/ai-gamification-assistant/index.ts` refactored to **Google Gemini 2.0 Flash API** (`gemini-2.0-flash`) with structured JSON output generation (`response_mime_type: "application/json"`). Primary environment variable: `GEMINI_API_KEY` (fallback `AI_API_KEY`). Server-side secrets kept via `Deno.env` (Zero key leaks in `dist/` bundle). Explicit human confirmation modal required before DB writes.
 - **Realtime Infrastructure Enabled**: Supabase Realtime Channels active on `xp_events`, `attendance`, and `students` tables with clean `ngOnDestroy()` channel unsubscription teardown.
 
 ### 2.2 Color System Tokens (Official Final Palette)
@@ -37,7 +37,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Light Teal | `--clr-primary-light` | `#CCFBF1` | `#1E4E49` | Subtle teal sections |
 | Soft Mint Surface | `--clr-surface-mint` | `#ECFDF5` | `#133D39` | Secondary card & panel surfaces |
 | Deep Navy / High Contrast | `--clr-navy` / `--clr-text` | `#0F172A` | `#F8FAFC` | Primary typography, headings, numbers |
-| Energetic Accent | `--clr-accent` | `#F59E0B` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
+| Energetic Accent | `--clr-accent` | `--clr-accent` | `#F59E0B` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
 | Main Background | `--clr-bg` | `#FAF7F2` | `#0F172A` | Main application background |
 | Surface / Cards | `--clr-surface` | `#FFFFFF` | `#111827` | Cards & modal surfaces |
 | Muted Teal | `--clr-muted-teal` | `#6B8E8D` | `#6B8E8D` | Subtle icons & secondary highlights |
@@ -54,7 +54,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
 | Realtime | Supabase Realtime Channels | Postgres changes listener (`INSERT`, `UPDATE`) |
 | Security | `authGuard` & `roleGuard` | Real Supabase session validation & role verification |
-| AI Gateway | Supabase Edge Function | Model `claude-sonnet-4-5-20250929` via Anthropic API |
+| AI Gateway | Supabase Edge Function | Model `gemini-2.0-flash` via Google Gemini API |
 | Notifications | `NotificationService` + Dropdown | Signal-driven unread count, type icons, mark as read |
 | i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) across all screens |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
@@ -128,7 +128,7 @@ QUEST/
 [ Phase 5: Live Session Workspace ]         ✅ Complete
 [ Phase 6: Admin Dashboard ]                ✅ Complete
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
-[ Phase 7: AI Gamification Assistant ]      ✅ Verified (Model Updated to claude-sonnet-4-5-20250929)
+[ Phase 7: AI Gamification Assistant ]      ✅ Verified (Switched to Google Gemini 2.0 Flash API)
 [ Phase 8: Advanced / Realtime ]            ✅ Verified (Realtime Broadcast + Notification Dropdown)
 ```
 
@@ -136,9 +136,10 @@ QUEST/
 
 ## 8. Detailed Accomplishments Log
 
-- **AI Model Upgrade**: Updated Anthropic Claude Model ID in `supabase/functions/ai-gamification-assistant/index.ts` to `claude-sonnet-4-5-20250929`.
-- **Full Workspace Grep**: Confirmed zero other references to old model ID exist in the codebase.
-- **Build & Sync**: Application compiled with 0 errors (`ng build`) and committed/pushed to GitHub.
+- **AI Engine Provider Refactor**: Replaced Anthropic Claude integration in `supabase/functions/ai-gamification-assistant/index.ts` with **Google Gemini 2.0 Flash API** (`gemini-2.0-flash`).
+- **Structured JSON Generation**: Configured `generationConfig.response_mime_type = "application/json"` and `system_instruction` parts format.
+- **Environment Variable Priority**: Primary variable `GEMINI_API_KEY` (fallback `AI_API_KEY`).
+- **Build & Sync**: Application compiled with 0 errors (`ng Build`) and committed/pushed to GitHub.
 
 ---
 *This file is the single source of truth for Mada Quest.*
