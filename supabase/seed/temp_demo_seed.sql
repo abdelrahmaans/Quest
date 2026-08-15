@@ -10,9 +10,9 @@ INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at
 )
 VALUES
-  ('d0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.instructor1@madaquest.local', '$2a$10$abcdefghijklmnopqrstuu', NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: Prof. Ahmed Hassan"}', false, NOW(), NOW()),
-  ('d0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.instructor2@madaquest.local', '$2a$10$abcdefghijklmnopqrstuu', NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: Eng. Sarah Mansour"}', false, NOW(), NOW()),
-  ('d0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.admin@madaquest.local', '$2a$10$abcdefghijklmnopqrstuu', NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: System Admin Mada"}', false, NOW(), NOW())
+  ('d0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.instructor1@madaquest.local', crypt('Password123!', gen_salt('bf')), NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: Prof. Ahmed Hassan"}', false, NOW(), NOW()),
+  ('d0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.instructor2@madaquest.local', crypt('Password123!', gen_salt('bf')), NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: Eng. Sarah Mansour"}', false, NOW(), NOW()),
+  ('d0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'demo.admin@madaquest.local', crypt('Password123!', gen_salt('bf')), NOW(), NULL, NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Demo: System Admin Mada"}', false, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- ── 1. DEMO PROFILES ─────────────────────────────────────
