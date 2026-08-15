@@ -16,7 +16,10 @@ begin
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     coalesce(new.raw_user_meta_data->>'avatar_url', 'https://api.dicebear.com/7.x/bottts/svg?seed=' || new.id),
     coalesce((new.raw_user_meta_data->>'role')::public.user_role, 'instructor')
-  );
+  )
+  on conflict (id) do update set
+    full_name = coalesce(excluded.full_name, public.profiles.full_name),
+    avatar_url = coalesce(excluded.avatar_url, public.profiles.avatar_url);
   return new;
 end;
 $$;

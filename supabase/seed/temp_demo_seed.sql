@@ -4,6 +4,8 @@
 -- Matches exact column schema and valid Hexadecimal UUID syntax.
 -- =========================================================
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ── 0. DEMO AUTH USERS ───────────────────────────────────
 -- Required because public.profiles.id references auth.users(id)
 INSERT INTO auth.users (
