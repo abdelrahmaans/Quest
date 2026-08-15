@@ -61,13 +61,13 @@ export class InstructorOverviewComponent implements OnInit {
 
       this.totalStudents.set(studentCount ?? 0);
 
-      // Load total XP given
-      const { data: xpData } = await this.supabase.client
-        .from('xp_events')
-        .select('points')
-        .eq('awarded_by', user.id);
+      // Load total XP given across all students of this instructor
+      const { data: xpStudentData } = await this.supabase.client
+        .from('students')
+        .select('xp_total')
+        .eq('instructor_id', user.id);
 
-      const total = (xpData ?? []).reduce((sum, r) => sum + (r.points ?? 0), 0);
+      const total = (xpStudentData ?? []).reduce((sum, r) => sum + (r.xp_total ?? 0), 0);
       this.totalXP.set(total);
 
       // Recent students (top by XP) — join via classes

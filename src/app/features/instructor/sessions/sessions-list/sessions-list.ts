@@ -74,7 +74,7 @@ export class SessionsListComponent implements OnInit {
       const { data, error } = await this.supabase.client
         .from('sessions')
         .select(`
-          id, title, description, status, scheduled_at, duration_minutes, class_id, created_at,
+          id, session_number, title, description, status, started_at, duration_minutes, class_id, created_at,
           class:classes(name)
         `)
         .order('created_at', { ascending: false });
@@ -83,14 +83,14 @@ export class SessionsListComponent implements OnInit {
 
       const mapped: SessionRow[] = (data ?? []).map((s: {
         id: string; title: string; description: string | null; status: any;
-        scheduled_at: string | null; duration_minutes: number | null; class_id: string; created_at: string;
+        started_at: string | null; duration_minutes: number | null; class_id: string; created_at: string;
         class: { name: string }[] | { name: string } | null;
       }) => ({
         id:               s.id,
         title:            s.title,
         description:      s.description,
         status:           s.status,
-        scheduled_at:     s.scheduled_at,
+        scheduled_at:     s.started_at,
         duration_minutes: s.duration_minutes,
         class_id:         s.class_id,
         class_name:       Array.isArray(s.class) ? (s.class[0]?.name ?? '—') : (s.class as { name: string } | null)?.name ?? '—',
@@ -112,11 +112,20 @@ export class SessionsListComponent implements OnInit {
     if (!user) return;
 
     try {
+      // Calculate next session_number for this class
+      const { count } = await this.supabase.client
+        .from('sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('class_id', this.selectedClassId);
+
+      const nextNum = (count ?? 0) + 1;
+
       const { error } = await this.supabase.client.from('sessions').insert({
         class_id:         this.selectedClassId,
+        session_number:   nextNum,
         title:            this.sessionTitle.trim(),
         description:      this.sessionDesc.trim() || null,
-        scheduled_at:     this.scheduledDate ? new Date(this.scheduledDate).toISOString() : null,
+        started_at:       this.scheduledDate ? new Date(this.scheduledDate).toISOString() : null,
         duration_minutes: this.durationMins || 45,
         status:           this.scheduledDate ? 'scheduled' : 'draft',
       });

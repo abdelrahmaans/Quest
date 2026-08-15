@@ -80,7 +80,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
       const { data, error } = await this.supabase.client
         .from('students')
         .select(`
-          id, full_name, xp_total, level, streak_days,
+          id, full_name, xp_total, level, current_streak,
           class:classes(name)
         `)
         .eq('instructor_id', user.id)
@@ -90,7 +90,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
       if (error) throw error;
 
       const ranked: LeaderboardEntry[] = (data ?? []).map((s: {
-        id: string; full_name: string; xp_total: number; level: number; streak_days: number;
+        id: string; full_name: string; xp_total: number; level: number; current_streak: number;
         class: { name: string }[] | null;
       }, i: number) => ({
         rank:        i + 1,
@@ -100,7 +100,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
         level:       s.level      ?? 1,
         class_name:  Array.isArray(s.class) ? (s.class[0]?.name ?? '—') : (s.class as { name: string } | null)?.name ?? '—',
         badge_count: 0,
-        streak:      s.streak_days ?? 0,
+        streak:      s.current_streak ?? 0,
       }));
 
       this.entries.set(ranked);

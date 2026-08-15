@@ -78,8 +78,7 @@ export class AIService {
       description,
       xp_reward: xpReward,
       duration_minutes: durationMinutes,
-      status: 'published',
-      configuration: { created_by_ai: true, class_id: classId },
+      is_active: true,
     });
 
     return { error: error as Error | null };
@@ -106,11 +105,10 @@ export class AIService {
 
     // 2. Insert batch xp_events
     const xpInserts = students.map((std) => ({
-      student_id: std.id,
-      class_id: classId,
-      awarded_by: instructorId,
+      student_id:  std.id,
+      class_id:    classId,
       points,
-      reason: `[AI Suggestion] ${reason}`,
+      reason:      `[AI Suggestion] ${reason}`,
       source_type: 'challenge',
     }));
 

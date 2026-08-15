@@ -111,10 +111,18 @@ export class GamificationComponent implements OnInit {
   async loadRecentEvents(): Promise<void> {
     const user = this.auth.currentUser();
     if (!user) return;
+
+    // Get student IDs belonging to this instructor
+    const studentIds = this.students().map(s => s.id);
+    if (studentIds.length === 0) {
+      this.recentEvents.set([]);
+      return;
+    }
+
     const { data } = await this.supabase.client
       .from('xp_events')
       .select('id, points, reason, created_at, student_id')
-      .eq('awarded_by', user.id)
+      .in('student_id', studentIds)
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -149,10 +157,9 @@ export class GamificationComponent implements OnInit {
     try {
       const { error } = await this.supabase.client.from('xp_events').insert({
         student_id:  this.selectedStudentId,
-        awarded_by:  user.id,
         points:      this.finalXP,
         reason:      this.finalReason,
-        event_type:  'manual',
+        source_type: 'manual',
       });
 
       if (error) throw error;

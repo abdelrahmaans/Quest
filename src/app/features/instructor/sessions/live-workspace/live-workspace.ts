@@ -289,11 +289,12 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     try {
       // Insert XP events for each selected student
       const inserts = selected.map(s => ({
-        student_id: s.id,
-        awarded_by: user.id,
+        student_id:  s.id,
+        session_id:  this.sessionId(),
+        class_id:    this.classId(),
         points,
-        reason: `[Live Session] ${reason}`,
-        event_type: 'live_session',
+        reason:      `[Live Session] ${reason}`,
+        source_type: 'live_session',
       }));
 
       await this.supabase.client.from('xp_events').insert(inserts);
