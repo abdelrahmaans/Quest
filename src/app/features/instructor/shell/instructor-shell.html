@@ -58,6 +58,10 @@
         </button>
       </div>
       <div class="topbar__right">
+        <button type="button" class="topbar__ai-btn" (click)="aiDrawerOpen.set(true)" aria-label="Open AI Assistant">
+          <app-icon name="sparkles" [size]="16" />
+          <span>AI Assistant</span>
+        </button>
         <app-notification-dropdown />
         <app-lang-toggle />
         <app-theme-toggle />
@@ -72,5 +76,11 @@
       <router-outlet />
     </main>
   </div>
+
+  <!-- AI Assistant Drawer available globally across instructor portal -->
+  <app-ai-assistant-drawer
+    [isOpen]="aiDrawerOpen()"
+    (closeDrawer)="aiDrawerOpen.set(false)"
+  />
 
 </div>

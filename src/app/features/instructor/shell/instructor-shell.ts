@@ -5,6 +5,7 @@ import { IconComponent } from '../../../shared/ui/icon/icon';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle';
 import { LangToggleComponent } from '../../../shared/ui/lang-toggle';
 import { NotificationDropdownComponent } from '../../../shared/ui/notification-dropdown/notification-dropdown';
+import { AiAssistantDrawerComponent } from '../../../shared/ui/ai-assistant-drawer/ai-assistant-drawer';
 import type { IconName } from '../../../shared/ui/icon/icons.constants';
 
 interface NavItem { icon: IconName; label: string; route: string; }
@@ -12,7 +13,7 @@ interface NavItem { icon: IconName; label: string; route: string; }
 @Component({
   selector: 'app-instructor-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ThemeToggleComponent, LangToggleComponent, NotificationDropdownComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ThemeToggleComponent, LangToggleComponent, NotificationDropdownComponent, AiAssistantDrawerComponent],
   templateUrl: './instructor-shell.html',
   styleUrl: './instructor-shell.css',
 })
@@ -20,6 +21,7 @@ export class InstructorShellComponent {
   readonly auth   = inject(AuthService);
   readonly router = inject(Router);
   readonly sidebarOpen = signal(true);
+  readonly aiDrawerOpen = signal(false);
 
   readonly navItems: NavItem[] = [
     { icon: 'bar-chart-2',   label: 'Overview',      route: '/instructor' },
