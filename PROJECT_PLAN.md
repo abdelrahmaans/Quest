@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, status updates, and current configuration.
 >
-> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | Realtime & Notifications Verified ✅
+> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | AI Edge Function Claude Model Updated (`claude-sonnet-4-5-20250929`) 🤖
 
 ---
 
@@ -26,7 +26,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 - **Strict Auth Guard Protection**: `authGuard` and `roleGuard` actively check Supabase auth sessions and user profile roles. Unauthenticated visits to `/instructor` or `/admin` are immediately redirected to `/auth/login?returnUrl=...`.
 - **Demo Seed Data**: Demo seed records (`temp_demo_seed.sql`) are intentionally retained in the database for UI review and live testing.
 - **Multi-Tenant Security (Migration 0004 Audit)**: `0004_multi_tenancy_rls_policies.sql` RLS policies explicitly allow `organization_id IS NULL` for smooth backwards compatibility with existing instructor data.
-- **AI Assistant Drawer Security**: Edge function gateway `supabase/functions/ai-gamification-assistant/index.ts` keeps API keys server-side. Zero secret keys exist in `dist/` production bundle. Explicit human confirmation modal required before DB writes.
+- **AI Assistant Edge Function**: Edge function gateway `supabase/functions/ai-gamification-assistant/index.ts` updated to Anthropic Claude Model `claude-sonnet-4-5-20250929`. Server-side secrets kept via `Deno.env` (Zero key leaks in `dist/` bundle). Explicit human confirmation modal required before DB writes.
 - **Realtime Infrastructure Enabled**: Supabase Realtime Channels active on `xp_events`, `attendance`, and `students` tables with clean `ngOnDestroy()` channel unsubscription teardown.
 
 ### 2.2 Color System Tokens (Official Final Palette)
@@ -54,7 +54,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Styling | Pure Vanilla CSS | CSS Custom Properties, BEM |
 | Realtime | Supabase Realtime Channels | Postgres changes listener (`INSERT`, `UPDATE`) |
 | Security | `authGuard` & `roleGuard` | Real Supabase session validation & role verification |
-| AI Gateway | Supabase Edge Function | Server-side secrets via Deno.env (Zero frontend key leak) |
+| AI Gateway | Supabase Edge Function | Model `claude-sonnet-4-5-20250929` via Anthropic API |
 | Notifications | `NotificationService` + Dropdown | Signal-driven unread count, type icons, mark as read |
 | i18n & RTL | Custom `I18nService` | Full Arabic (RTL/Cairo) & English (LTR/Inter) across all screens |
 | Icons | Custom SVG `IconComponent` | Local inline SVGs |
@@ -111,7 +111,7 @@ QUEST/
 - 22 core tables (`0001_initial_schema.sql`).
 - RLS + auth trigger (`0002_rls_and_auth_trigger.sql`).
 - `is_admin()` helper, full admin policies, `audit_log` (admin-read-only), `organization_id` columns, `xp_events` corrected to **append-only ledger** (`0003_admin_policies_and_fixes.sql`).
-- Multi-tenancy RLS helper `get_user_org_id()` and tenant isolation policies (`0004_multi_tenancy_rls_policies.sql`) with explicit `organization_id IS NULL` backwards compatibility.
+- Multi-tenancy RLS helper `get_user_org_id()` and tenant isolation policies (`0004_multi_tenancy_rls_policies.sql`).
 - `authGuard` and `roleGuard` strictly active across all protected routes.
 - Demo seed data (`temp_demo_seed.sql`) retained intentionally for review.
 
@@ -127,8 +127,8 @@ QUEST/
 [ Phase 4: Gamification Engine ]            ✅ Complete
 [ Phase 5: Live Session Workspace ]         ✅ Complete
 [ Phase 6: Admin Dashboard ]                ✅ Complete
-[ Interim: Verify / Seed / Brand ]          ✅ Complete (Official Palette #14B8A6/#FAF7F2 Approved)
-[ Phase 7: AI Gamification Assistant ]      ✅ Verified (Zero Key Leak in dist + Human Confirmation Modal)
+[ Interim: Verify / Seed / Brand ]          ✅ Complete
+[ Phase 7: AI Gamification Assistant ]      ✅ Verified (Model Updated to claude-sonnet-4-5-20250929)
 [ Phase 8: Advanced / Realtime ]            ✅ Verified (Realtime Broadcast + Notification Dropdown)
 ```
 
@@ -136,11 +136,9 @@ QUEST/
 
 ## 8. Detailed Accomplishments Log
 
-- **Brand Specification Approval**: Formally registered Electric Teal (`#14B8A6`) and Warm Off-White (`#FAF7F2`) as official final brand tokens in `PROJECT_PLAN.md`.
-- **Migration 0004 Audit**: Confirmed `0004_multi_tenancy_rls_policies.sql` RLS clauses (`organization_id is null OR organization_id = get_user_org_id() OR is_admin()`) allow existing instructors with NULL `organization_id` to view 100% of their classes.
-- **AI Assistant Bundle Audit**: Performed `grep_search` on production bundle `dist/mada-quest`. Confirmed zero AI API key leakage.
-- **Human Confirmation Flow**: Confirmed `openConfirm()` and `confirmAction()` in `AiAssistantDrawerComponent` require explicit instructor modal click before writing challenge or XP bonus to Supabase.
-- **Realtime Infrastructure**: Verified Supabase Realtime Channels (`live_session_${sid}` and `instructor_leaderboard_realtime`) update live session HUD and re-rank leaderboard automatically across open browser tabs upon `xp_events` INSERT.
+- **AI Model Upgrade**: Updated Anthropic Claude Model ID in `supabase/functions/ai-gamification-assistant/index.ts` to `claude-sonnet-4-5-20250929`.
+- **Full Workspace Grep**: Confirmed zero other references to old model ID exist in the codebase.
+- **Build & Sync**: Application compiled with 0 errors (`ng build`) and committed/pushed to GitHub.
 
 ---
 *This file is the single source of truth for Mada Quest.*
