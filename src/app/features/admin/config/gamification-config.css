@@ -74,3 +74,80 @@
 
 .empty-text { color: var(--clr-text-muted); font-size: .875rem; padding: 1rem; text-align: center; }
 .spinning { animation: spin .7s linear infinite; }
+
+/* Class Selector Card */
+.class-selector-card {
+  padding: 1rem 1.25rem;
+}
+
+.class-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.class-selector__label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .9375rem;
+  color: var(--clr-text);
+}
+
+.class-selector__label app-icon {
+  color: var(--clr-primary);
+}
+
+.form-select {
+  height: 42px;
+  padding: 0 .875rem;
+  border: 1.5px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  font-size: .9375rem;
+  font-family: inherit;
+  color: var(--clr-text);
+  background: var(--clr-surface);
+  outline: none;
+  min-width: 260px;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+/* Empty Card */
+.empty-card {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .875rem;
+}
+
+.empty-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--clr-surface-mint);
+  color: var(--clr-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: .5rem;
+}
+
+.empty-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--clr-text);
+}
+
+.empty-card p {
+  font-size: .9375rem;
+  color: var(--clr-text-muted);
+  max-width: 460px;
+}

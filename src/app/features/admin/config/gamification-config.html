@@ -4,7 +4,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Level & XP Rules</h1>
-      <p class="page-subtitle">Configure system level thresholds, titles, and XP requirements.</p>
+      <p class="page-subtitle">Configure class-specific level thresholds, names, and XP requirements.</p>
     </div>
   </div>
 
@@ -17,71 +17,110 @@
     </div>
   }
 
-  <div class="config-grid">
-
-    <!-- Add Level Form -->
-    <section class="card">
-      <h2 class="card__title">
-        <app-icon name="plus" [size]="16" />
-        Add Level Threshold
-      </h2>
-
-      <div class="form">
-        <div class="form-field">
-          <label class="form-label" for="lvlNum">Level Number</label>
-          <input id="lvlNum" type="number" class="form-input" min="1" [(ngModel)]="newLevelNum" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label" for="lvlXP">XP Required</label>
-          <input id="lvlXP" type="number" class="form-input" min="0" step="50" [(ngModel)]="newXPRequired" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label" for="lvlTitle">Level Title (e.g. Master Apprentice)</label>
-          <input id="lvlTitle" type="text" class="form-input" placeholder="e.g. Novice Explorer" [(ngModel)]="newLevelTitle" />
-        </div>
-
-        <button type="button" class="btn-primary" [disabled]="isSaving()" (click)="addLevel()">
-          @if (isSaving()) {
-            <app-icon name="loader-2" [size]="16" class="spinning" /> Saving…
-          } @else {
-            <app-icon name="plus" [size]="16" /> Add Level
-          }
-        </button>
+  @if (isLoadingClasses()) {
+    <div class="skeleton-list">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  } @else if (classes().length === 0) {
+    <!-- Empty State: No classes exist yet -->
+    <div class="card empty-card">
+      <div class="empty-icon-wrap">
+        <app-icon name="graduation-cap" [size]="36" />
       </div>
-    </section>
-
-    <!-- Levels List Table -->
-    <section class="card">
-      <h2 class="card__title">
-        <app-icon name="trophy" [size]="16" />
-        Active Level Hierarchy
-      </h2>
-
-      @if (isLoading()) {
-        <div class="skeleton-list">
-          @for (_ of [1,2,3,4]; track $index) {
-            <div class="skeleton-row"></div>
+      <h3>No Classes Available Yet</h3>
+      <p>A class is required before configuring level thresholds. Please create a class first in the system.</p>
+      <a routerLink="/instructor/classes" class="btn-primary">
+        <app-icon name="plus" [size]="16" /> Go to Classes & Create One
+      </a>
+    </div>
+  } @else {
+    <!-- Class Selector Bar -->
+    <div class="card class-selector-card">
+      <div class="class-selector">
+        <label for="classSelect" class="class-selector__label">
+          <app-icon name="graduation-cap" [size]="18" />
+          <span>Select Class to Configure:</span>
+        </label>
+        <select
+          id="classSelect"
+          class="form-select"
+          [ngModel]="selectedClassId()"
+          (ngModelChange)="onClassChange($event)"
+        >
+          @for (c of classes(); track c.id) {
+            <option [value]="c.id">{{ c.name }} ({{ c.public_code }})</option>
           }
+        </select>
+      </div>
+    </div>
+
+    <div class="config-grid">
+
+      <!-- Add Level Form -->
+      <section class="card">
+        <h2 class="card__title">
+          <app-icon name="plus" [size]="16" />
+          Add Level Threshold
+        </h2>
+
+        <div class="form">
+          <div class="form-field">
+            <label class="form-label" for="lvlNum">Level Number</label>
+            <input id="lvlNum" type="number" class="form-input" min="1" [(ngModel)]="newLevelNum" />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="lvlXP">XP Required</label>
+            <input id="lvlXP" type="number" class="form-input" min="0" step="50" [(ngModel)]="newXPRequired" />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="lvlTitle">Level Name (e.g. Master Apprentice)</label>
+            <input id="lvlTitle" type="text" class="form-input" placeholder="e.g. Novice Explorer" [(ngModel)]="newLevelTitle" />
+          </div>
+
+          <button type="button" class="btn-primary" [disabled]="isSaving()" (click)="addLevel()">
+            @if (isSaving()) {
+              <app-icon name="loader-2" [size]="16" class="spinning" /> Saving…
+            } @else {
+              <app-icon name="plus" [size]="16" /> Add Level
+            }
+          </button>
         </div>
-      } @else if (levels().length === 0) {
-        <p class="empty-text">No levels configured yet. Add level 1 above.</p>
-      } @else {
-        <div class="levels-table">
-          @for (l of levels(); track l.id) {
-            <div class="level-row">
-              <div class="level-badge">Lv. {{ l.level_number }}</div>
-              <div class="level-info">
-                <span class="level-title">{{ l.title || 'Level ' + l.level_number }}</span>
-                <span class="level-xp">{{ l.xp_required | number }} XP required</span>
+      </section>
+
+      <!-- Levels List Table -->
+      <section class="card">
+        <h2 class="card__title">
+          <app-icon name="trophy" [size]="16" />
+          Active Level Hierarchy
+        </h2>
+
+        @if (isLoadingLevels()) {
+          <div class="skeleton-list">
+            @for (_ of [1,2,3,4]; track $index) {
+              <div class="skeleton-row"></div>
+            }
+          </div>
+        } @else if (levels().length === 0) {
+          <p class="empty-text">No levels configured yet for this class. Add level 1 using the form.</p>
+        } @else {
+          <div class="levels-table">
+            @for (l of levels(); track l.id) {
+              <div class="level-row">
+                <div class="level-badge">Lv. {{ l.level_number }}</div>
+                <div class="level-info">
+                  <span class="level-title">{{ l.name || 'Level ' + l.level_number }}</span>
+                  <span class="level-xp">{{ l.xp_required | number }} XP required</span>
+                </div>
               </div>
-            </div>
-          }
-        </div>
-      }
-    </section>
+            }
+          </div>
+        }
+      </section>
 
-  </div>
+    </div>
+  }
 
 </div>

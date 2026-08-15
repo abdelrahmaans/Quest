@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, status updates, and current configuration.
 >
-> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | AI Edge Function Switch to Google Gemini 2.0 Flash API (`gemini-2.0-flash`) 🤖
+> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | Admin Gamification Config Resolved (Class Selector + Schema Alignment) 🛠️
 
 ---
 
@@ -37,7 +37,7 @@ The platform is built as a **generic, brand-agnostic core engine** reusable acro
 | Light Teal | `--clr-primary-light` | `#CCFBF1` | `#1E4E49` | Subtle teal sections |
 | Soft Mint Surface | `--clr-surface-mint` | `#ECFDF5` | `#133D39` | Secondary card & panel surfaces |
 | Deep Navy / High Contrast | `--clr-navy` / `--clr-text` | `#0F172A` | `#F8FAFC` | Primary typography, headings, numbers |
-| Energetic Accent | `--clr-accent` | `--clr-accent` | `#F59E0B` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
+| Energetic Accent | `--clr-accent` | `#F59E0B` | `#F59E0B` | Amber accent for XP, rewards, streaks, podium, celebration |
 | Main Background | `--clr-bg` | `#FAF7F2` | `#0F172A` | Main application background |
 | Surface / Cards | `--clr-surface` | `#FFFFFF` | `#111827` | Cards & modal surfaces |
 | Muted Teal | `--clr-muted-teal` | `#6B8E8D` | `#6B8E8D` | Subtle icons & secondary highlights |
@@ -126,7 +126,7 @@ QUEST/
 [ Phase 3: Instructor Shell ]               ✅ Complete
 [ Phase 4: Gamification Engine ]            ✅ Complete
 [ Phase 5: Live Session Workspace ]         ✅ Complete
-[ Phase 6: Admin Dashboard ]                ✅ Complete
+[ Phase 6: Admin Dashboard ]                ✅ Complete (Gamification Config Resolved)
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
 [ Phase 7: AI Gamification Assistant ]      ✅ Verified (Switched to Google Gemini 2.0 Flash API)
 [ Phase 8: Advanced / Realtime ]            ✅ Verified (Realtime Broadcast + Notification Dropdown)
@@ -136,10 +136,8 @@ QUEST/
 
 ## 8. Detailed Accomplishments Log
 
-- **AI Engine Provider Refactor**: Replaced Anthropic Claude integration in `supabase/functions/ai-gamification-assistant/index.ts` with **Google Gemini 2.0 Flash API** (`gemini-2.0-flash`).
-- **Structured JSON Generation**: Configured `generationConfig.response_mime_type = "application/json"` and `system_instruction` parts format.
-- **Environment Variable Priority**: Primary variable `GEMINI_API_KEY` (fallback `AI_API_KEY`).
-- **Build & Sync**: Application compiled with 0 errors (`ng Build`) and committed/pushed to GitHub.
+- **Admin Gamification Config Fix**: Resolved schema mismatch in `GamificationConfigComponent` (`title` -> `name`). Added class selector dropdown to pass required `class_id` on INSERT. Added friendly Empty State card when no classes exist.
+- **Build & Sync**: Application compiled with 0 errors (`ng build`) and committed/pushed to GitHub.
 
 ---
 *This file is the single source of truth for Mada Quest.*
