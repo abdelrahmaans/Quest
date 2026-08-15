@@ -52,24 +52,47 @@ alter table public.feedback enable row level security;
 alter table public.gamification_suggestions enable row level security;
 
 -- 3. Public Read Policies for Non-Sensitive Data
+drop policy if exists "Public read age_profiles" on public.age_profiles;
 create policy "Public read age_profiles" on public.age_profiles for select using (true);
+
+drop policy if exists "Public read tracks" on public.tracks;
 create policy "Public read tracks" on public.tracks for select using (is_active = true);
+
+drop policy if exists "Public read gamification_modules" on public.gamification_modules;
 create policy "Public read gamification_modules" on public.gamification_modules for select using (is_active = true);
+
+drop policy if exists "Public read badges" on public.badges;
 create policy "Public read badges" on public.badges for select using (is_active = true);
+
+drop policy if exists "Public read achievements" on public.achievements;
 create policy "Public read achievements" on public.achievements for select using (is_active = true);
+
+drop policy if exists "Public read safe student profiles" on public.students;
 create policy "Public read safe student profiles" on public.students for select using (status = 'active');
+
+drop policy if exists "Public read classes info" on public.classes;
 create policy "Public read classes info" on public.classes for select using (status != 'archived');
+
+drop policy if exists "Public read feedback approved" on public.feedback;
 create policy "Public read feedback approved" on public.feedback for select using (approved_for_public = true);
 
 -- 4. Instructor & Admin Security Policies
+drop policy if exists "Users read own profile" on public.profiles;
 create policy "Users read own profile" on public.profiles for select using (auth.uid() = id);
+
+drop policy if exists "Instructors manage own classes" on public.classes;
 create policy "Instructors manage own classes" on public.classes for all using (auth.uid() = instructor_id);
+
+drop policy if exists "Instructors manage sessions for own classes" on public.sessions;
 create policy "Instructors manage sessions for own classes" on public.sessions for all using (
   exists (select 1 from public.classes c where c.id = sessions.class_id and c.instructor_id = auth.uid())
 );
+
+drop policy if exists "Instructors award XP for own classes" on public.xp_events;
 create policy "Instructors award XP for own classes" on public.xp_events for all using (
   exists (select 1 from public.classes c where c.id = xp_events.class_id and c.instructor_id = auth.uid())
 );
 
 -- 5. Public Feedback Submission Policy
+drop policy if exists "Anyone can submit public feedback" on public.feedback;
 create policy "Anyone can submit public feedback" on public.feedback for insert with check (true);

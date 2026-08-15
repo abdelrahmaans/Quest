@@ -9,68 +9,45 @@ create extension if not exists "pgcrypto";
 -- ENUMS
 -- =========================================================
 
-create type public.user_role as enum (
-  'admin',
-  'instructor'
-);
+DO $$ BEGIN
+  CREATE TYPE public.user_role AS ENUM ('admin', 'instructor');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.member_status as enum (
-  'active',
-  'inactive',
-  'completed'
-);
+DO $$ BEGIN
+  CREATE TYPE public.member_status AS ENUM ('active', 'inactive', 'completed');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.class_status as enum (
-  'active',
-  'paused',
-  'completed',
-  'archived'
-);
+DO $$ BEGIN
+  CREATE TYPE public.class_status AS ENUM ('active', 'paused', 'completed', 'archived');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.session_status as enum (
-  'draft',
-  'scheduled',
-  'live',
-  'completed',
-  'cancelled'
-);
+DO $$ BEGIN
+  CREATE TYPE public.session_status AS ENUM ('draft', 'scheduled', 'live', 'completed', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.feedback_type as enum (
-  'feedback',
-  'suggestion',
-  'gamification_request',
-  'feature_request',
-  'contact',
-  'complaint',
-  'praise'
-);
+DO $$ BEGIN
+  CREATE TYPE public.feedback_type AS ENUM (
+    'feedback', 'suggestion', 'gamification_request', 'feature_request', 'contact', 'complaint', 'praise'
+  );
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.feedback_status as enum (
-  'new',
-  'in_review',
-  'approved',
-  'rejected',
-  'resolved'
-);
+DO $$ BEGIN
+  CREATE TYPE public.feedback_status AS ENUM ('new', 'in_review', 'approved', 'rejected', 'resolved');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.challenge_status as enum (
-  'draft',
-  'published',
-  'archived'
-);
+DO $$ BEGIN
+  CREATE TYPE public.challenge_status AS ENUM ('draft', 'published', 'archived');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
-create type public.challenge_assignment_status as enum (
-  'active',
-  'completed',
-  'expired',
-  'cancelled'
-);
+DO $$ BEGIN
+  CREATE TYPE public.challenge_assignment_status AS ENUM ('active', 'completed', 'expired', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- =========================================================
 -- USER PROFILES
 -- =========================================================
 
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
 
   full_name text not null,
@@ -88,7 +65,7 @@ create table public.profiles (
 -- AGE PROFILES
 -- =========================================================
 
-create table public.age_profiles (
+create table if not exists public.age_profiles (
   id uuid primary key default gen_random_uuid(),
 
   name text not null,
@@ -113,7 +90,7 @@ create table public.age_profiles (
 -- TRACKS
 -- =========================================================
 
-create table public.tracks (
+create table if not exists public.tracks (
   id uuid primary key default gen_random_uuid(),
 
   name text not null,
@@ -131,7 +108,7 @@ create table public.tracks (
 -- STUDENTS
 -- =========================================================
 
-create table public.students (
+create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),
 
   public_code text not null unique,
@@ -155,7 +132,7 @@ create table public.students (
 -- PARENTS
 -- =========================================================
 
-create table public.parents (
+create table if not exists public.parents (
   id uuid primary key default gen_random_uuid(),
 
   full_name text not null,
@@ -170,7 +147,7 @@ create table public.parents (
 -- STUDENT / PARENT RELATION
 -- =========================================================
 
-create table public.student_parents (
+create table if not exists public.student_parents (
   student_id uuid not null references public.students(id) on delete cascade,
   parent_id uuid not null references public.parents(id) on delete cascade,
 
@@ -183,7 +160,7 @@ create table public.student_parents (
 -- CLASSES
 -- =========================================================
 
-create table public.classes (
+create table if not exists public.classes (
   id uuid primary key default gen_random_uuid(),
 
   public_code text not null unique,
@@ -210,7 +187,7 @@ create table public.classes (
 -- CLASS MEMBERS
 -- =========================================================
 
-create table public.class_members (
+create table if not exists public.class_members (
   id uuid primary key default gen_random_uuid(),
 
   class_id uuid not null
@@ -233,7 +210,7 @@ create table public.class_members (
 -- LEVELS
 -- =========================================================
 
-create table public.levels (
+create table if not exists public.levels (
   id uuid primary key default gen_random_uuid(),
 
   class_id uuid not null
@@ -258,7 +235,7 @@ create table public.levels (
 -- SESSIONS
 -- =========================================================
 
-create table public.sessions (
+create table if not exists public.sessions (
   id uuid primary key default gen_random_uuid(),
 
   class_id uuid not null
@@ -290,7 +267,7 @@ create table public.sessions (
 -- GAMIFICATION MODULES
 -- =========================================================
 
-create table public.gamification_modules (
+create table if not exists public.gamification_modules (
   id uuid primary key default gen_random_uuid(),
 
   name text not null,
@@ -311,7 +288,7 @@ create table public.gamification_modules (
 -- CLASS GAMIFICATION
 -- =========================================================
 
-create table public.class_gamification (
+create table if not exists public.class_gamification (
   id uuid primary key default gen_random_uuid(),
 
   class_id uuid not null
@@ -335,7 +312,7 @@ create table public.class_gamification (
 -- SESSION GAMIFICATION
 -- =========================================================
 
-create table public.session_gamification (
+create table if not exists public.session_gamification (
   id uuid primary key default gen_random_uuid(),
 
   session_id uuid not null
@@ -354,7 +331,7 @@ create table public.session_gamification (
 -- XP EVENTS
 -- =========================================================
 
-create table public.xp_events (
+create table if not exists public.xp_events (
   id uuid primary key default gen_random_uuid(),
 
   student_id uuid not null
@@ -385,7 +362,7 @@ create table public.xp_events (
 -- BADGES
 -- =========================================================
 
-create table public.badges (
+create table if not exists public.badges (
   id uuid primary key default gen_random_uuid(),
 
   public_code text not null unique,
@@ -411,7 +388,7 @@ create table public.badges (
 -- STUDENT BADGES
 -- =========================================================
 
-create table public.student_badges (
+create table if not exists public.student_badges (
   id uuid primary key default gen_random_uuid(),
 
   student_id uuid not null
@@ -435,7 +412,7 @@ create table public.student_badges (
 -- ACHIEVEMENTS
 -- =========================================================
 
-create table public.achievements (
+create table if not exists public.achievements (
   id uuid primary key default gen_random_uuid(),
 
   public_code text not null unique,
@@ -458,7 +435,7 @@ create table public.achievements (
 -- STUDENT ACHIEVEMENTS
 -- =========================================================
 
-create table public.student_achievements (
+create table if not exists public.student_achievements (
   id uuid primary key default gen_random_uuid(),
 
   student_id uuid not null
@@ -482,7 +459,7 @@ create table public.student_achievements (
 -- CHALLENGES
 -- =========================================================
 
-create table public.challenges (
+create table if not exists public.challenges (
   id uuid primary key default gen_random_uuid(),
 
   public_code text not null unique,
@@ -521,7 +498,7 @@ create table public.challenges (
 -- CHALLENGE ASSIGNMENTS
 -- =========================================================
 
-create table public.challenge_assignments (
+create table if not exists public.challenge_assignments (
   id uuid primary key default gen_random_uuid(),
 
   challenge_id uuid not null
@@ -549,7 +526,7 @@ create table public.challenge_assignments (
 -- STUDENT CHALLENGE RESULTS
 -- =========================================================
 
-create table public.challenge_results (
+create table if not exists public.challenge_results (
   id uuid primary key default gen_random_uuid(),
 
   assignment_id uuid not null
@@ -575,7 +552,7 @@ create table public.challenge_results (
 -- ATTENDANCE
 -- =========================================================
 
-create table public.attendance (
+create table if not exists public.attendance (
   id uuid primary key default gen_random_uuid(),
 
   session_id uuid not null
@@ -597,7 +574,7 @@ create table public.attendance (
 -- FEEDBACK
 -- =========================================================
 
-create table public.feedback (
+create table if not exists public.feedback (
   id uuid primary key default gen_random_uuid(),
 
   type public.feedback_type not null,
@@ -628,7 +605,7 @@ create table public.feedback (
 -- GAMIFICATION SUGGESTIONS
 -- =========================================================
 
-create table public.gamification_suggestions (
+create table if not exists public.gamification_suggestions (
   id uuid primary key default gen_random_uuid(),
 
   instructor_id uuid
@@ -656,37 +633,37 @@ create table public.gamification_suggestions (
 -- INDEXES
 -- =========================================================
 
-create index idx_students_public_code
+create index if not exists idx_students_public_code
 on public.students(public_code);
 
-create index idx_classes_public_code
+create index if not exists idx_classes_public_code
 on public.classes(public_code);
 
-create index idx_class_members_class
+create index if not exists idx_class_members_class
 on public.class_members(class_id);
 
-create index idx_class_members_student
+create index if not exists idx_class_members_student
 on public.class_members(student_id);
 
-create index idx_sessions_class
+create index if not exists idx_sessions_class
 on public.sessions(class_id);
 
-create index idx_xp_events_student
+create index if not exists idx_xp_events_student
 on public.xp_events(student_id);
 
-create index idx_xp_events_class
+create index if not exists idx_xp_events_class
 on public.xp_events(class_id);
 
-create index idx_xp_events_created
+create index if not exists idx_xp_events_created
 on public.xp_events(created_at);
 
-create index idx_attendance_student
+create index if not exists idx_attendance_student
 on public.attendance(student_id);
 
-create index idx_challenge_results_student
+create index if not exists idx_challenge_results_student
 on public.challenge_results(student_id);
 
-create index idx_feedback_status
+create index if not exists idx_feedback_status
 on public.feedback(status);
 
 -- =========================================================
@@ -705,7 +682,8 @@ values
 ('Time Attack', 'time_attack', 'Timed challenge mechanic', 'gameplay', '⏱️'),
 ('Team Battle', 'team_battle', 'Team based competition', 'competition', '⚔️'),
 ('Mystery Reward', 'mystery_reward', 'Random reward mechanic', 'gameplay', '🎁'),
-('Progress', 'progress', 'Visual progress system', 'progress', '🚀');
+('Progress', 'progress', 'Visual progress system', 'progress', '🚀')
+on conflict (code) do nothing;
 
 -- =========================================================
 -- UPDATED_AT TRIGGER
@@ -721,38 +699,47 @@ begin
 end;
 $$;
 
+drop trigger if exists profiles_updated_at on public.profiles;
 create trigger profiles_updated_at
 before update on public.profiles
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists students_updated_at on public.students;
 create trigger students_updated_at
 before update on public.students
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists parents_updated_at on public.parents;
 create trigger parents_updated_at
 before update on public.parents
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists classes_updated_at on public.classes;
 create trigger classes_updated_at
 before update on public.classes
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists sessions_updated_at on public.sessions;
 create trigger sessions_updated_at
 before update on public.sessions
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists badges_updated_at on public.badges;
 create trigger badges_updated_at
 before update on public.badges
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists challenges_updated_at on public.challenges;
 create trigger challenges_updated_at
 before update on public.challenges
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists feedback_updated_at on public.feedback;
 create trigger feedback_updated_at
 before update on public.feedback
 for each row execute procedure public.handle_updated_at();
 
+drop trigger if exists gamification_suggestions_updated_at on public.gamification_suggestions;
 create trigger gamification_suggestions_updated_at
 before update on public.gamification_suggestions
 for each row execute procedure public.handle_updated_at();

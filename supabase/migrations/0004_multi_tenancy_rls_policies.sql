@@ -17,6 +17,7 @@ as $$
 $$;
 
 -- Multi-Tenant RLS Policy on classes table
+drop policy if exists "Tenant organization read classes" on public.classes;
 create policy "Tenant organization read classes"
   on public.classes for select
   using (
@@ -26,6 +27,7 @@ create policy "Tenant organization read classes"
   );
 
 -- Multi-Tenant RLS Policy on students table
+drop policy if exists "Tenant organization read students" on public.students;
 create policy "Tenant organization read students"
   on public.students for select
   using (

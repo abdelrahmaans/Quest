@@ -39,144 +39,168 @@ $$;
 -- =========================================================
 
 -- profiles
+drop policy if exists "Admin full access profiles" on public.profiles;
 create policy "Admin full access profiles"
   on public.profiles for all
   using (is_admin())
   with check (is_admin());
 
 -- age_profiles
+drop policy if exists "Admin full access age_profiles" on public.age_profiles;
 create policy "Admin full access age_profiles"
   on public.age_profiles for all
   using (is_admin())
   with check (is_admin());
 
 -- tracks
+drop policy if exists "Admin full access tracks" on public.tracks;
 create policy "Admin full access tracks"
   on public.tracks for all
   using (is_admin())
   with check (is_admin());
 
 -- students
+drop policy if exists "Admin full access students" on public.students;
 create policy "Admin full access students"
   on public.students for all
   using (is_admin())
   with check (is_admin());
 
 -- parents
+drop policy if exists "Admin full access parents" on public.parents;
 create policy "Admin full access parents"
   on public.parents for all
   using (is_admin())
   with check (is_admin());
 
 -- student_parents
+drop policy if exists "Admin full access student_parents" on public.student_parents;
 create policy "Admin full access student_parents"
   on public.student_parents for all
   using (is_admin())
   with check (is_admin());
 
 -- classes
+drop policy if exists "Admin full access classes" on public.classes;
 create policy "Admin full access classes"
   on public.classes for all
   using (is_admin())
   with check (is_admin());
 
 -- class_members
+drop policy if exists "Admin full access class_members" on public.class_members;
 create policy "Admin full access class_members"
   on public.class_members for all
   using (is_admin())
   with check (is_admin());
 
 -- levels
+drop policy if exists "Admin full access levels" on public.levels;
 create policy "Admin full access levels"
   on public.levels for all
   using (is_admin())
   with check (is_admin());
 
 -- sessions
+drop policy if exists "Admin full access sessions" on public.sessions;
 create policy "Admin full access sessions"
   on public.sessions for all
   using (is_admin())
   with check (is_admin());
 
 -- gamification_modules
+drop policy if exists "Admin full access gamification_modules" on public.gamification_modules;
 create policy "Admin full access gamification_modules"
   on public.gamification_modules for all
   using (is_admin())
   with check (is_admin());
 
 -- class_gamification
+drop policy if exists "Admin full access class_gamification" on public.class_gamification;
 create policy "Admin full access class_gamification"
   on public.class_gamification for all
   using (is_admin())
   with check (is_admin());
 
 -- session_gamification
+drop policy if exists "Admin full access session_gamification" on public.session_gamification;
 create policy "Admin full access session_gamification"
   on public.session_gamification for all
   using (is_admin())
   with check (is_admin());
 
 -- xp_events
+drop policy if exists "Admin full access xp_events" on public.xp_events;
 create policy "Admin full access xp_events"
   on public.xp_events for all
   using (is_admin())
   with check (is_admin());
 
 -- badges
+drop policy if exists "Admin full access badges" on public.badges;
 create policy "Admin full access badges"
   on public.badges for all
   using (is_admin())
   with check (is_admin());
 
 -- student_badges
+drop policy if exists "Admin full access student_badges" on public.student_badges;
 create policy "Admin full access student_badges"
   on public.student_badges for all
   using (is_admin())
   with check (is_admin());
 
 -- achievements
+drop policy if exists "Admin full access achievements" on public.achievements;
 create policy "Admin full access achievements"
   on public.achievements for all
   using (is_admin())
   with check (is_admin());
 
 -- student_achievements
+drop policy if exists "Admin full access student_achievements" on public.student_achievements;
 create policy "Admin full access student_achievements"
   on public.student_achievements for all
   using (is_admin())
   with check (is_admin());
 
 -- challenges
+drop policy if exists "Admin full access challenges" on public.challenges;
 create policy "Admin full access challenges"
   on public.challenges for all
   using (is_admin())
   with check (is_admin());
 
 -- challenge_assignments
+drop policy if exists "Admin full access challenge_assignments" on public.challenge_assignments;
 create policy "Admin full access challenge_assignments"
   on public.challenge_assignments for all
   using (is_admin())
   with check (is_admin());
 
 -- challenge_results
+drop policy if exists "Admin full access challenge_results" on public.challenge_results;
 create policy "Admin full access challenge_results"
   on public.challenge_results for all
   using (is_admin())
   with check (is_admin());
 
 -- attendance
+drop policy if exists "Admin full access attendance" on public.attendance;
 create policy "Admin full access attendance"
   on public.attendance for all
   using (is_admin())
   with check (is_admin());
 
 -- feedback
+drop policy if exists "Admin full access feedback" on public.feedback;
 create policy "Admin full access feedback"
   on public.feedback for all
   using (is_admin())
   with check (is_admin());
 
 -- gamification_suggestions
+drop policy if exists "Admin full access gamification_suggestions" on public.gamification_suggestions;
 create policy "Admin full access gamification_suggestions"
   on public.gamification_suggestions for all
   using (is_admin())
@@ -190,7 +214,7 @@ create policy "Admin full access gamification_suggestions"
 -- INSERT access. Only admins can SELECT.
 -- =========================================================
 
-create table public.audit_log (
+create table if not exists public.audit_log (
   id          uuid        primary key default gen_random_uuid(),
   actor_id    uuid        references public.profiles(id),
   action      text        not null,
@@ -205,14 +229,15 @@ alter table public.audit_log enable row level security;
 
 -- Only admins can read audit logs; no policy for INSERT/UPDATE/DELETE
 -- means regular users have zero write access through the API.
+drop policy if exists "Admin read audit_log" on public.audit_log;
 create policy "Admin read audit_log"
   on public.audit_log for select
   using (is_admin());
 
 -- Index for common query patterns
-create index idx_audit_log_actor    on public.audit_log(actor_id);
-create index idx_audit_log_entity   on public.audit_log(entity, entity_id);
-create index idx_audit_log_created  on public.audit_log(created_at desc);
+create index if not exists idx_audit_log_actor    on public.audit_log(actor_id);
+create index if not exists idx_audit_log_entity   on public.audit_log(entity, entity_id);
+create index if not exists idx_audit_log_created  on public.audit_log(created_at desc);
 
 
 -- =========================================================
@@ -280,6 +305,9 @@ $$;
 
 -- Drop the incorrect FOR ALL policy from migration 0002
 drop policy if exists "Instructors award XP for own classes"
+  on public.xp_events;
+
+drop policy if exists "Instructors insert XP for own classes"
   on public.xp_events;
 
 -- New INSERT-only policy for instructors (WITH CHECK, not USING)
