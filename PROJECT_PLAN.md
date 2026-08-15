@@ -2,7 +2,7 @@
 
 > **This is the single source of truth for the project.** It contains everything: what the product is, what has been built, status updates, and current configuration.
 >
-> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | Admin Gamification Config Resolved (Class Selector + Schema Alignment) 🛠️
+> **Current status**: Official Brand Tokens Approved (#14B8A6 / #FAF7F2) 🎨 | Strict Auth Guards Active 🔒 | Demo Seed Retained for Review 🧪 | Admin Audit Stream Query Refactored to `public.audit_log` 🛡️
 
 ---
 
@@ -126,7 +126,7 @@ QUEST/
 [ Phase 3: Instructor Shell ]               ✅ Complete
 [ Phase 4: Gamification Engine ]            ✅ Complete
 [ Phase 5: Live Session Workspace ]         ✅ Complete
-[ Phase 6: Admin Dashboard ]                ✅ Complete (Gamification Config Resolved)
+[ Phase 6: Admin Dashboard ]                ✅ Complete (Audit Logs Refactored to public.audit_log)
 [ Interim: Verify / Seed / Brand ]          ✅ Complete
 [ Phase 7: AI Gamification Assistant ]      ✅ Verified (Switched to Google Gemini 2.0 Flash API)
 [ Phase 8: Advanced / Realtime ]            ✅ Verified (Realtime Broadcast + Notification Dropdown)
@@ -136,7 +136,7 @@ QUEST/
 
 ## 8. Detailed Accomplishments Log
 
-- **Admin Gamification Config Fix**: Resolved schema mismatch in `GamificationConfigComponent` (`title` -> `name`). Added class selector dropdown to pass required `class_id` on INSERT. Added friendly Empty State card when no classes exist.
+- **Admin Audit Logs Refactor**: Refactored `AdminAuditLogsComponent` (`src/app/features/admin/logs/audit-logs.ts`) to query the dedicated `public.audit_log` table with a relation join to `profiles(full_name)` instead of querying `xp_events` with non-existent column `awarded_by`.
 - **Build & Sync**: Application compiled with 0 errors (`ng build`) and committed/pushed to GitHub.
 
 ---

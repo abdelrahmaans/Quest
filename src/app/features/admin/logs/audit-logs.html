@@ -4,14 +4,20 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Audit Stream</h1>
-      <p class="page-subtitle">Real-time system event stream and security audit logs.</p>
+      <p class="page-subtitle">Real-time security audit logs and administrative activity records.</p>
     </div>
   </div>
+
+  @if (errorMsg()) {
+    <div class="alert-error">
+      <app-icon name="alert-circle" [size]="15" />{{ errorMsg() }}
+    </div>
+  }
 
   <div class="card">
     <h2 class="card__title">
       <app-icon name="shield-check" [size]="16" />
-      System Activity Stream
+      System Audit Log Ledger
     </h2>
 
     @if (isLoading()) {
@@ -21,15 +27,19 @@
         }
       </div>
     } @else if (logs().length === 0) {
-      <p class="empty-text">No system activity logged yet.</p>
+      <div class="empty-state">
+        <app-icon name="shield-check" [size]="32" />
+        <p class="empty-text">No security audit logs recorded yet.</p>
+        <span class="empty-subtext">System administrative events (e.g. role updates, security policy actions) will appear here in real-time.</span>
+      </div>
     } @else {
       <div class="log-stream">
         @for (log of logs(); track log.id) {
           <div class="log-item">
-            <span class="log-tag">XP EVENT</span>
+            <span class="log-tag">{{ log.entity | uppercase }}</span>
             <div class="log-body">
-              <span class="log-desc">{{ log.description }}</span>
-              <span class="log-actor">By {{ log.actor }}</span>
+              <span class="log-desc"><strong>{{ log.action }}</strong> on {{ log.entity }}</span>
+              <span class="log-actor">Actor: {{ log.actor_name }}</span>
             </div>
             <span class="log-time">{{ log.created_at | date:'short' }}</span>
           </div>
