@@ -11,6 +11,7 @@ interface StudentItem {
   display_name: string;
   xp_total: number;
   level: number;
+  selected?: boolean;
   created_at: string;
 }
 
@@ -43,10 +44,12 @@ export class InstructorClassesComponent implements OnInit {
   readonly successMsg   = signal<string | null>(null);
 
   /* Create class form */
-  className          = '';
-  classSubject       = '';
-  classGrade         = '';
+  className           = '';
+  classSubject        = '';
+  classGrade          = '';
   initialStudentNames = '';
+  readonly allInstructorStudents = signal<StudentItem[]>([]);
+  selectedExistingIds = new Set<string>();
 
   /* Active Class Modal / Drawer for Students Management */
   readonly activeClassModal = signal<ClassRow | null>(null);
@@ -57,6 +60,7 @@ export class InstructorClassesComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.loadClasses();
+    await this.loadAllStudents();
   }
 
   async loadClasses(): Promise<void> {
@@ -92,6 +96,35 @@ export class InstructorClassesComponent implements OnInit {
     }
   }
 
+  async loadAllStudents(): Promise<void> {
+    const user = this.auth.currentUser();
+    if (!user) return;
+
+    try {
+      const { data } = await this.supabase.client
+        .from('students')
+        .select('id, full_name, display_name, xp_total, level, created_at')
+        .eq('instructor_id', user.id)
+        .order('full_name', { ascending: true });
+
+      this.allInstructorStudents.set((data ?? []) as StudentItem[]);
+    } catch (e) {
+      console.warn('Could not load all students:', e);
+    }
+  }
+
+  toggleStudentSelection(studentId: string): void {
+    if (this.selectedExistingIds.has(studentId)) {
+      this.selectedExistingIds.delete(studentId);
+    } else {
+      this.selectedExistingIds.add(studentId);
+    }
+  }
+
+  isStudentSelected(studentId: string): boolean {
+    return this.selectedExistingIds.has(studentId);
+  }
+
   async createClass(): Promise<void> {
     if (!this.className.trim()) return;
     this.creating.set(true);
@@ -117,7 +150,16 @@ export class InstructorClassesComponent implements OnInit {
 
       if (error) throw error;
 
-      // If initial students were provided in textarea, add them
+      // 1. Attach selected existing students to this new class
+      if (newClass?.id && this.selectedExistingIds.size > 0) {
+        const ids = Array.from(this.selectedExistingIds);
+        await this.supabase.client
+          .from('students')
+          .update({ class_id: newClass.id })
+          .in('id', ids);
+      }
+
+      // 2. Insert new students by name
       if (newClass?.id && this.initialStudentNames.trim()) {
         const names = this.initialStudentNames
           .split('\n')
@@ -145,8 +187,10 @@ export class InstructorClassesComponent implements OnInit {
       this.classSubject = '';
       this.classGrade = '';
       this.initialStudentNames = '';
+      this.selectedExistingIds.clear();
       this.showCreate.set(false);
       await this.loadClasses();
+      await this.loadAllStudents();
 
       setTimeout(() => this.successMsg.set(null), 4000);
     } catch (e: unknown) {
@@ -156,8 +200,9 @@ export class InstructorClassesComponent implements OnInit {
     }
   }
 
-  /* ── Student Management Modal ────────────────────────────── */
-  async openStudentsModal(cls: ClassRow): Promise<void> {
+  /* ── Student Management Modal ── */
+  async openStudentsModal(cls: ClassRow, event: MouseEvent): Promise<void> {
+    event.stopPropagation(); // prevent card click navigation
     this.activeClassModal.set(cls);
     this.loadingStudents.set(true);
     try {
@@ -211,7 +256,8 @@ export class InstructorClassesComponent implements OnInit {
         this.classStudents.update(list => [...list, newStd as StudentItem]);
       }
       this.newStudentName = '';
-      await this.loadClasses(); // Refresh student count on cards
+      await this.loadClasses();
+      await this.loadAllStudents();
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {
@@ -219,7 +265,12 @@ export class InstructorClassesComponent implements OnInit {
     }
   }
 
-  goToCreateSession(cls: ClassRow): void {
+  goToClassHub(cls: ClassRow): void {
+    this.router.navigate(['/instructor/classes', cls.id]);
+  }
+
+  goToCreateSession(cls: ClassRow, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
     this.router.navigate(['/instructor/sessions'], { queryParams: { class: cls.id } });
   }
 

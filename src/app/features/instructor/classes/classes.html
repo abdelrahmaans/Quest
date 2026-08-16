@@ -57,24 +57,50 @@
           </div>
         </div>
 
+        <!-- 1. Select from Existing Students -->
+        @if (allInstructorStudents().length > 0) {
+          <div class="form-field">
+            <label class="form-label">
+              👥 Attach Existing Students (Optional)
+              @if (selectedExistingIds.size > 0) {
+                <span class="selected-count">
+                  ({{ selectedExistingIds.size }} selected)
+                </span>
+              }
+            </label>
+            <div class="students-picker-box">
+              @for (std of allInstructorStudents(); track std.id) {
+                <label class="student-check-item" [class.student-check-item--active]="isStudentSelected(std.id)">
+                  <input type="checkbox"
+                         [checked]="isStudentSelected(std.id)"
+                         (change)="toggleStudentSelection(std.id)" />
+                  <span class="student-check-name">{{ std.full_name }}</span>
+                  <span class="student-check-lvl">Lvl {{ std.level }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- 2. Add New Students by Name -->
         <div class="form-field">
           <label class="form-label" for="initialStudents">
-            Students Names (Optional — one name per line)
+            ➕ Add Brand New Students by Name (Optional — one per line)
           </label>
-          <textarea id="initialStudents" class="form-textarea" rows="3"
-            placeholder="Youssef Ahmed&#10;Mariam Karim&#10;Omar Khaled"
+          <textarea id="initialStudents" class="form-textarea" rows="2"
+            placeholder="Youssef Ahmed&#10;Mariam Karim"
             [(ngModel)]="initialStudentNames"></textarea>
-          <span class="form-hint">You can also add students individually later at any time.</span>
+          <span class="form-hint">You can also add or import more students anytime inside the Class Hub.</span>
         </div>
 
         <div class="create-actions">
           <button class="btn-primary" [disabled]="!className.trim() || creating()" (click)="createClass()">
             @if (creating()) {
               <app-icon name="loader-2" [size]="15" class="spinning" />
-              Creating…
+              Creating Class…
             } @else {
               <app-icon name="plus" [size]="15" />
-              Create Class & Enroll Students
+              Create Class & Enroll
             }
           </button>
         </div>
@@ -104,7 +130,8 @@
   } @else {
     <div class="classes-grid">
       @for (cls of classes(); track cls.id) {
-        <article class="class-card">
+        <!-- Clicking the card opens the Class Hub / Details Page -->
+        <article class="class-card class-card--clickable" (click)="goToClassHub(cls)">
           <div class="class-card__header">
             <div class="class-card__icon">
               <app-icon name="graduation-cap" [size]="20" />
@@ -115,7 +142,10 @@
             </div>
           </div>
 
-          <h3 class="class-card__name">{{ cls.name }}</h3>
+          <div class="class-card__title-row">
+            <h3 class="class-card__name">{{ cls.name }}</h3>
+            <app-icon name="chevron-right" [size]="16" class="chevron-icon" />
+          </div>
 
           <div class="class-card__stats">
             <span class="class-card__stat">
@@ -129,20 +159,19 @@
           </div>
 
           <!-- Quick Action Buttons -->
-          <div class="class-card__actions">
-            <button type="button" class="btn-sm btn-sm--outline" (click)="openStudentsModal(cls)">
+          <div class="class-card__actions" (click)="$event.stopPropagation()">
+            <button type="button" class="btn-sm btn-sm--outline" (click)="openStudentsModal(cls, $event)">
               <app-icon name="users" [size]="13" />
-              Students ({{ cls.student_count }})
+              Roster ({{ cls.student_count }})
             </button>
-            <button type="button" class="btn-sm btn-sm--secondary" (click)="goToCreateSession(cls)">
+            <button type="button" class="btn-sm btn-sm--secondary" (click)="goToCreateSession(cls, $event)">
               <app-icon name="radio" [size]="13" />
               New Session
             </button>
-            <a [routerLink]="['/instructor/gamification']"
-               [queryParams]="{ class: cls.id }"
+            <a [routerLink]="['/instructor/classes', cls.id]"
                class="btn-sm btn-sm--primary">
-              <app-icon name="zap" [size]="13" />
-              XP
+              <app-icon name="chevron-right" [size]="13" />
+              Open Hub
             </a>
           </div>
         </article>
@@ -150,7 +179,7 @@
     </div>
   }
 
-  <!-- ── Students Management Modal ────────────────────────────── -->
+  <!-- ── Students Quick Modal ────────────────────────────── -->
   @if (activeClassModal()) {
     <div class="modal-backdrop" (click)="closeStudentsModal()">
       <div class="modal-card" (click)="$event.stopPropagation()">
@@ -158,7 +187,7 @@
           <div>
             <h3 class="modal-title">
               <app-icon name="users" [size]="18" />
-              {{ activeClassModal()?.name }} — Students
+              {{ activeClassModal()?.name }} — Students Roster
             </h3>
             <p class="modal-subtitle">Enrolled students and quick enrollment</p>
           </div>
@@ -179,7 +208,7 @@
             } @else {
               <app-icon name="plus" [size]="14" />
             }
-            Add Student
+            Add
           </button>
         </div>
 
@@ -209,9 +238,9 @@
 
         <div class="modal-footer">
           <button class="btn-secondary" (click)="closeStudentsModal()">Close</button>
-          <button class="btn-primary" (click)="goToCreateSession(activeClassModal()!)">
-            <app-icon name="radio" [size]="14" />
-            Launch Gamified Session For This Class
+          <button class="btn-primary" (click)="goToClassHub(activeClassModal()!)">
+            <app-icon name="chevron-right" [size]="14" />
+            Go to Full Class Dashboard
           </button>
         </div>
       </div>

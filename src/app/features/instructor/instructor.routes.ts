@@ -17,6 +17,11 @@ export const instructorRoutes: Routes = [
           import('./classes/classes').then(m => m.InstructorClassesComponent),
       },
       {
+        path: 'classes/:id',
+        loadComponent: () =>
+          import('./classes/class-detail/class-detail').then(m => m.ClassDetailComponent),
+      },
+      {
         path: 'gamification',
         loadComponent: () =>
           import('./gamification/gamification').then(m => m.GamificationComponent),
