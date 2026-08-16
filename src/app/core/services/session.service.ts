@@ -114,8 +114,8 @@ export class SessionService {
           sessionsToInsert.push({
             class_id:          classId,
             session_number:    sessionIndex,
-            title:             `Session #${sessionIndex}: ${className}`,
-            description:       `Scheduled session on ${DAY_NAMES[dayOfWeek]} at ${scheduleTime || '16:00'}`,
+            title:             `Session #${sessionIndex}`,
+            description:       `${className} — ${DAY_NAMES[dayOfWeek]} at ${scheduleTime || '16:00'}`,
             scheduled_at:      sessionDateTime.toISOString(),
             started_at:        sessionDateTime.toISOString(),
             duration_minutes:  duration,

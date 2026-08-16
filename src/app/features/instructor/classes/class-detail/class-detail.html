@@ -67,9 +67,12 @@
             @if (cls.subject) { <span class="tag tag--subject">{{ cls.subject }}</span> }
             @if (cls.grade_level) { <span class="tag tag--grade">{{ cls.grade_level }}</span> }
             <span class="tag tag--code">Code: <code>{{ cls.public_code }}</code></span>
+            @if (cls.schedule_days && cls.schedule_days.length > 0) {
+              <span class="tag tag--schedule">📅 {{ cls.schedule_days.join(', ') }} · {{ cls.schedule_time }}</span>
+            }
           </div>
           <h1 class="hub-header__title">{{ cls.name }}</h1>
-          <p class="hub-header__meta">Created on {{ cls.created_at | date:'mediumDate' }}</p>
+          <p class="hub-header__meta">Created on {{ cls.created_at | date:'mediumDate' }} · {{ sessions().length }} Sessions total</p>
         </div>
       </div>
 
@@ -111,7 +114,7 @@
               [class.hub-tab--active]="activeTab() === 'sessions'"
               (click)="activeTab.set('sessions')">
         <app-icon name="radio" [size]="16" />
-        Live Sessions & Gamification ({{ sessions().length }})
+        Live Sessions & Schedule ({{ sessions().length }})
       </button>
       <button type="button" class="hub-tab"
               [class.hub-tab--active]="activeTab() === 'leaderboard'"
@@ -206,7 +209,7 @@
           </div>
         </div>
 
-        <!-- Students Roster Table -->
+        <!-- Students Roster Grid -->
         @if (students().length === 0) {
           <div class="empty-state">
             <app-icon name="users" [size]="32" />
@@ -258,12 +261,12 @@
         <!-- Top Action -->
         <div class="pane-header">
           <div>
-            <h2 class="pane-title">Class Sessions</h2>
-            <p class="pane-subtitle">Choose gamification modes and launch interactive live workspace.</p>
+            <h2 class="pane-title">Class Sessions Schedule</h2>
+            <p class="pane-subtitle">Choose gamification modes, manage dates, and launch live workspace.</p>
           </div>
           <button class="btn-primary" (click)="showCreateSession.update(v => !v)">
             <app-icon [name]="showCreateSession() ? 'x' : 'plus'" [size]="16" />
-            {{ showCreateSession() ? 'Cancel' : 'Create Session' }}
+            {{ showCreateSession() ? 'Cancel' : 'Add Session' }}
           </button>
         </div>
 
@@ -279,6 +282,10 @@
                 <div class="form-field">
                   <label class="form-label" for="sTitle">Session Title <span class="required">*</span></label>
                   <input id="sTitle" type="text" class="form-input" placeholder="e.g. Loops & Arrays Quest" [(ngModel)]="sessionTitle" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="sDate">Date & Time</label>
+                  <input id="sDate" type="datetime-local" class="form-input" [(ngModel)]="sessionDate" />
                 </div>
                 <div class="form-field">
                   <label class="form-label" for="sDuration">Duration (Mins)</label>
@@ -325,23 +332,41 @@
         } @else {
           <div class="sessions-list">
             @for (sess of sessions(); track sess.id) {
-              <article class="session-item">
+              <article class="session-item" [class.session-item--live]="sess.status === 'live'">
                 <div class="session-item__info">
                   <div class="session-badge-row">
                     <span class="session-num">Session #{{ sess.session_number }}</span>
                     <span class="session-mode-tag">{{ getModeName(sess.gamification_mode) }}</span>
                     <span class="session-status session-status--{{ sess.status }}">{{ sess.status }}</span>
                   </div>
+
                   <h4 class="session-title">{{ sess.title }}</h4>
+
                   <p class="session-meta">
-                    Duration: {{ sess.duration_minutes || 45 }} mins · Created {{ sess.created_at | date:'mediumDate' }}
+                    @if (sess.scheduled_at) {
+                      📅 <strong>{{ sess.scheduled_at | date:'EEE, d MMM y · h:mm a' }}</strong> ·
+                    }
+                    ⏱️ {{ sess.duration_minutes || 45 }} mins
+                    @if (sess.description) {
+                      · <span class="session-desc-text">{{ sess.description }}</span>
+                    }
                   </p>
                 </div>
 
                 <div class="session-item__actions">
+                  <!-- Mode Switcher -->
+                  <select class="form-select mode-select-sm"
+                          [ngModel]="sess.gamification_mode"
+                          (ngModelChange)="updateSessionGamificationMode(sess, $event)">
+                    <option value="xp_levels">⚡ XP & Levels</option>
+                    <option value="teams_duels">🛡️ Team Duels</option>
+                    <option value="badges_mastery">🏆 Badges</option>
+                    <option value="hybrid_quest">🎯 Hybrid</option>
+                  </select>
+
                   <button class="btn-launch" (click)="launchLiveSession(sess)">
                     <app-icon name="play" [size]="15" />
-                    Launch Live Workspace
+                    {{ sess.status === 'live' ? 'Join Live Room' : 'Launch Live' }}
                   </button>
                 </div>
               </article>

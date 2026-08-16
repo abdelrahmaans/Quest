@@ -68,6 +68,13 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   readonly totalSessionXP = signal<number>(0);
   readonly elapsedSeconds = signal<number>(0);
 
+  /* In-Session Alarm / Challenge Timer */
+  readonly showAlarmWidget = signal(false);
+  readonly alarmSeconds    = signal<number>(300); // 5 min default
+  readonly isAlarmRunning  = signal(false);
+  readonly isAlarmRinging  = signal(false);
+  private alarmInterval: any = null;
+
   /* Team Battle State (for teams_duels mode) */
   readonly activeTeamTab  = signal<'all' | 'red' | 'blue'>('all');
   get teamRedStudents(): LiveStudent[] {
@@ -152,6 +159,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.alarmInterval) clearInterval(this.alarmInterval);
     this.teardownRealtimeSubscription();
   }
 
@@ -243,12 +251,50 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
   }
 
+  /* ── In-Session Alarm Methods ── */
+  setAlarmDuration(seconds: number): void {
+    this.isAlarmRunning.set(false);
+    this.isAlarmRinging.set(false);
+    if (this.alarmInterval) clearInterval(this.alarmInterval);
+    this.alarmSeconds.set(seconds);
+  }
+
+  toggleAlarm(): void {
+    if (this.isAlarmRunning()) {
+      clearInterval(this.alarmInterval);
+      this.isAlarmRunning.set(false);
+    } else {
+      if (this.alarmSeconds() <= 0) return;
+      this.isAlarmRunning.set(true);
+      this.isAlarmRinging.set(false);
+
+      this.alarmInterval = setInterval(() => {
+        this.alarmSeconds.update(sec => {
+          if (sec <= 1) {
+            clearInterval(this.alarmInterval);
+            this.isAlarmRunning.set(false);
+            this.isAlarmRinging.set(true);
+            return 0;
+          }
+          return sec - 1;
+        });
+      }, 1000);
+    }
+  }
+
+  resetAlarm(): void {
+    if (this.alarmInterval) clearInterval(this.alarmInterval);
+    this.isAlarmRunning.set(false);
+    this.isAlarmRinging.set(false);
+    this.alarmSeconds.set(300);
+  }
+
   async loadLiveSessionData(sid: string): Promise<void> {
     try {
       // 1. Load Session & Class Info
       const { data: sess, error: sessErr } = await this.supabase.client
         .from('sessions')
-        .select('id, title, class_id, status, gamification_mode, class:classes(name)')
+        .select('id, title, class_id, status, started_at, scheduled_at, gamification_mode, class:classes(name)')
         .eq('id', sid)
         .single();
 
@@ -259,6 +305,13 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       this.gamificationMode.set(sess.gamification_mode || 'xp_levels');
       const cName = Array.isArray(sess.class) ? sess.class[0]?.name : (sess.class as { name: string } | null)?.name;
       this.className.set(cName ?? 'Class');
+
+      // Preserve elapsed timer from started_at if session is already live!
+      if (sess.status === 'live' && sess.started_at) {
+        const startMs = new Date(sess.started_at).getTime();
+        const elapsedSecs = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+        this.elapsedSeconds.set(elapsedSecs);
+      }
 
       // 2. Load Students in Class
       const { data: stdData, error: stdErr } = await this.supabase.client
@@ -285,19 +338,12 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
         full_name:       s.full_name,
         xp_total:        s.xp_total ?? 0,
         level:           s.level ?? 1,
-        attendance:      attMap.get(s.id) ?? 'present', // default present
+        attendance:      attMap.get(s.id) ?? 'present',
         selected:        false,
         earnedSessionXp: 0,
       }));
 
       this.students.set(liveStudents);
-
-      // Auto-save default attendance for unrecorded students
-      for (const st of liveStudents) {
-        if (!attMap.has(st.id)) {
-          this.sessionService.updateAttendance(sid, st.id, 'present').catch(() => {});
-        }
-      }
 
       // 4. Load Previous Feed Events in this Session
       const { data: xpData } = await this.supabase.client
@@ -499,7 +545,12 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
         mvpStudentName:    this.mvpStudentName,
       });
 
-      await this.router.navigate(['/instructor/sessions']);
+      // Route back to the specific Class Hub so the updated Leaderboard is shown!
+      if (this.classId()) {
+        await this.router.navigate(['/instructor/classes', this.classId()]);
+      } else {
+        await this.router.navigate(['/instructor/sessions']);
+      }
     } catch {
       this.isEnding.set(false);
     }

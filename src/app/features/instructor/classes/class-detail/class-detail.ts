@@ -16,6 +16,10 @@ interface ClassInfo {
   grade_level: string | null;
   public_code: string;
   gamification_mode: GamificationModeId;
+  schedule_days?: string[] | null;
+  schedule_time?: string | null;
+  start_date?: string | null;
+  total_sessions?: number | null;
   created_at: string;
 }
 
@@ -60,13 +64,13 @@ export class ClassDetailComponent implements OnInit {
   readonly xpService      = inject(XpService);
   readonly sessionService = inject(SessionService);
 
-  readonly classId = signal<string>('');
-  readonly classInfo = signal<ClassInfo | null>(null);
-  readonly students  = signal<StudentRow[]>([]);
-  readonly sessions  = signal<SessionRow[]>([]);
-  readonly isLoading = signal(true);
-  readonly error     = signal<string | null>(null);
-  readonly successMsg= signal<string | null>(null);
+  readonly classId    = signal<string>('');
+  readonly classInfo  = signal<ClassInfo | null>(null);
+  readonly students   = signal<StudentRow[]>([]);
+  readonly sessions   = signal<SessionRow[]>([]);
+  readonly isLoading  = signal(true);
+  readonly error      = signal<string | null>(null);
+  readonly successMsg = signal<string | null>(null);
 
   /* Active Tab */
   readonly activeTab = signal<'students' | 'sessions' | 'leaderboard'>('students');
@@ -83,7 +87,7 @@ export class ClassDetailComponent implements OnInit {
         const time = new Date(s.scheduled_at || s.started_at!).getTime();
         return { session: s, time, diffMins: Math.round((time - now) / 60000) };
       })
-      .filter(s => s.diffMins >= -15 && s.diffMins <= 45) // within 45 mins
+      .filter(s => s.diffMins >= -15 && s.diffMins <= 45)
       .sort((a, b) => a.diffMins - b.diffMins)[0];
 
     if (scheduled) {
@@ -124,10 +128,10 @@ export class ClassDetailComponent implements OnInit {
   selectedGamificationMode: GamificationModeId = 'xp_levels';
 
   readonly gamificationModes = [
-    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Classic points, levels, and individual streaks' },
-    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Group challenges, team battles, and collaborative XP' },
-    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Milestone achievements and target criteria unlocks' },
-    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Customizable mix of XP, badges, and live challenges' },
+    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Points, streaks, & levels' },
+    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Phoenix vs Titans battles' },
+    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Special badges unlocking' },
+    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Full hybrid interactive mix' },
   ];
 
   /* Computed stats */
@@ -159,7 +163,7 @@ export class ClassDetailComponent implements OnInit {
       // 1. Load Class Info
       const { data: cls, error: clsErr } = await this.supabase.client
         .from('classes')
-        .select('id, name, subject, grade_level, public_code, gamification_mode, created_at')
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -177,12 +181,12 @@ export class ClassDetailComponent implements OnInit {
       if (stdErr) throw stdErr;
       this.students.set((stds ?? []) as StudentRow[]);
 
-      // 3. Load Class Sessions
+      // 3. Load Class Sessions (ordered ascending by session_number)
       const { data: sess, error: sessErr } = await this.supabase.client
         .from('sessions')
         .select('id, session_number, title, description, status, scheduled_at, started_at, duration_minutes, gamification_mode, created_at')
         .eq('class_id', id)
-        .order('session_number', { ascending: false });
+        .order('session_number', { ascending: true });
 
       if (sessErr) throw sessErr;
       this.sessions.set((sess ?? []).map((s: any) => ({
@@ -190,30 +194,15 @@ export class ClassDetailComponent implements OnInit {
         gamification_mode: s.gamification_mode || 'xp_levels',
       })) as SessionRow[]);
 
-      // 4. Load all students belonging to this instructor (with their class names)
+      // 4. Load all instructor's students for the search dropdown
       if (user) {
         const { data: allStds } = await this.supabase.client
           .from('students')
-          .select(`
-            id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at,
-            class:classes(name)
-          `)
-          .eq('instructor_id', user.id);
+          .select('id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at')
+          .eq('instructor_id', user.id)
+          .order('full_name', { ascending: true });
 
-        const mappedAll = (allStds ?? []).map((s: any) => ({
-          id: s.id,
-          full_name: s.full_name,
-          display_name: s.display_name,
-          xp_total: s.xp_total,
-          level: s.level,
-          current_streak: s.current_streak,
-          class_id: s.class_id,
-          current_class_name: Array.isArray(s.class) ? (s.class[0]?.name ?? null) : s.class?.name ?? null,
-          metadata: s.metadata,
-          created_at: s.created_at,
-        }));
-
-        this.allInstructorStudents.set(mappedAll as StudentRow[]);
+        this.allInstructorStudents.set((allStds ?? []) as StudentRow[]);
       }
     } catch (e: unknown) {
       this.error.set((e as Error).message);
@@ -345,7 +334,7 @@ export class ClassDetailComponent implements OnInit {
       if (error) throw error;
 
       if (newSess) {
-        this.sessions.update(list => [newSess as SessionRow, ...list]);
+        this.sessions.update(list => [...list, newSess as SessionRow]);
       }
 
       this.sessionTitle = '';
@@ -357,6 +346,23 @@ export class ClassDetailComponent implements OnInit {
       this.error.set((e as Error).message);
     } finally {
       this.isCreatingSession.set(false);
+    }
+  }
+
+  /* ── Update Gamification Mode for a Session ── */
+  async updateSessionGamificationMode(sess: SessionRow, newMode: GamificationModeId): Promise<void> {
+    try {
+      await this.supabase.client
+        .from('sessions')
+        .update({ gamification_mode: newMode })
+        .eq('id', sess.id);
+
+      this.sessions.update(list =>
+        list.map(s => s.id === sess.id ? { ...s, gamification_mode: newMode } : s),
+      );
+      this.showToast(`🎮 Updated session gamification mode to ${this.getModeName(newMode)}`);
+    } catch (e: unknown) {
+      this.error.set((e as Error).message);
     }
   }
 
@@ -376,9 +382,9 @@ export class ClassDetailComponent implements OnInit {
 
   getModeName(mode: GamificationModeId): string {
     switch (mode) {
-      case 'teams_duels':    return '🛡️ Team Quests & Duels';
-      case 'badges_mastery': return '🏆 Badges & Mastery';
-      case 'hybrid_quest':   return '🎯 Custom Hybrid Quest';
+      case 'teams_duels':    return '🛡️ Team Duels';
+      case 'badges_mastery': return '🏆 Badges';
+      case 'hybrid_quest':   return '🎯 Hybrid';
       default:               return '⚡ XP & Levels';
     }
   }

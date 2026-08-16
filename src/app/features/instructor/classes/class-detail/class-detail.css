@@ -72,8 +72,18 @@
   font-size: .75rem; font-weight: 600; padding: .2rem .5rem; border-radius: var(--radius-sm);
 }
 .tag--subject { background: var(--clr-surface-mint); color: var(--clr-primary-dark); }
-.tag--grade   { background: #EEF2FF; color: #4F46E5; }
-.tag--code    { background: #F1F5F9; color: #475569; }
+.tag--code { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.tag--schedule { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+
+.session-item--live { border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239,68,68,.1); }
+
+.session-desc-text { color: var(--clr-text-muted); font-size: .75rem; }
+
+.mode-select-sm {
+  height: 32px; padding: 0 .625rem; border-radius: var(--radius-md);
+  border: 1px solid var(--clr-border); background: var(--clr-bg);
+  font-size: .75rem; font-weight: 600; color: var(--clr-text); font-family: inherit;
+}
 .tag--code code { font-family: monospace; font-weight: 700; }
 
 .hub-header__title {

@@ -30,6 +30,51 @@
         <app-icon name="clock" [size]="16" />
         <span>{{ formatTimer(elapsedSeconds()) }}</span>
       </div>
+
+      <!-- Alarm / Countdown Widget Toggle -->
+      <div class="alarm-widget-wrap">
+        <button type="button" class="btn-alarm-toggle"
+                [class.btn-alarm-toggle--ringing]="isAlarmRinging()"
+                [class.btn-alarm-toggle--active]="isAlarmRunning()"
+                (click)="showAlarmWidget.update(v => !v)">
+          <span>🔔 {{ formatTimer(alarmSeconds()) }}</span>
+        </button>
+
+        @if (showAlarmWidget()) {
+          <div class="alarm-dropdown-card">
+            <div class="alarm-header">
+              <span class="alarm-title">⏱️ In-Session Challenge Alarm</span>
+              <button class="btn-icon-xs" (click)="showAlarmWidget.set(false)"><app-icon name="x" [size]="14" /></button>
+            </div>
+
+            <div class="alarm-time-display" [class.alarm-time-display--ringing]="isAlarmRinging()">
+              {{ formatTimer(alarmSeconds()) }}
+              @if (isAlarmRinging()) {
+                <span class="alarm-alert-tag">TIME IS UP! 🚨</span>
+              }
+            </div>
+
+            <!-- Alarm Presets -->
+            <div class="alarm-presets-row">
+              <button type="button" class="btn-preset-time" (click)="setAlarmDuration(180)">3m</button>
+              <button type="button" class="btn-preset-time" (click)="setAlarmDuration(300)">5m</button>
+              <button type="button" class="btn-preset-time" (click)="setAlarmDuration(600)">10m</button>
+              <button type="button" class="btn-preset-time" (click)="setAlarmDuration(900)">15m</button>
+            </div>
+
+            <div class="alarm-actions">
+              <button type="button" class="btn-alarm-action btn-alarm-action--start" (click)="toggleAlarm()">
+                <app-icon [name]="isAlarmRunning() ? 'square' : 'play'" [size]="14" />
+                {{ isAlarmRunning() ? 'Pause' : 'Start Timer' }}
+              </button>
+              <button type="button" class="btn-alarm-action btn-alarm-action--reset" (click)="resetAlarm()">
+                Reset
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
       @if (isRealtimeActive()) {
         <span class="realtime-pill" title="Connected to Supabase Realtime Channel">
           <span class="sync-dot"></span> Realtime Sync
