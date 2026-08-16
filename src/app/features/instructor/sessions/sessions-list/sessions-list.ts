@@ -1,7 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, UpperCasePipe } from '@angular/common';
+import { DatePipe, UpperCasePipe, CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { SessionService } from '../../../../core/services/session.service';
@@ -18,6 +18,7 @@ interface SessionRow {
   description: string | null;
   status: 'draft' | 'scheduled' | 'live' | 'completed' | 'cancelled';
   started_at: string | null;
+  scheduled_at: string | null;
   duration_minutes: number | null;
   class_id: string;
   class_name: string;
@@ -25,10 +26,19 @@ interface SessionRow {
   created_at: string;
 }
 
+export interface CalendarDay {
+  date: Date;
+  dateStr: string;
+  dayNum: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  sessions: SessionRow[];
+}
+
 @Component({
   selector: 'app-sessions-list',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe, UpperCasePipe, IconComponent],
+  imports: [RouterLink, FormsModule, DatePipe, UpperCasePipe, CommonModule, IconComponent],
   templateUrl: './sessions-list.html',
   styleUrl: './sessions-list.css',
 })
@@ -42,9 +52,14 @@ export class SessionsListComponent implements OnInit {
   readonly sessions    = signal<SessionRow[]>([]);
   readonly classes     = signal<ClassItem[]>([]);
   readonly activeTab   = signal<'all' | 'live' | 'scheduled' | 'completed'>('all');
+  readonly viewMode    = signal<'list' | 'calendar'>('list');
   readonly showCreate  = signal(false);
   readonly isCreating  = signal(false);
   readonly error       = signal<string | null>(null);
+
+  /* Calendar View State */
+  currentCalendarDate = new Date();
+  readonly calendarMonthYear = signal<string>('');
 
   /* Form */
   selectedClassId          = '';
@@ -55,31 +70,120 @@ export class SessionsListComponent implements OnInit {
   selectedGamificationMode: GamificationModeId = 'xp_levels';
 
   readonly gamificationModes = [
-    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Classic points, levels, and individual streaks' },
-    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Group challenges, team battles, and collaborative XP' },
-    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Milestone achievements and target criteria unlocks' },
-    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Customizable mix of XP, badges, and live challenges' },
+    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Points, streaks, & rankings' },
+    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Phoenix vs Titans battles' },
+    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Special badges unlocking' },
+    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Full hybrid interactive mix' },
   ];
 
+  /* ── Today's Sessions Agenda ── */
+  readonly todaySessions = computed(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return this.sessions().filter(s => {
+      const dateVal = s.scheduled_at || s.started_at;
+      if (!dateVal) return false;
+      return new Date(dateVal).toISOString().split('T')[0] === todayStr;
+    });
+  });
+
+  /* ── Filtered Sessions for List View ── */
   get filteredSessions(): SessionRow[] {
     const tab = this.activeTab();
     if (tab === 'all') return this.sessions();
     return this.sessions().filter(s => s.status === tab);
   }
 
+  /* ── Calendar Days Matrix ── */
+  readonly calendarDays = computed(() => {
+    const all = this.sessions();
+    const curr = this.currentCalendarDate;
+    const year = curr.getFullYear();
+    const month = curr.getMonth();
+
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const days: CalendarDay[] = [];
+
+    // Previous month padding
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      const d = new Date(year, month - 1, prevMonthDays - i);
+      const dStr = d.toISOString().split('T')[0];
+      days.push({
+        date: d,
+        dateStr: dStr,
+        dayNum: prevMonthDays - i,
+        isCurrentMonth: false,
+        isToday: dStr === todayStr,
+        sessions: all.filter(s => (s.scheduled_at || s.started_at)?.startsWith(dStr)),
+      });
+    }
+
+    // Current month days
+    for (let i = 1; i <= totalDaysInMonth; i++) {
+      const d = new Date(year, month, i);
+      const dStr = d.toISOString().split('T')[0];
+      days.push({
+        date: d,
+        dateStr: dStr,
+        dayNum: i,
+        isCurrentMonth: true,
+        isToday: dStr === todayStr,
+        sessions: all.filter(s => (s.scheduled_at || s.started_at)?.startsWith(dStr)),
+      });
+    }
+
+    // Next month padding to complete 35 or 42 cells
+    const remaining = (7 - (days.length % 7)) % 7;
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i);
+      const dStr = d.toISOString().split('T')[0];
+      days.push({
+        date: d,
+        dateStr: dStr,
+        dayNum: i,
+        isCurrentMonth: false,
+        isToday: dStr === todayStr,
+        sessions: all.filter(s => (s.scheduled_at || s.started_at)?.startsWith(dStr)),
+      });
+    }
+
+    return days;
+  });
+
   async ngOnInit(): Promise<void> {
+    this.updateCalendarLabel();
     await Promise.all([this.loadClasses(), this.loadSessions()]);
     this.isLoading.set(false);
+  }
+
+  updateCalendarLabel(): void {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    this.calendarMonthYear.set(`${monthNames[this.currentCalendarDate.getMonth()]} ${this.currentCalendarDate.getFullYear()}`);
+  }
+
+  prevMonth(): void {
+    this.currentCalendarDate = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() - 1, 1);
+    this.updateCalendarLabel();
+  }
+
+  nextMonth(): void {
+    this.currentCalendarDate = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() + 1, 1);
+    this.updateCalendarLabel();
+  }
+
+  goToToday(): void {
+    this.currentCalendarDate = new Date();
+    this.updateCalendarLabel();
   }
 
   async loadClasses(): Promise<void> {
     const user = this.auth.currentUser();
     if (!user) return;
     const { data } = await this.supabase.client
-      .from('classes')
-      .select('id, name')
-      .eq('instructor_id', user.id)
-      .order('name');
+      .from('classes').select('id, name').eq('instructor_id', user.id).order('name');
     this.classes.set(data ?? []);
   }
 
@@ -91,10 +195,10 @@ export class SessionsListComponent implements OnInit {
       const { data, error } = await this.supabase.client
         .from('sessions')
         .select(`
-          id, session_number, title, description, status, started_at, duration_minutes, class_id, gamification_mode, created_at,
+          id, session_number, title, description, status, scheduled_at, started_at, duration_minutes, class_id, gamification_mode, created_at,
           class:classes(name, instructor_id)
         `)
-        .order('created_at', { ascending: false });
+        .order('session_number', { ascending: true });
 
       if (error) throw error;
 
@@ -109,6 +213,7 @@ export class SessionsListComponent implements OnInit {
           title:            s.title,
           description:      s.description,
           status:           s.status,
+          scheduled_at:     s.scheduled_at,
           started_at:       s.started_at,
           duration_minutes: s.duration_minutes,
           class_id:         s.class_id,

@@ -1,72 +1,134 @@
-<!-- Sessions List Page -->
+<!-- Sessions Page -->
 <div class="page">
 
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Live Sessions</h1>
-      <p class="page-subtitle">Schedule, launch, and manage interactive class sessions.</p>
+      <h1 class="page-title">Sessions & Gamification Hub</h1>
+      <p class="page-subtitle">Schedule sessions, view the calendar, and launch live gamified workspaces.</p>
     </div>
-    <button class="btn-primary" (click)="showCreate.update(v => !v)">
-      <app-icon [name]="showCreate() ? 'x' : 'plus'" [size]="16" />
-      {{ showCreate() ? 'Cancel' : 'New Session' }}
-    </button>
+    <div class="header-actions">
+      <!-- View Mode Toggle -->
+      <div class="view-toggle">
+        <button type="button" class="view-btn"
+                [class.view-btn--active]="viewMode() === 'list'"
+                (click)="viewMode.set('list')">
+          <app-icon name="bar-chart-2" [size]="15" />
+          List View
+        </button>
+        <button type="button" class="view-btn"
+                [class.view-btn--active]="viewMode() === 'calendar'"
+                (click)="viewMode.set('calendar')">
+          <app-icon name="calendar" [size]="15" />
+          Calendar View
+        </button>
+      </div>
+
+      <button class="btn-create" (click)="showCreate.update(v => !v)">
+        <app-icon [name]="showCreate() ? 'x' : 'plus'" [size]="16" />
+        {{ showCreate() ? 'Cancel' : 'New Session' }}
+      </button>
+    </div>
   </div>
 
+  <!-- Messages -->
   @if (error()) {
     <div class="alert-error">
-      <app-icon name="alert-circle" [size]="15" />{{ error() }}
+      <app-icon name="alert-circle" [size]="15" />
+      {{ error() }}
     </div>
+  }
+
+  <!-- ── TODAY'S SESSIONS SPOTLIGHT ────────────────────────── -->
+  @if (todaySessions().length > 0) {
+    <section class="today-spotlight-card">
+      <div class="today-header">
+        <span class="today-badge">📅 TODAY'S AGENDA</span>
+        <h3 class="today-title">You have {{ todaySessions().length }} session(s) scheduled for today</h3>
+      </div>
+
+      <div class="today-sessions-grid">
+        @for (s of todaySessions(); track s.id) {
+          <div class="today-item" [class.today-item--live]="s.status === 'live'">
+            <div class="today-item__time">
+              <app-icon name="clock" [size]="14" />
+              <span>{{ s.scheduled_at || s.started_at | date:'shortTime' }}</span>
+            </div>
+            <div class="today-item__info">
+              <span class="today-item__class">{{ s.class_name }}</span>
+              <h4 class="today-item__title">Session #{{ s.session_number }}: {{ s.title }}</h4>
+            </div>
+            <div class="today-item__mode">
+              <span class="session-mode-pill">{{ getModeName(s.gamification_mode) }}</span>
+            </div>
+            <button class="btn-today-launch" (click)="startLiveSession(s)">
+              <app-icon name="play" [size]="14" />
+              {{ s.status === 'live' ? 'Join Live' : 'Launch Live' }}
+            </button>
+          </div>
+        }
+      </div>
+    </section>
   }
 
   <!-- Create Session Form -->
   @if (showCreate()) {
     <div class="create-card">
       <h2 class="create-card__title">
-        <app-icon name="radio" [size]="16" />
-        Create Session
+        <app-icon name="radio" [size]="18" />
+        Create & Schedule Session
       </h2>
-
       <div class="create-form">
         <div class="form-row">
           <div class="form-field">
-            <label class="form-label" for="sessClass">Class <span class="required">*</span></label>
-            <select id="sessClass" class="form-select" [(ngModel)]="selectedClassId">
-              <option value="">Select a class…</option>
+            <label class="form-label" for="sessionClass">Class / Track <span class="required">*</span></label>
+            <select id="sessionClass" class="form-select" [(ngModel)]="selectedClassId">
+              <option value="" disabled selected>Select a class…</option>
               @for (c of classes(); track c.id) {
                 <option [value]="c.id">{{ c.name }}</option>
               }
             </select>
           </div>
           <div class="form-field">
-            <label class="form-label" for="sessTitle">Session Title <span class="required">*</span></label>
-            <input id="sessTitle" type="text" class="form-input" placeholder="e.g. Chapter 4 Review & Quiz" [(ngModel)]="sessionTitle" />
+            <label class="form-label" for="sessionTitle">Session Title <span class="required">*</span></label>
+            <input id="sessionTitle" type="text" class="form-input"
+              placeholder="e.g. Scratch Variables Quest"
+              [(ngModel)]="sessionTitle" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-field">
-            <label class="form-label" for="sessDate">Scheduled Time (Optional)</label>
-            <input id="sessDate" type="datetime-local" class="form-input" [(ngModel)]="scheduledDate" />
+            <label class="form-label" for="sessionDate">Schedule Date & Time</label>
+            <input id="sessionDate" type="datetime-local" class="form-input" [(ngModel)]="scheduledDate" />
           </div>
           <div class="form-field">
-            <label class="form-label" for="sessDuration">Est. Duration (Minutes)</label>
-            <input id="sessDuration" type="number" class="form-input" placeholder="45" [(ngModel)]="durationMins" />
+            <label class="form-label" for="sessionDuration">Duration (Mins)</label>
+            <input id="sessionDuration" type="number" class="form-input" placeholder="45" [(ngModel)]="durationMins" />
+          </div>
+        </div>
+
+        <!-- Gamification Mode Selector -->
+        <div class="form-field">
+          <label class="form-label">🎮 Gamification Style / Mode for this Session</label>
+          <div class="modes-grid">
+            @for (m of gamificationModes; track m.id) {
+              <label class="mode-card" [class.mode-card--selected]="selectedGamificationMode === m.id">
+                <input type="radio" name="sessGMode" [value]="m.id" [(ngModel)]="selectedGamificationMode" />
+                <div class="mode-card__content">
+                  <strong class="mode-card__name">{{ m.name }}</strong>
+                  <span class="mode-card__desc">{{ m.desc }}</span>
+                </div>
+              </label>
+            }
           </div>
         </div>
 
         <div class="form-field">
-          <label class="form-label" for="sessDesc">Description / Objectives</label>
-          <input id="sessDesc" type="text" class="form-input" placeholder="Brief notes for students…" [(ngModel)]="sessionDesc" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label" for="sessGamiMode">🎮 Gamification Style / Mode</label>
-          <select id="sessGamiMode" class="form-select" [(ngModel)]="selectedGamificationMode">
-            @for (mode of gamificationModes; track mode.id) {
-              <option [value]="mode.id">{{ mode.name }} — {{ mode.desc }}</option>
-            }
-          </select>
+          <label class="form-label" for="sessionDesc">Description / Objectives (Optional)</label>
+          <textarea id="sessionDesc" class="form-textarea" rows="2"
+            placeholder="Key concepts to cover in this session…"
+            [(ngModel)]="sessionDesc"></textarea>
         </div>
 
         <div class="create-actions">
@@ -74,7 +136,7 @@
             @if (isCreating()) {
               <app-icon name="loader-2" [size]="15" class="spinning" /> Creating…
             } @else {
-              <app-icon name="plus" [size]="15" /> Save Session
+              <app-icon name="plus" [size]="15" /> Save & Schedule Session
             }
           </button>
         </div>
@@ -82,89 +144,141 @@
     </div>
   }
 
-  <!-- Filter Tabs -->
-  <div class="tabs">
-    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'all'" (click)="activeTab.set('all')">
-      All Sessions
-    </button>
-    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'live'" (click)="activeTab.set('live')">
-      <span class="pulse-dot"></span> Live Now
-    </button>
-    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'scheduled'" (click)="activeTab.set('scheduled')">
-      Scheduled
-    </button>
-    <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'completed'" (click)="activeTab.set('completed')">
-      Completed
-    </button>
-  </div>
-
-  <!-- Sessions List Grid -->
-  @if (isLoading()) {
-    <div class="sessions-grid">
-      @for (_ of [1,2,3]; track $index) {
-        <div class="session-card session-card--skeleton"></div>
-      }
+  <!-- ── VIEW 1: LIST VIEW ─────────────────────────────────── -->
+  @if (viewMode() === 'list') {
+    <!-- Filter Tabs -->
+    <div class="tabs">
+      <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'all'" (click)="activeTab.set('all')">
+        All Sessions ({{ sessions().length }})
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'live'" (click)="activeTab.set('live')">
+        <span class="pulse-dot"></span> Live Now
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'scheduled'" (click)="activeTab.set('scheduled')">
+        Scheduled
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn--active]="activeTab() === 'completed'" (click)="activeTab.set('completed')">
+        Completed
+      </button>
     </div>
-  } @else if (filteredSessions.length === 0) {
-    <div class="empty">
-      <div class="empty__icon">📡</div>
-      <h3>No sessions found</h3>
-      <p>Create a session to start managing live interactions and XP awards.</p>
-    </div>
-  } @else {
-    <div class="sessions-grid">
-      @for (s of filteredSessions; track s.id) {
-        <article class="session-card" [class.session-card--live]="s.status === 'live'">
 
-          <div class="session-card__top">
-            <span class="status-badge" [class]="getStatusBadgeClass(s.status)">
-              @if (s.status === 'live') { <span class="pulse-dot"></span> }
-              {{ s.status | uppercase }}
-            </span>
-            <div class="top-tags">
-              <span class="session-mode-pill">{{ getModeName(s.gamification_mode) }}</span>
-              <span class="session-card__class">{{ s.class_name }}</span>
+    <!-- Sessions List Grid -->
+    @if (isLoading()) {
+      <div class="sessions-grid">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="session-card session-card--skeleton"></div>
+        }
+      </div>
+    } @else if (filteredSessions.length === 0) {
+      <div class="empty">
+        <div class="empty__icon">📡</div>
+        <h3>No sessions found</h3>
+        <p>Create a session to start managing live interactions and XP awards.</p>
+      </div>
+    } @else {
+      <div class="sessions-grid">
+        @for (s of filteredSessions; track s.id) {
+          <article class="session-card" [class.session-card--live]="s.status === 'live'">
+
+            <div class="session-card__top">
+              <span class="status-badge" [class]="getStatusBadgeClass(s.status)">
+                @if (s.status === 'live') { <span class="pulse-dot"></span> }
+                {{ s.status | uppercase }}
+              </span>
+              <div class="top-tags">
+                <span class="session-mode-pill">{{ getModeName(s.gamification_mode) }}</span>
+                <span class="session-card__class">{{ s.class_name }}</span>
+              </div>
+            </div>
+
+            <h3 class="session-card__title">Session #{{ s.session_number }}: {{ s.title }}</h3>
+
+            @if (s.description) {
+              <p class="session-card__desc">{{ s.description }}</p>
+            }
+
+            <div class="session-card__meta">
+              @if (s.scheduled_at || s.started_at) {
+                <span class="meta-item">
+                  <app-icon name="calendar" [size]="13" />
+                  {{ s.scheduled_at || s.started_at | date:'EEE, d MMM y · h:mm a' }}
+                </span>
+              }
+              <span class="meta-item">
+                <app-icon name="clock" [size]="13" />
+                {{ s.duration_minutes ?? 45 }} mins
+              </span>
+            </div>
+
+            <div class="session-card__actions">
+              @if (s.status === 'live') {
+                <a [routerLink]="['/instructor/sessions', s.id, 'live']" class="btn-action btn-action--live">
+                  <app-icon name="radio" [size]="15" /> Join Live Room
+                </a>
+              } @else if (s.status === 'scheduled' || s.status === 'draft') {
+                <button type="button" class="btn-action btn-action--start" (click)="startLiveSession(s)">
+                  <app-icon name="play" [size]="15" /> Launch Live Session
+                </button>
+              } @else {
+                <a [routerLink]="['/instructor/sessions', s.id, 'live']" class="btn-action btn-action--outline">
+                  <app-icon name="eye" [size]="15" /> View Session Summary
+                </a>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+
+  <!-- ── VIEW 2: INTERACTIVE CALENDAR VIEW ─────────────────── -->
+  @if (viewMode() === 'calendar') {
+    <section class="calendar-card">
+      <div class="calendar-nav-bar">
+        <div class="calendar-nav-left">
+          <button type="button" class="btn-cal-arrow" (click)="prevMonth()" title="Previous Month">
+            <app-icon name="chevron-left" [size]="16" />
+          </button>
+          <h2 class="cal-month-title">{{ calendarMonthYear() }}</h2>
+          <button type="button" class="btn-cal-arrow" (click)="nextMonth()" title="Next Month">
+            <app-icon name="chevron-right" [size]="16" />
+          </button>
+        </div>
+        <button type="button" class="btn-today" (click)="goToToday()">Today</button>
+      </div>
+
+      <!-- Days of Week Header -->
+      <div class="cal-weekdays-row">
+        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      </div>
+
+      <!-- Calendar Matrix -->
+      <div class="cal-matrix">
+        @for (day of calendarDays(); track day.dateStr) {
+          <div class="cal-cell"
+               [class.cal-cell--other-month]="!day.isCurrentMonth"
+               [class.cal-cell--today]="day.isToday">
+            <div class="cal-cell__header">
+              <span class="cal-cell__day-num">{{ day.dayNum }}</span>
+              @if (day.sessions.length > 0) {
+                <span class="cal-cell__count">{{ day.sessions.length }}</span>
+              }
+            </div>
+
+            <div class="cal-cell__sessions">
+              @for (sess of day.sessions; track sess.id) {
+                <div class="cal-session-chip"
+                     [class.cal-session-chip--live]="sess.status === 'live'"
+                     (click)="startLiveSession(sess)">
+                  <span class="cal-chip-time">{{ sess.scheduled_at || sess.started_at | date:'shortTime' }}</span>
+                  <span class="cal-chip-title">#{{ sess.session_number }} {{ sess.class_name }}</span>
+                </div>
+              }
             </div>
           </div>
-
-          <h3 class="session-card__title">Session #{{ s.session_number }}: {{ s.title }}</h3>
-
-          @if (s.description) {
-            <p class="session-card__desc">{{ s.description }}</p>
-          }
-
-          <div class="session-card__meta">
-            @if (s.started_at) {
-              <span class="meta-item">
-                <app-icon name="calendar" [size]="13" />
-                {{ s.started_at | date:'short' }}
-              </span>
-            }
-            <span class="meta-item">
-              <app-icon name="clock" [size]="13" />
-              {{ s.duration_minutes ?? 45 }} mins
-            </span>
-          </div>
-
-          <div class="session-card__actions">
-            @if (s.status === 'live') {
-              <a [routerLink]="['/instructor/sessions', s.id, 'live']" class="btn-action btn-action--live">
-                <app-icon name="radio" [size]="15" /> Join Live Room
-              </a>
-            } @else if (s.status === 'scheduled' || s.status === 'draft') {
-              <button type="button" class="btn-action btn-action--start" (click)="startLiveSession(s)">
-                <app-icon name="play" [size]="15" /> Launch Live Session
-              </button>
-            } @else {
-              <a [routerLink]="['/instructor/sessions', s.id, 'live']" class="btn-action btn-action--outline">
-                <app-icon name="eye" [size]="15" /> View Session Summary
-              </a>
-            }
-          </div>
-
-        </article>
-      }
-    </div>
+        }
+      </div>
+    </section>
   }
 
 </div>

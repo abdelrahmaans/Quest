@@ -157,7 +157,6 @@ export class ClassDetailComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
     const id = this.classId();
-    const user = this.auth.currentUser();
 
     try {
       // 1. Load Class Info
@@ -165,9 +164,11 @@ export class ClassDetailComponent implements OnInit {
         .from('classes')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (clsErr || !cls) throw clsErr || new Error('Class not found');
+      if (clsErr) throw clsErr;
+      if (!cls) throw new Error('Class not found. Please verify the link or class ID.');
+      
       this.classInfo.set(cls as ClassInfo);
       this.selectedGamificationMode = cls.gamification_mode || 'xp_levels';
 
@@ -178,7 +179,7 @@ export class ClassDetailComponent implements OnInit {
         .eq('class_id', id)
         .order('full_name', { ascending: true });
 
-      if (stdErr) throw stdErr;
+      if (stdErr) console.warn('Students load warn:', stdErr);
       this.students.set((stds ?? []) as StudentRow[]);
 
       // 3. Load Class Sessions (ordered ascending by session_number)
@@ -188,13 +189,14 @@ export class ClassDetailComponent implements OnInit {
         .eq('class_id', id)
         .order('session_number', { ascending: true });
 
-      if (sessErr) throw sessErr;
+      if (sessErr) console.warn('Sessions load warn:', sessErr);
       this.sessions.set((sess ?? []).map((s: any) => ({
         ...s,
         gamification_mode: s.gamification_mode || 'xp_levels',
       })) as SessionRow[]);
 
       // 4. Load all instructor's students for the search dropdown
+      const user = this.auth.currentUser();
       if (user) {
         const { data: allStds } = await this.supabase.client
           .from('students')
@@ -205,6 +207,7 @@ export class ClassDetailComponent implements OnInit {
         this.allInstructorStudents.set((allStds ?? []) as StudentRow[]);
       }
     } catch (e: unknown) {
+      console.error('[ClassDetail] load error:', e);
       this.error.set((e as Error).message);
     } finally {
       this.isLoading.set(false);
