@@ -109,14 +109,9 @@
 }
 .cal-cell:hover { background: var(--clr-bg); }
 .cal-cell--other-month { background: #FAFAFA; opacity: .5; }
-.cal-cell--today { background: var(--clr-surface-mint); }
 
 .cal-cell__header { display: flex; align-items: center; justify-content: space-between; }
 .cal-cell__day-num { font-size: .8125rem; font-weight: 700; color: var(--clr-text); }
-.cal-cell--today .cal-cell__day-num {
-  background: var(--clr-primary); color: #fff; width: 22px; height: 22px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-}
 .cal-cell__count {
   font-size: .625rem; font-weight: 800; background: rgba(20,184,166,.15);
   color: var(--clr-primary-dark); padding: .1rem .35rem; border-radius: var(--radius-sm);

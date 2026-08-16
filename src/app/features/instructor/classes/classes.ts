@@ -121,17 +121,27 @@ export class InstructorClassesComponent implements OnInit {
 
       const enriched = await Promise.all(
         (data ?? []).map(async (cls: { id: string; name: string; subject: string | null; grade_level: string | null; created_at: string }) => {
-          const { count: stdCount } = await this.supabase.client
+          const { data: stds } = await this.supabase.client
             .from('students')
-            .select('id', { count: 'exact', head: true })
+            .select('id')
             .eq('class_id', cls.id);
+
+          const { data: members } = await this.supabase.client
+            .from('class_members')
+            .select('student_id')
+            .eq('class_id', cls.id);
+
+          const uniqueStudentIds = new Set([
+            ...(stds ?? []).map(s => s.id),
+            ...(members ?? []).map(m => m.student_id),
+          ]);
 
           const { count: sessCount } = await this.supabase.client
             .from('sessions')
             .select('id', { count: 'exact', head: true })
             .eq('class_id', cls.id);
 
-          return { ...cls, student_count: stdCount ?? 0, session_count: sessCount ?? 0 };
+          return { ...cls, student_count: uniqueStudentIds.size, session_count: sessCount ?? 0 };
         }),
       );
 
@@ -314,14 +324,24 @@ export class InstructorClassesComponent implements OnInit {
     this.activeClassModal.set(cls);
     this.loadingStudents.set(true);
     try {
-      const { data, error } = await this.supabase.client
+      const { data: stds1 } = await this.supabase.client
         .from('students')
         .select('id, full_name, display_name, xp_total, level, created_at')
-        .eq('class_id', cls.id)
-        .order('full_name', { ascending: true });
+        .eq('class_id', cls.id);
 
-      if (error) throw error;
-      this.classStudents.set((data ?? []) as StudentItem[]);
+      const { data: members } = await this.supabase.client
+        .from('class_members')
+        .select('student:students(id, full_name, display_name, xp_total, level, created_at)')
+        .eq('class_id', cls.id);
+
+      const map = new Map<string, StudentItem>();
+      (stds1 ?? []).forEach((s: any) => map.set(s.id, s));
+      (members ?? []).forEach((m: any) => {
+        const s = Array.isArray(m.student) ? m.student[0] : m.student;
+        if (s && s.id) map.set(s.id, s);
+      });
+
+      this.classStudents.set(Array.from(map.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {

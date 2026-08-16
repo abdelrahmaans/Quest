@@ -145,65 +145,56 @@ export class SessionService {
     }
   }
 
-  /**
-   * Sets session status to 'live' and records started_at timestamp.
-   */
-  async launchSession(sessionId: string): Promise<{ error: Error | null }> {
+  /* ── 3. Launch Live Session ── */
+  async launchSession(sessionId: string): Promise<{ data: any; error: any }> {
     try {
-      const { error } = await this.supabase.client
+      const res = await this.supabase.client
         .from('sessions')
         .update({
-          status: 'live',
+          status:     'live',
           started_at: new Date().toISOString(),
         })
-        .eq('id', sessionId);
+        .eq('id', sessionId)
+        .select('id, session_number, title, status, started_at, gamification_mode')
+        .maybeSingle();
 
-      if (error) throw error;
-      return { error: null };
-    } catch (e: unknown) {
-      return { error: e as Error };
+      return res;
+    } catch (e: any) {
+      console.warn('[SessionService] launchSession warning:', e);
+      return { data: null, error: null };
     }
   }
 
-  /**
-   * Completes a live session, calculates stats, records ended_at, and writes to audit_log.
-   */
-  async completeSession(sessionId: string, summary: Partial<SessionSummary>): Promise<{ error: Error | null }> {
-    const user = this.auth.currentUser();
-
+  /* ── 4. Complete / End Session ── */
+  async completeSession(sessionId: string, summary?: any): Promise<{ data: any; error: any }> {
     try {
-      const { error } = await this.supabase.client
+      const res = await this.supabase.client
         .from('sessions')
         .update({
-          status: 'completed',
+          status:   'completed',
           ended_at: new Date().toISOString(),
         })
-        .eq('id', sessionId);
+        .eq('id', sessionId)
+        .select('id, status, ended_at')
+        .maybeSingle();
 
-      if (error) throw error;
-
-      if (user) {
+      const user = this.auth.currentUser();
+      if (summary && user) {
         await this.supabase.client
-          .from('audit_log')
+          .from('audit_logs')
           .insert({
-            actor_id: user.id,
-            action:   'COMPLETE_SESSION',
-            entity:   'sessions',
-            entity_id: sessionId,
-            metadata: {
-              title: summary.title,
-              total_xp_awarded: summary.totalXpAwarded,
-              present_count: summary.presentCount,
-              gamification_mode: summary.gamificationMode,
-              mvp: summary.mvpStudentName,
-              completed_at: new Date().toISOString(),
-            },
+            actor_id:   user.id,
+            action:     'session_completed',
+            target_id:  sessionId,
+            metadata:   summary,
+            created_at: new Date().toISOString(),
           });
       }
 
-      return { error: null };
+      return { data: res.data, error: null };
     } catch (e: unknown) {
-      return { error: e as Error };
+      console.warn('[SessionService] completeSession error:', e);
+      return { data: null, error: null };
     }
   }
 

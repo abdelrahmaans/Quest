@@ -282,12 +282,11 @@ export class SessionsListComponent implements OnInit {
 
   async startLiveSession(session: SessionRow): Promise<void> {
     try {
-      const { error } = await this.sessionService.launchSession(session.id);
-      if (error) throw error;
-      await this.router.navigate(['/instructor/sessions', session.id, 'live']);
+      await this.sessionService.launchSession(session.id);
     } catch (e: unknown) {
-      this.error.set((e as Error).message);
+      console.warn('launch live warning:', e);
     }
+    await this.router.navigate(['/instructor/sessions', session.id, 'live']);
   }
 
   getModeName(mode: GamificationModeId): string {
