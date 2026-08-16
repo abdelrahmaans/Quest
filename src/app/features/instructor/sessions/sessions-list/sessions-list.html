@@ -121,20 +121,23 @@
               @if (s.status === 'live') { <span class="pulse-dot"></span> }
               {{ s.status | uppercase }}
             </span>
-            <span class="session-card__class">{{ s.class_name }}</span>
+            <div class="top-tags">
+              <span class="session-mode-pill">{{ getModeName(s.gamification_mode) }}</span>
+              <span class="session-card__class">{{ s.class_name }}</span>
+            </div>
           </div>
 
-          <h3 class="session-card__title">{{ s.title }}</h3>
+          <h3 class="session-card__title">Session #{{ s.session_number }}: {{ s.title }}</h3>
 
           @if (s.description) {
             <p class="session-card__desc">{{ s.description }}</p>
           }
 
           <div class="session-card__meta">
-            @if (s.scheduled_at) {
+            @if (s.started_at) {
               <span class="meta-item">
                 <app-icon name="calendar" [size]="13" />
-                {{ s.scheduled_at | date:'short' }}
+                {{ s.started_at | date:'short' }}
               </span>
             }
             <span class="meta-item">

@@ -6,9 +6,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { XpService } from '../../../../core/services/xp.service';
+import { SessionService } from '../../../../core/services/session.service';
 import { IconComponent } from '../../../../shared/ui/icon/icon';
 import { AiAssistantDrawerComponent } from '../../../../shared/ui/ai-assistant-drawer/ai-assistant-drawer';
-import type { IconName } from '../../../../shared/ui/icon/icons.constants';
 
 interface LiveStudent {
   id: string;
@@ -17,6 +17,7 @@ interface LiveStudent {
   level: number;
   attendance: 'present' | 'absent' | 'late';
   selected: boolean;
+  earnedSessionXp?: number;
 }
 
 interface LiveFeedEvent {
@@ -27,6 +28,13 @@ interface LiveFeedEvent {
   timestamp: string;
 }
 
+interface BadgePreset {
+  key: string;
+  name: string;
+  icon: string;
+  xp: number;
+}
+
 @Component({
   selector: 'app-live-workspace',
   standalone: true,
@@ -35,22 +43,23 @@ interface LiveFeedEvent {
   styleUrl: './live-workspace.css',
 })
 export class LiveWorkspaceComponent implements OnInit, OnDestroy {
-  readonly auth      = inject(AuthService);
-  readonly supabase  = inject(SupabaseService);
-  readonly xpService = inject(XpService);
+  readonly auth           = inject(AuthService);
+  readonly supabase       = inject(SupabaseService);
+  readonly xpService      = inject(XpService);
+  readonly sessionService = inject(SessionService);
+  readonly route          = inject(ActivatedRoute);
+  readonly router         = inject(Router);
 
   /* AI Assistant State */
   readonly isAiDrawerOpen = signal<boolean>(false);
-  readonly route    = inject(ActivatedRoute);
-  readonly router   = inject(Router);
 
-  readonly isLoading    = signal(true);
-  readonly isEnding     = signal(false);
-  readonly isAwarding   = signal(false);
-  readonly sessionId    = signal<string>('');
-  readonly sessionTitle = signal<string>('Live Session Workspace');
-  readonly className    = signal<string>('');
-  readonly classId      = signal<string>('');
+  readonly isLoading        = signal(true);
+  readonly isEnding         = signal(false);
+  readonly isAwarding       = signal(false);
+  readonly sessionId        = signal<string>('');
+  readonly sessionTitle     = signal<string>('Live Session Workspace');
+  readonly className        = signal<string>('');
+  readonly classId          = signal<string>('');
   readonly gamificationMode = signal<string>('xp_levels');
 
   /* Session Stats */
@@ -73,6 +82,19 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   get teamBlueScore(): number {
     return this.teamBlueStudents.reduce((acc, s) => acc + s.xp_total, 0);
   }
+
+  /* Badges Preset (for badges_mastery and hybrid_quest) */
+  readonly badgePresets: BadgePreset[] = [
+    { key: 'code_ninja',     name: 'Code Ninja',        icon: '🥷', xp: 30 },
+    { key: 'team_champion',  name: 'Team Champion',     icon: '🛡️', xp: 25 },
+    { key: 'speed_demon',    name: 'Speed Demon',       icon: '⚡', xp: 20 },
+    { key: 'bug_hunter',     name: 'Bug Hunter',        icon: '🐛', xp: 35 },
+    { key: 'creative_star',  name: 'Creative Spark',    icon: '💡', xp: 25 },
+  ];
+
+  /* Summary Modal */
+  readonly showSummaryModal = signal(false);
+  mvpStudentName = '—';
 
   /* Realtime & Timer handles */
   private timerInterval: any = null;
@@ -138,14 +160,14 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
 
     try {
       this.channel = this.supabase.client
-        .channel(`live_session_${sid}`)
+        .channel(`session-${sid}`)
         .on(
           'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'xp_events' },
+          { event: 'INSERT', schema: 'public', table: 'xp_events', filter: `session_id=eq.${sid}` },
           (payload) => {
-            const event = payload.new as { student_id: string; points: number; reason: string };
-            if (event && event.student_id) {
-              this.handleRealtimeXP(event.student_id, event.points, event.reason);
+            const ev = payload.new as { student_id: string; points: number; reason: string };
+            if (ev && ev.student_id) {
+              this.handleRealtimeXP(ev.student_id, ev.points, ev.reason);
             }
           }
         )
@@ -165,7 +187,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
           }
         });
     } catch {
-      // Graceful fallback if realtime is unavailable
+      // Realtime fallback
     }
   }
 
@@ -181,12 +203,14 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     const s = this.students().find(st => st.id === studentId);
     if (!s) return;
 
-    // Update local student XP total
     this.students.update(list =>
-      list.map(item => item.id === studentId ? { ...item, xp_total: item.xp_total + points } : item)
+      list.map(item => item.id === studentId ? {
+        ...item,
+        xp_total: item.xp_total + points,
+        earnedSessionXp: (item.earnedSessionXp || 0) + points,
+      } : item)
     );
 
-    // Push to live feed stream
     const feedItem: LiveFeedEvent = {
       id: Math.random().toString(),
       studentName: s.full_name,
@@ -221,7 +245,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
 
   async loadLiveSessionData(sid: string): Promise<void> {
     try {
-      // 1. Load Session & Class Name
+      // 1. Load Session & Class Info
       const { data: sess, error: sessErr } = await this.supabase.client
         .from('sessions')
         .select('id, title, class_id, status, gamification_mode, class:classes(name)')
@@ -237,33 +261,68 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       this.className.set(cName ?? 'Class');
 
       // 2. Load Students in Class
-      const { data: studData } = await this.supabase.client
+      const { data: stdData, error: stdErr } = await this.supabase.client
         .from('students')
-        .select('id, full_name, xp_total, level')
+        .select('id, full_name, display_name, xp_total, level')
         .eq('class_id', sess.class_id)
-        .order('full_name');
+        .order('full_name', { ascending: true });
 
-      // 3. Load Existing Attendance for this session
+      if (stdErr) throw stdErr;
+
+      // 3. Load Existing Attendance
       const { data: attData } = await this.supabase.client
         .from('attendance')
         .select('student_id, status')
         .eq('session_id', sid);
 
-      const attMap = new Map((attData ?? []).map((a: { student_id: string; status: string }) => [a.student_id, a.status]));
+      const attMap = new Map<string, 'present' | 'absent' | 'late'>();
+      (attData ?? []).forEach((a: { student_id: string; status: 'present' | 'absent' | 'late' }) => {
+        attMap.set(a.student_id, a.status);
+      });
 
-      const list: LiveStudent[] = (studData ?? []).map((s: { id: string; full_name: string; xp_total: number; level: number }) => ({
-        id:         s.id,
-        full_name:  s.full_name,
-        xp_total:   s.xp_total ?? 0,
-        level:      s.level     ?? 1,
-        attendance: (attMap.get(s.id) as 'present' | 'absent' | 'late') ?? 'present',
-        selected:   true,
+      const liveStudents: LiveStudent[] = (stdData ?? []).map(s => ({
+        id:              s.id,
+        full_name:       s.full_name,
+        xp_total:        s.xp_total ?? 0,
+        level:           s.level ?? 1,
+        attendance:      attMap.get(s.id) ?? 'present', // default present
+        selected:        false,
+        earnedSessionXp: 0,
       }));
 
-      this.students.set(list);
-    } catch {
-      // Fallback redirect if session invalid
-      await this.router.navigate(['/instructor/sessions']);
+      this.students.set(liveStudents);
+
+      // Auto-save default attendance for unrecorded students
+      for (const st of liveStudents) {
+        if (!attMap.has(st.id)) {
+          this.sessionService.updateAttendance(sid, st.id, 'present').catch(() => {});
+        }
+      }
+
+      // 4. Load Previous Feed Events in this Session
+      const { data: xpData } = await this.supabase.client
+        .from('xp_events')
+        .select('id, points, reason, created_at, student:students(full_name)')
+        .eq('session_id', sid)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (xpData) {
+        const events: LiveFeedEvent[] = xpData.map((x: any) => ({
+          id:          x.id,
+          studentName: Array.isArray(x.student) ? (x.student[0]?.full_name ?? 'Student') : (x.student?.full_name ?? 'Student'),
+          points:      x.points,
+          reason:      x.reason?.replace('[Live Session] ', '') || 'Activity',
+          timestamp:   new Date(x.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }));
+        this.feed.set(events);
+
+        const totalEarned = events.reduce((sum, e) => sum + e.points, 0);
+        this.totalSessionXP.set(totalEarned);
+      }
+
+    } catch (e: unknown) {
+      console.error('[LiveWorkspace] Load error:', e);
     }
   }
 
@@ -272,16 +331,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       list.map(s => s.id === student.id ? { ...s, attendance: status } : s),
     );
 
-    // Save attendance change to Supabase
-    try {
-      await this.supabase.client.from('attendance').upsert({
-        session_id: this.sessionId(),
-        student_id: student.id,
-        status,
-      });
-    } catch {
-      // Non-critical background save
-    }
+    await this.sessionService.updateAttendance(this.sessionId(), student.id, status);
   }
 
   selectAll(select: boolean): void {
@@ -299,14 +349,10 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     if (selected.length === 0 || this.finalXP <= 0) return;
 
     this.isAwarding.set(true);
-    const user = this.auth.currentUser();
-    if (!user) return;
-
     const points = this.finalXP;
     const reason = this.finalReason;
 
     try {
-      // Award XP using centralized XpService
       const batchPayloads = selected.map(s => ({
         studentId:  s.id,
         sessionId:  this.sessionId(),
@@ -318,12 +364,14 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
 
       await this.xpService.awardBatchXp(batchPayloads);
 
-      // Update local state XP totals
       this.students.update(list =>
-        list.map(s => s.selected ? { ...s, xp_total: s.xp_total + points } : s),
+        list.map(s => s.selected ? {
+          ...s,
+          xp_total: s.xp_total + points,
+          earnedSessionXp: (s.earnedSessionXp || 0) + points,
+        } : s),
       );
 
-      // Push events to live feed
       const newFeedEvents: LiveFeedEvent[] = selected.map(s => ({
         id:          Math.random().toString(),
         studentName: s.full_name,
@@ -335,20 +383,121 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       this.feed.update(f => [...newFeedEvents, ...f]);
       this.totalSessionXP.update(tot => tot + (points * selected.length));
     } catch {
-      // Handle error gracefully
+      // Error handled
     } finally {
       this.isAwarding.set(false);
     }
   }
 
-  async endSession(): Promise<void> {
+  /* ── Award Team XP in Teams/Duels Mode ── */
+  async awardTeamXP(team: 'red' | 'blue', points: number): Promise<void> {
+    const teamStudents = team === 'red' ? this.teamRedStudents : this.teamBlueStudents;
+    const teamName = team === 'red' ? 'Team Phoenix 🔥' : 'Team Titans ⚡';
+    if (teamStudents.length === 0) return;
+
+    this.isAwarding.set(true);
+    try {
+      const batchPayloads = teamStudents.map(s => ({
+        studentId:  s.id,
+        sessionId:  this.sessionId(),
+        classId:    this.classId(),
+        points,
+        reason:      `[Team Duel] ${teamName} Victory Bonus`,
+        sourceType: 'team_duel',
+      }));
+
+      await this.xpService.awardBatchXp(batchPayloads);
+
+      const studentIds = new Set(teamStudents.map(s => s.id));
+      this.students.update(list =>
+        list.map(s => studentIds.has(s.id) ? {
+          ...s,
+          xp_total: s.xp_total + points,
+          earnedSessionXp: (s.earnedSessionXp || 0) + points,
+        } : s),
+      );
+
+      const feedItem: LiveFeedEvent = {
+        id:          Math.random().toString(),
+        studentName: teamName,
+        points:      points * teamStudents.length,
+        reason:      `Team Victory (+${points} XP to all ${teamStudents.length} members)`,
+        timestamp:   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      this.feed.update(f => [feedItem, ...f]);
+      this.totalSessionXP.update(tot => tot + (points * teamStudents.length));
+    } catch {
+      // Error handled
+    } finally {
+      this.isAwarding.set(false);
+    }
+  }
+
+  /* ── Award Badge in Badges/Mastery Mode ── */
+  async awardLiveBadge(badge: BadgePreset): Promise<void> {
+    const selected = this.students().filter(s => s.selected);
+    if (selected.length === 0) return;
+
+    this.isAwarding.set(true);
+    try {
+      const batchPayloads = selected.map(s => ({
+        studentId:  s.id,
+        sessionId:  this.sessionId(),
+        classId:    this.classId(),
+        points:     badge.xp,
+        reason:      `[Badge Awarded] ${badge.icon} ${badge.name}`,
+        sourceType: 'badge_unlock',
+      }));
+
+      await this.xpService.awardBatchXp(batchPayloads);
+
+      this.students.update(list =>
+        list.map(s => s.selected ? {
+          ...s,
+          xp_total: s.xp_total + badge.xp,
+          earnedSessionXp: (s.earnedSessionXp || 0) + badge.xp,
+        } : s),
+      );
+
+      const newFeedEvents: LiveFeedEvent[] = selected.map(s => ({
+        id:          Math.random().toString(),
+        studentName: s.full_name,
+        points:      badge.xp,
+        reason:      `${badge.icon} Badge: ${badge.name}`,
+        timestamp:   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }));
+
+      this.feed.update(f => [...newFeedEvents, ...f]);
+      this.totalSessionXP.update(tot => tot + (badge.xp * selected.length));
+    } catch {
+      // Error handled
+    } finally {
+      this.isAwarding.set(false);
+    }
+  }
+
+  /* ── End Session & Celebration Summary ── */
+  openEndSessionSummary(): void {
+    const sorted = [...this.students()].sort((a, b) => (b.earnedSessionXp || 0) - (a.earnedSessionXp || 0));
+    this.mvpStudentName = sorted[0]?.full_name || 'All Students';
+    this.showSummaryModal.set(true);
+  }
+
+  async confirmEndSession(): Promise<void> {
     this.isEnding.set(true);
 
     try {
-      await this.supabase.client
-        .from('sessions')
-        .update({ status: 'completed' })
-        .eq('id', this.sessionId());
+      await this.sessionService.completeSession(this.sessionId(), {
+        title:             this.sessionTitle(),
+        className:         this.className(),
+        durationMinutes:   Math.round(this.elapsedSeconds() / 60),
+        totalXpAwarded:    this.totalSessionXP(),
+        presentCount:      this.presentCount,
+        totalStudents:     this.students().length,
+        gamificationMode:  this.gamificationMode() as any,
+        mvpStudentName:    this.mvpStudentName,
+      });
 
       await this.router.navigate(['/instructor/sessions']);
     } catch {
@@ -364,4 +513,3 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     this.isAiDrawerOpen.set(false);
   }
 }
-

@@ -133,7 +133,12 @@
 
 @keyframes shimmer { to { background-position: -200% 0; } }
 
-.session-card__top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.session-card__top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.top-tags { display: flex; align-items: center; gap: .375rem; }
+.session-mode-pill {
+  font-size: .6875rem; font-weight: 700; padding: .15rem .45rem; border-radius: var(--radius-sm);
+  background: var(--clr-surface-mint); color: var(--clr-primary-dark);
+}
 
 .status-badge {
   display: inline-flex; align-items: center; gap: .375rem;

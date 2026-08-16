@@ -16,6 +16,12 @@
       <div class="hud-title-wrap">
         <h1 class="hud-title">{{ sessionTitle() }}</h1>
         <span class="hud-class-badge">{{ className() }}</span>
+        <span class="hud-mode-badge">
+          @if (gamificationMode() === 'teams_duels') { 🛡️ Teams & Duels }
+          @else if (gamificationMode() === 'badges_mastery') { 🏆 Badges & Mastery }
+          @else if (gamificationMode() === 'hybrid_quest') { 🎯 Hybrid Quest }
+          @else { ⚡ XP & Levels }
+        </span>
       </div>
     </div>
 
@@ -24,6 +30,11 @@
         <app-icon name="clock" [size]="16" />
         <span>{{ formatTimer(elapsedSeconds()) }}</span>
       </div>
+      @if (isRealtimeActive()) {
+        <span class="realtime-pill" title="Connected to Supabase Realtime Channel">
+          <span class="sync-dot"></span> Realtime Sync
+        </span>
+      }
     </div>
 
     <div class="hud-right">
@@ -40,7 +51,7 @@
         AI Assistant
       </button>
 
-      <button type="button" class="btn-end" [disabled]="isEnding()" (click)="endSession()">
+      <button type="button" class="btn-end" [disabled]="isEnding()" (click)="openEndSessionSummary()">
         @if (isEnding()) {
           <app-icon name="loader-2" [size]="16" class="spinning" />
         } @else {
@@ -50,6 +61,71 @@
       </button>
     </div>
   </header>
+
+  <!-- ── SPECIAL MODE BANNER: TEAM DUELS ───────────────────── -->
+  @if (gamificationMode() === 'teams_duels') {
+    <div class="teams-arena-banner">
+      <!-- Team Red -->
+      <div class="team-banner-card team-banner-card--red">
+        <div class="team-info">
+          <span class="team-icon">🔥</span>
+          <div>
+            <h3 class="team-name">Team Phoenix</h3>
+            <span class="team-members">{{ teamRedStudents.length }} Members</span>
+          </div>
+        </div>
+        <div class="team-score-box">
+          <span class="team-score-num">{{ teamRedScore | number }} XP</span>
+          <button type="button" class="btn-team-award btn-team-award--red"
+                  [disabled]="isAwarding()" (click)="awardTeamXP('red', 50)">
+            +50 Team XP
+          </button>
+        </div>
+      </div>
+
+      <!-- VS Tag -->
+      <div class="duel-vs-circle">VS</div>
+
+      <!-- Team Blue -->
+      <div class="team-banner-card team-banner-card--blue">
+        <div class="team-info">
+          <span class="team-icon">⚡</span>
+          <div>
+            <h3 class="team-name">Team Titans</h3>
+            <span class="team-members">{{ teamBlueStudents.length }} Members</span>
+          </div>
+        </div>
+        <div class="team-score-box">
+          <span class="team-score-num">{{ teamBlueScore | number }} XP</span>
+          <button type="button" class="btn-team-award btn-team-award--blue"
+                  [disabled]="isAwarding()" (click)="awardTeamXP('blue', 50)">
+            +50 Team XP
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── SPECIAL MODE BANNER: BADGES & MASTERY ─────────────── -->
+  @if (gamificationMode() === 'badges_mastery' || gamificationMode() === 'hybrid_quest') {
+    <div class="badges-action-bar">
+      <span class="badges-bar-label">
+        <app-icon name="trophy" [size]="16" />
+        Award Badge to {{ selectedCount }} Selected Student(s):
+      </span>
+      <div class="badges-pills-list">
+        @for (b of badgePresets; track b.key) {
+          <button type="button" class="badge-award-pill"
+                  [disabled]="selectedCount === 0 || isAwarding()"
+                  (click)="awardLiveBadge(b)">
+            <span class="badge-award-icon">{{ b.icon }}</span>
+            <span class="badge-award-name">{{ b.name }}</span>
+            <span class="badge-award-xp">+{{ b.xp }} XP</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
 
   <!-- ── MAIN LIVE CONTENT ────────────────────────────────── -->
   <div class="live-grid">
@@ -78,10 +154,12 @@
         </div>
       } @else {
         <div class="roster-grid">
-          @for (s of students(); track s.id) {
+          @for (s of students(); track s.id; let idx = $index) {
             <div class="student-card"
               [class.student-card--selected]="s.selected"
-              [class.student-card--absent]="s.attendance === 'absent'">
+              [class.student-card--absent]="s.attendance === 'absent'"
+              [class.student-card--team-red]="gamificationMode() === 'teams_duels' && idx % 2 === 0"
+              [class.student-card--team-blue]="gamificationMode() === 'teams_duels' && idx % 2 === 1">
 
               <div class="student-card__top">
                 <input type="checkbox" class="student-check"
@@ -92,7 +170,12 @@
 
                 <div class="student-meta">
                   <span class="student-name">{{ s.full_name }}</span>
-                  <span class="student-xp-lvl">Lv. {{ s.level }} · {{ s.xp_total | number }} XP</span>
+                  <span class="student-xp-lvl">
+                    Lv. {{ s.level }} · ⭐ {{ s.xp_total | number }} XP
+                    @if (s.earnedSessionXp && s.earnedSessionXp > 0) {
+                      <em class="earned-pill">(+{{ s.earnedSessionXp }})</em>
+                    }
+                  </span>
                 </div>
               </div>
 
@@ -180,7 +263,7 @@
 
         @if (feed().length === 0) {
           <div class="feed-empty">
-            <p>Select students and award XP to see live activity stream.</p>
+            <p>Select students and award XP or badges to see live activity stream.</p>
           </div>
         } @else {
           <div class="feed-list">
@@ -203,6 +286,49 @@
   </div>
 
 </div>
+
+<!-- ── End Session Celebration Summary Modal ─────────────── -->
+@if (showSummaryModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card summary-card">
+      <div class="summary-header">
+        <div class="summary-icon-burst">🎉</div>
+        <h2 class="summary-title">Session Complete!</h2>
+        <p class="summary-sub">{{ sessionTitle() }} · {{ className() }}</p>
+      </div>
+
+      <div class="summary-stats-grid">
+        <div class="sum-stat">
+          <span class="sum-stat__num">{{ formatTimer(elapsedSeconds()) }}</span>
+          <span class="sum-stat__lbl">Duration</span>
+        </div>
+        <div class="sum-stat sum-stat--xp">
+          <span class="sum-stat__num">⭐ +{{ totalSessionXP() | number }}</span>
+          <span class="sum-stat__lbl">Total XP Distributed</span>
+        </div>
+        <div class="sum-stat">
+          <span class="sum-stat__num">{{ presentCount }} / {{ students().length }}</span>
+          <span class="sum-stat__lbl">Present Students</span>
+        </div>
+        <div class="sum-stat sum-stat--mvp">
+          <span class="sum-stat__num">👑 {{ mvpStudentName }}</span>
+          <span class="sum-stat__lbl">Session MVP</span>
+        </div>
+      </div>
+
+      <div class="summary-actions">
+        <button class="btn-secondary" (click)="showSummaryModal.set(false)">Return to Workspace</button>
+        <button class="btn-primary" [disabled]="isEnding()" (click)="confirmEndSession()">
+          @if (isEnding()) {
+            <app-icon name="loader-2" [size]="15" class="spinning" /> Finishing…
+          } @else {
+            <app-icon name="check" [size]="15" /> Save & Back to Sessions
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- AI Assistant Drawer -->
 <app-ai-assistant-drawer

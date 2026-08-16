@@ -63,7 +63,13 @@
   color: var(--clr-primary); border: 1px solid rgba(13,148,136,.3);
 }
 
-.hud-center { display: flex; align-items: center; justify-content: center; }
+.hud-mode-badge {
+  font-size: .6875rem; font-weight: 700; padding: .125rem .5rem;
+  border-radius: var(--radius-full); background: rgba(139,92,246,.2);
+  color: #C4B5FD; border: 1px solid rgba(139,92,246,.3);
+}
+
+.hud-center { display: flex; align-items: center; justify-content: center; gap: .75rem; }
 
 .hud-timer {
   display: flex; align-items: center; gap: .5rem;
@@ -71,6 +77,115 @@
   background: rgba(0,0,0,.4); border: 1px solid var(--clr-dark-border);
   color: #FCD34D; font-family: var(--font-mono); font-size: 1.125rem; font-weight: 700;
 }
+
+.realtime-pill {
+  display: inline-flex; align-items: center; gap: .375rem;
+  font-size: .6875rem; font-weight: 700; color: #4ADE80;
+  padding: .25rem .625rem; border-radius: var(--radius-full);
+  background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2);
+}
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; }
+
+/* ── Teams Arena Banner (Mode: teams_duels) ─────────────── */
+.teams-arena-banner {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem;
+  padding: 1rem 1.25rem; background: var(--clr-dark-surface);
+  border: 1.5px solid var(--clr-dark-border); border-radius: var(--radius-xl);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+
+.team-banner-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .875rem 1.25rem; border-radius: var(--radius-lg);
+}
+.team-banner-card--red {
+  background: linear-gradient(135deg, rgba(239,68,68,.15), rgba(185,28,28,.08));
+  border: 1px solid rgba(239,68,68,.3);
+}
+.team-banner-card--blue {
+  background: linear-gradient(135deg, rgba(59,130,246,.15), rgba(29,78,216,.08));
+  border: 1px solid rgba(59,130,246,.3);
+}
+
+.team-info { display: flex; align-items: center; gap: .75rem; }
+.team-icon { font-size: 1.5rem; }
+.team-name { font-size: 1rem; font-weight: 800; color: #fff; margin: 0; }
+.team-members { font-size: .75rem; color: var(--clr-dark-muted); }
+
+.team-score-box { display: flex; align-items: center; gap: .75rem; }
+.team-score-num { font-size: 1.125rem; font-weight: 800; color: #FCD34D; font-family: var(--font-mono); }
+
+.btn-team-award {
+  height: 32px; padding: 0 .875rem; border-radius: var(--radius-md); border: none;
+  font-size: .75rem; font-weight: 700; cursor: pointer; color: #fff;
+  transition: all var(--t-fast); font-family: inherit;
+}
+.btn-team-award--red { background: linear-gradient(135deg, #EF4444, #DC2626); }
+.btn-team-award--red:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.4); }
+
+.btn-team-award--blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+.btn-team-award--blue:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,.4); }
+
+.duel-vs-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: #1E293B; border: 2px solid #F59E0B; color: #F59E0B;
+  font-size: .8125rem; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Badges Action Bar (Mode: badges_mastery) ───────────── */
+.badges-action-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  padding: .75rem 1.25rem; background: var(--clr-dark-surface);
+  border: 1px solid var(--clr-dark-border); border-radius: var(--radius-xl);
+}
+.badges-bar-label { font-size: .8125rem; font-weight: 700; color: #F8FAFC; display: flex; align-items: center; gap: .5rem; }
+.badges-pills-list { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+.badge-award-pill {
+  display: inline-flex; align-items: center; gap: .375rem;
+  padding: .375rem .75rem; border-radius: var(--radius-full);
+  background: rgba(255,255,255,.06); border: 1px solid var(--clr-dark-border);
+  color: #F8FAFC; font-size: .75rem; font-weight: 600; cursor: pointer;
+  transition: all var(--t-fast); font-family: inherit;
+}
+.badge-award-pill:hover:not(:disabled) {
+  background: rgba(245,158,11,.15); border-color: #F59E0B; transform: translateY(-1px);
+}
+.badge-award-pill:disabled { opacity: .4; cursor: not-allowed; }
+.badge-award-xp { color: #F59E0B; font-weight: 700; font-size: .6875rem; }
+
+/* Student Card Team Accent */
+.student-card--team-red { border-left: 3px solid #EF4444 !important; }
+.student-card--team-blue { border-left: 3px solid #3B82F6 !important; }
+.earned-pill { font-style: normal; color: #10B981; font-weight: 700; font-size: .6875rem; }
+
+/* ── Summary Modal ───────────────────────────────────────── */
+.summary-card {
+  max-width: 500px; text-align: center; background: #0F172A !important;
+  border: 1px solid rgba(255,255,255,.1) !important; color: #fff;
+  padding: 2rem !important;
+}
+.summary-icon-burst { font-size: 3rem; margin-bottom: .5rem; animation: bounce 1s ease; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+.summary-title { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: .25rem; }
+.summary-sub { font-size: .875rem; color: var(--clr-dark-muted); margin-bottom: 1.5rem; }
+
+.summary-stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.75rem;
+}
+.sum-stat {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius-lg); padding: 1rem;
+  display: flex; flex-direction: column; gap: .25rem;
+}
+.sum-stat__num { font-size: 1.25rem; font-weight: 800; color: #F8FAFC; font-family: var(--font-mono); }
+.sum-stat__lbl { font-size: .75rem; color: var(--clr-dark-muted); }
+.sum-stat--xp .sum-stat__num { color: #F59E0B; }
+.sum-stat--mvp .sum-stat__num { color: #A855F7; font-size: 1rem; }
+
+.summary-actions { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; }
 
 .hud-right { display: flex; align-items: center; gap: 1.25rem; }
 
