@@ -8,6 +8,8 @@ import { IconComponent } from '../../../../shared/ui/icon/icon';
 
 interface ClassItem { id: string; name: string; }
 
+export type GamificationModeId = 'xp_levels' | 'teams_duels' | 'badges_mastery' | 'hybrid_quest';
+
 interface SessionRow {
   id: string;
   title: string;
@@ -17,6 +19,7 @@ interface SessionRow {
   duration_minutes: number | null;
   class_id: string;
   class_name: string;
+  gamification_mode: GamificationModeId;
   created_at: string;
 }
 
@@ -41,11 +44,19 @@ export class SessionsListComponent implements OnInit {
   readonly error       = signal<string | null>(null);
 
   /* Form */
-  selectedClassId = '';
-  sessionTitle    = '';
-  sessionDesc     = '';
-  scheduledDate   = '';
-  durationMins    = 45;
+  selectedClassId          = '';
+  sessionTitle             = '';
+  sessionDesc              = '';
+  scheduledDate            = '';
+  durationMins             = 45;
+  selectedGamificationMode: GamificationModeId = 'xp_levels';
+
+  readonly gamificationModes = [
+    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Classic points, levels, and individual streaks' },
+    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Group challenges, team battles, and collaborative XP' },
+    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Milestone achievements and target criteria unlocks' },
+    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Customizable mix of XP, badges, and live challenges' },
+  ];
 
   get filteredSessions(): SessionRow[] {
     const tab = this.activeTab();
@@ -74,7 +85,7 @@ export class SessionsListComponent implements OnInit {
       const { data, error } = await this.supabase.client
         .from('sessions')
         .select(`
-          id, session_number, title, description, status, started_at, duration_minutes, class_id, created_at,
+          id, session_number, title, description, status, started_at, duration_minutes, class_id, gamification_mode, created_at,
           class:classes(name)
         `)
         .order('created_at', { ascending: false });
@@ -83,7 +94,7 @@ export class SessionsListComponent implements OnInit {
 
       const mapped: SessionRow[] = (data ?? []).map((s: {
         id: string; title: string; description: string | null; status: any;
-        started_at: string | null; duration_minutes: number | null; class_id: string; created_at: string;
+        started_at: string | null; duration_minutes: number | null; class_id: string; gamification_mode: GamificationModeId; created_at: string;
         class: { name: string }[] | { name: string } | null;
       }) => ({
         id:               s.id,
@@ -94,6 +105,7 @@ export class SessionsListComponent implements OnInit {
         duration_minutes: s.duration_minutes,
         class_id:         s.class_id,
         class_name:       Array.isArray(s.class) ? (s.class[0]?.name ?? '—') : (s.class as { name: string } | null)?.name ?? '—',
+        gamification_mode: s.gamification_mode || 'xp_levels',
         created_at:       s.created_at,
       }));
 
@@ -121,13 +133,14 @@ export class SessionsListComponent implements OnInit {
       const nextNum = (count ?? 0) + 1;
 
       const { error } = await this.supabase.client.from('sessions').insert({
-        class_id:         this.selectedClassId,
-        session_number:   nextNum,
-        title:            this.sessionTitle.trim(),
-        description:      this.sessionDesc.trim() || null,
-        started_at:       this.scheduledDate ? new Date(this.scheduledDate).toISOString() : null,
-        duration_minutes: this.durationMins || 45,
-        status:           this.scheduledDate ? 'scheduled' : 'draft',
+        class_id:          this.selectedClassId,
+        session_number:    nextNum,
+        title:             this.sessionTitle.trim(),
+        description:       this.sessionDesc.trim() || null,
+        started_at:        this.scheduledDate ? new Date(this.scheduledDate).toISOString() : null,
+        duration_minutes:  this.durationMins || 45,
+        status:            this.scheduledDate ? 'scheduled' : 'draft',
+        gamification_mode: this.selectedGamificationMode,
       });
 
       if (error) throw error;
