@@ -26,40 +26,36 @@
     </div>
 
     <div class="hud-center">
-      <div class="hud-timer" title="Elapsed Time">
-        <app-icon name="clock" [size]="16" />
-        <span>{{ formatTimer(elapsedSeconds()) }}</span>
-      </div>
-
-      <!-- Alarm / Countdown Widget Toggle -->
+      <!-- In-Session Alarm / Challenge Timer with Sound -->
       <div class="alarm-widget-wrap">
         <button type="button" class="btn-alarm-toggle"
                 [class.btn-alarm-toggle--ringing]="isAlarmRinging()"
                 [class.btn-alarm-toggle--active]="isAlarmRunning()"
                 (click)="showAlarmWidget.update(v => !v)">
-          <span>🔔 {{ formatTimer(alarmSeconds()) }}</span>
+          <span>⏱️ Challenge Timer: {{ formatTimer(alarmSeconds()) }}</span>
+          @if (isAlarmRunning()) { <span class="alarm-running-dot"></span> }
         </button>
 
         @if (showAlarmWidget()) {
           <div class="alarm-dropdown-card">
             <div class="alarm-header">
-              <span class="alarm-title">⏱️ In-Session Challenge Alarm</span>
+              <span class="alarm-title">⏱️ Activity Countdown Alarm</span>
               <button class="btn-icon-xs" (click)="showAlarmWidget.set(false)"><app-icon name="x" [size]="14" /></button>
             </div>
 
             <div class="alarm-time-display" [class.alarm-time-display--ringing]="isAlarmRinging()">
               {{ formatTimer(alarmSeconds()) }}
               @if (isAlarmRinging()) {
-                <span class="alarm-alert-tag">TIME IS UP! 🚨</span>
+                <span class="alarm-alert-tag">TIME IS UP! 🚨 🔔</span>
               }
             </div>
 
             <!-- Alarm Presets -->
             <div class="alarm-presets-row">
+              <button type="button" class="btn-preset-time" (click)="setAlarmDuration(60)">1m</button>
               <button type="button" class="btn-preset-time" (click)="setAlarmDuration(180)">3m</button>
               <button type="button" class="btn-preset-time" (click)="setAlarmDuration(300)">5m</button>
               <button type="button" class="btn-preset-time" (click)="setAlarmDuration(600)">10m</button>
-              <button type="button" class="btn-preset-time" (click)="setAlarmDuration(900)">15m</button>
             </div>
 
             <div class="alarm-actions">
@@ -91,9 +87,16 @@
         <span class="hud-stat__val">+{{ totalSessionXP() | number }}</span>
         <span class="hud-stat__lbl">XP Awarded</span>
       </div>
+
+      <!-- Live Leaderboard Button for Students presentation -->
+      <button type="button" class="btn-lb-live" (click)="showLiveLeaderboard.set(true)" title="Show Live Leaderboard">
+        <app-icon name="trophy" [size]="15" />
+        Live Leaderboard
+      </button>
+
       <button type="button" class="btn-ai" (click)="openAiDrawer()" title="Open AI Assistant">
         <app-icon name="sparkles" [size]="16" />
-        AI Assistant
+        AI
       </button>
 
       <button type="button" class="btn-end" [disabled]="isEnding()" (click)="openEndSessionSummary()">
@@ -107,278 +110,321 @@
     </div>
   </header>
 
-  <!-- ── SPECIAL MODE BANNER: TEAM DUELS ───────────────────── -->
+  <!-- ── MODE SPECIFIC BANNER: TEAMS & DUELS (Mode: teams_duels) ─ -->
   @if (gamificationMode() === 'teams_duels') {
-    <div class="teams-arena-banner">
-      <!-- Team Red -->
+    <section class="teams-arena-banner">
+      <!-- Team Phoenix (Red) -->
       <div class="team-banner-card team-banner-card--red">
         <div class="team-info">
-          <span class="team-icon">🔥</span>
+          <span class="team-emoji">🔥</span>
           <div>
             <h3 class="team-name">Team Phoenix</h3>
-            <span class="team-members">{{ teamRedStudents.length }} Members</span>
+            <span class="team-count">{{ teamRedStudents.length }} Members</span>
           </div>
         </div>
-        <div class="team-score-box">
-          <span class="team-score-num">{{ teamRedScore | number }} XP</span>
-          <button type="button" class="btn-team-award btn-team-award--red"
-                  [disabled]="isAwarding()" (click)="awardTeamXP('red', 50)">
-            +50 Team XP
-          </button>
+        <div class="team-score">
+          <span class="score-val">{{ teamRedScore | number }}</span>
+          <span class="score-lbl">XP</span>
         </div>
+        <button type="button" class="btn-team-bonus" [disabled]="isAwarding()" (click)="awardTeamXP('red', 50)">
+          +50 Team XP
+        </button>
       </div>
 
-      <!-- VS Tag -->
-      <div class="duel-vs-circle">VS</div>
+      <div class="vs-badge">VS</div>
 
-      <!-- Team Blue -->
+      <!-- Team Titans (Blue) -->
       <div class="team-banner-card team-banner-card--blue">
         <div class="team-info">
-          <span class="team-icon">⚡</span>
+          <span class="team-emoji">⚡</span>
           <div>
             <h3 class="team-name">Team Titans</h3>
-            <span class="team-members">{{ teamBlueStudents.length }} Members</span>
+            <span class="team-count">{{ teamBlueStudents.length }} Members</span>
           </div>
         </div>
-        <div class="team-score-box">
-          <span class="team-score-num">{{ teamBlueScore | number }} XP</span>
-          <button type="button" class="btn-team-award btn-team-award--blue"
-                  [disabled]="isAwarding()" (click)="awardTeamXP('blue', 50)">
-            +50 Team XP
-          </button>
+        <div class="team-score">
+          <span class="score-val">{{ teamBlueScore | number }}</span>
+          <span class="score-lbl">XP</span>
         </div>
+        <button type="button" class="btn-team-bonus" [disabled]="isAwarding()" (click)="awardTeamXP('blue', 50)">
+          +50 Team XP
+        </button>
       </div>
-    </div>
+    </section>
   }
 
-  <!-- ── SPECIAL MODE BANNER: BADGES & MASTERY ─────────────── -->
+  <!-- ── MODE SPECIFIC BAR: BADGES & MASTERY (Mode: badges_mastery or hybrid_quest) ── -->
   @if (gamificationMode() === 'badges_mastery' || gamificationMode() === 'hybrid_quest') {
-    <div class="badges-action-bar">
-      <span class="badges-bar-label">
+    <section class="badges-showcase-bar">
+      <div class="badges-title">
         <app-icon name="trophy" [size]="16" />
-        Award Badge to {{ selectedCount }} Selected Student(s):
-      </span>
-      <div class="badges-pills-list">
+        <span>Award Live Badge to Selected Students:</span>
+      </div>
+      <div class="badges-list">
         @for (b of badgePresets; track b.key) {
-          <button type="button" class="badge-award-pill"
+          <button type="button" class="btn-badge-pill"
                   [disabled]="selectedCount === 0 || isAwarding()"
-                  (click)="awardLiveBadge(b)">
-            <span class="badge-award-icon">{{ b.icon }}</span>
-            <span class="badge-award-name">{{ b.name }}</span>
-            <span class="badge-award-xp">+{{ b.xp }} XP</span>
+                  (click)="awardLiveBadge(b)"
+                  title="Award {{ b.name }} (+{{ b.xp }} XP)">
+            <span class="badge-icon">{{ b.icon }}</span>
+            <span class="badge-name">{{ b.name }}</span>
+            <span class="badge-xp">+{{ b.xp }} XP</span>
           </button>
         }
       </div>
-    </div>
+    </section>
   }
 
-  <!-- ── MAIN LIVE CONTENT ────────────────────────────────── -->
-  <div class="live-grid">
+  <!-- ── MAIN WORKSPACE BODY: SPLIT VIEW ───────────────────── -->
+  <div class="workspace-body">
 
-    <!-- ── LEFT PANEL: Live Roster & Attendance ─────────── -->
-    <section class="roster-panel">
-      <div class="panel-header">
-        <div class="panel-header__title">
-          <app-icon name="users" [size]="18" />
-          <h2>Student Roster</h2>
-          <span class="count-chip">{{ students().length }}</span>
+    <!-- ── LEFT: STUDENT ROSTER & ATTENDANCE ───────────────── -->
+    <section class="roster-pane">
+      <div class="pane-header">
+        <div class="pane-title-wrap">
+          <h2 class="pane-title">Class Roster ({{ students().length }})</h2>
+          <span class="pane-subtitle">{{ selectedCount }} selected</span>
         </div>
 
-        <div class="batch-select">
-          <button type="button" class="btn-text" (click)="selectAll(true)">Select All</button>
-          <span class="sep">·</span>
-          <button type="button" class="btn-text" (click)="selectAll(false)">Deselect All</button>
+        <div class="selection-actions">
+          <button type="button" class="btn-select-all" (click)="selectAll(true)">Select All</button>
+          <button type="button" class="btn-select-none" (click)="selectAll(false)">Clear</button>
         </div>
       </div>
 
-      @if (isLoading()) {
-        <div class="skeleton-grid">
-          @for (_ of [1,2,3,4,5,6]; track $index) {
-            <div class="skeleton-card"></div>
-          }
-        </div>
-      } @else {
-        <div class="roster-grid">
-          @for (s of students(); track s.id; let idx = $index) {
-            <div class="student-card"
-              [class.student-card--selected]="s.selected"
-              [class.student-card--absent]="s.attendance === 'absent'"
-              [class.student-card--team-red]="gamificationMode() === 'teams_duels' && idx % 2 === 0"
-              [class.student-card--team-blue]="gamificationMode() === 'teams_duels' && idx % 2 === 1">
+      <div class="students-list">
+        @for (s of students(); track s.id) {
+          <div class="student-row"
+               [class.student-row--selected]="s.selected"
+               [class.student-row--absent]="s.attendance === 'absent'"
+               (click)="toggleSelectStudent(s)">
 
-              <div class="student-card__top">
-                <input type="checkbox" class="student-check"
-                  [checked]="s.selected"
-                  (change)="toggleSelectStudent(s)" />
-
-                <div class="student-avatar">{{ s.full_name.charAt(0) }}</div>
-
-                <div class="student-meta">
-                  <span class="student-name">{{ s.full_name }}</span>
-                  <span class="student-xp-lvl">
-                    Lv. {{ s.level }} · ⭐ {{ s.xp_total | number }} XP
-                    @if (s.earnedSessionXp && s.earnedSessionXp > 0) {
-                      <em class="earned-pill">(+{{ s.earnedSessionXp }})</em>
-                    }
-                  </span>
-                </div>
-              </div>
-
-              <!-- Attendance Toggles -->
-              <div class="att-row">
-                <button type="button" class="att-btn att-btn--present"
-                  [class.att-btn--active]="s.attendance === 'present'"
-                  (click)="toggleAttendance(s, 'present')" title="Present">
-                  <app-icon name="user-check" [size]="14" /> P
-                </button>
-                <button type="button" class="att-btn att-btn--late"
-                  [class.att-btn--active]="s.attendance === 'late'"
-                  (click)="toggleAttendance(s, 'late')" title="Late">
-                  <app-icon name="clock" [size]="14" /> L
-                </button>
-                <button type="button" class="att-btn att-btn--absent"
-                  [class.att-btn--active]="s.attendance === 'absent'"
-                  (click)="toggleAttendance(s, 'absent')" title="Absent">
-                  <app-icon name="user-x" [size]="14" /> A
-                </button>
-              </div>
-
+            <!-- Checkbox -->
+            <div class="student-select">
+              <input type="checkbox" [checked]="s.selected" (click)="$event.stopPropagation()" (change)="toggleSelectStudent(s)" />
             </div>
-          }
-        </div>
-      }
+
+            <!-- Avatar -->
+            <div class="student-avatar" [class.student-avatar--absent]="s.attendance === 'absent'">
+              {{ s.full_name.charAt(0).toUpperCase() }}
+            </div>
+
+            <!-- Student Info -->
+            <div class="student-info">
+              <div class="student-name-row">
+                <span class="student-name">{{ s.full_name }}</span>
+                @if (s.earnedSessionXp && s.earnedSessionXp > 0) {
+                  <span class="session-xp-badge">+{{ s.earnedSessionXp }} XP</span>
+                }
+              </div>
+              <div class="student-meta">
+                <span class="student-lvl">Lvl {{ s.level }}</span>
+                <span class="student-total-xp">⭐ {{ s.xp_total | number }} XP</span>
+              </div>
+            </div>
+
+            <!-- Attendance Toggles -->
+            <div class="attendance-toggles" (click)="$event.stopPropagation()">
+              <button type="button" class="btn-att"
+                      [class.btn-att--present]="s.attendance === 'present'"
+                      (click)="toggleAttendance(s, 'present')" title="Present">P</button>
+              <button type="button" class="btn-att"
+                      [class.btn-att--late]="s.attendance === 'late'"
+                      (click)="toggleAttendance(s, 'late')" title="Late">L</button>
+              <button type="button" class="btn-att"
+                      [class.btn-att--absent]="s.attendance === 'absent'"
+                      (click)="toggleAttendance(s, 'absent')" title="Absent">A</button>
+            </div>
+          </div>
+        }
+      </div>
     </section>
 
-    <!-- ── RIGHT PANEL: Live XP Control & Feed ───────────── -->
-    <aside class="control-panel">
+    <!-- ── RIGHT: XP AWARD CONSOLE & LIVE FEED ────────────── -->
+    <section class="console-pane">
 
-      <!-- Live XP Action Box -->
-      <div class="xp-action-box">
-        <h3 class="box-title">
-          <span class="sparkle-icon">⚡</span>
-          Quick Live XP Award
+      <!-- XP Action Card -->
+      <div class="award-card">
+        <h3 class="award-card__title">
+          <app-icon name="zap" [size]="18" />
+          Award XP to Selected Students
         </h3>
 
-        <p class="target-summary">
-          Targeting <strong>{{ selectedCount }}</strong> student(s) selected
-        </p>
-
-        <!-- Presets -->
-        <div class="preset-row">
+        <!-- Preset Chips -->
+        <div class="presets-row">
           @for (p of xpPresets; track p.val) {
-            <button type="button" class="preset-pill"
-              [class.preset-pill--active]="!useCustomXP && selectedXPPreset === p.val"
-              (click)="selectedXPPreset = p.val; useCustomXP = false">
+            <button type="button" class="btn-preset"
+                    [class.btn-preset--active]="!useCustomXP && selectedXPPreset === p.val"
+                    (click)="useCustomXP = false; selectedXPPreset = p.val">
               <span class="preset-icon">{{ p.icon }}</span>
-              <span class="preset-val">{{ p.label }}</span>
+              <span class="preset-lbl">{{ p.label }} XP</span>
             </button>
           }
+          <button type="button" class="btn-preset"
+                  [class.btn-preset--active]="useCustomXP"
+                  (click)="useCustomXP = true">
+            Custom
+          </button>
         </div>
 
-        <!-- Reasons -->
-        <div class="reason-select-wrap">
-          <select class="form-select" [(ngModel)]="awardReason">
+        @if (useCustomXP) {
+          <div class="custom-xp-field">
+            <input type="number" class="form-input custom-xp-input"
+                   placeholder="Enter custom XP amount…"
+                   [(ngModel)]="customXP" />
+          </div>
+        }
+
+        <!-- Reason Selector -->
+        <div class="reason-section">
+          <label class="form-label" for="awardReason">Reason / Trigger</label>
+          <select id="awardReason" class="form-select" [(ngModel)]="awardReason">
             @for (r of reasonOptions; track r) {
               <option [value]="r">{{ r }}</option>
             }
           </select>
+
           @if (awardReason === 'Custom…') {
-            <input type="text" class="form-input" placeholder="Custom reason…" [(ngModel)]="customReason" style="margin-top:.5rem" />
+            <input type="text" class="form-input custom-reason-input"
+                   placeholder="Type custom award reason…"
+                   [(ngModel)]="customReason" />
           }
         </div>
 
         <!-- Big Launch Award Button -->
-        <button type="button" class="btn-award-live"
-          [disabled]="selectedCount === 0 || finalXP <= 0 || isAwarding()"
-          (click)="awardLiveXP()">
+        <button type="button" class="btn-award-big"
+                [disabled]="selectedCount === 0 || finalXP <= 0 || isAwarding()"
+                (click)="awardLiveXP()">
           @if (isAwarding()) {
-            <app-icon name="loader-2" [size]="18" class="spinning" /> Awarding…
+            <app-icon name="loader-2" [size]="18" class="spinning" />
+            <span>Awarding…</span>
           } @else {
-            <span>⚡ Award +{{ finalXP }} XP to {{ selectedCount }} Student(s)</span>
+            <app-icon name="zap" [size]="18" />
+            <span>
+              Award +{{ finalXP }} XP
+              @if (selectedCount > 0) { to {{ selectedCount }} student(s) }
+            </span>
           }
         </button>
       </div>
 
-      <!-- Live Feed Log -->
-      <div class="feed-box">
-        <h3 class="box-title">
-          <app-icon name="sparkles" [size]="16" />
-          Live XP Stream
+      <!-- Live Feed Stream -->
+      <div class="feed-card">
+        <h3 class="feed-card__title">
+          <app-icon name="zap" [size]="16" />
+          Live Event Feed
         </h3>
 
-        @if (feed().length === 0) {
-          <div class="feed-empty">
-            <p>Select students and award XP or badges to see live activity stream.</p>
-          </div>
-        } @else {
-          <div class="feed-list">
-            @for (item of feed(); track item.id) {
+        <div class="feed-list">
+          @if (feed().length === 0) {
+            <div class="feed-empty">
+              <span>No XP awarded yet in this session. Select students to start!</span>
+            </div>
+          } @else {
+            @for (ev of feed(); track ev.id) {
               <div class="feed-item">
-                <span class="feed-item__badge">+{{ item.points }}</span>
-                <div class="feed-item__info">
-                  <span class="feed-item__name">{{ item.studentName }}</span>
-                  <span class="feed-item__reason">{{ item.reason }}</span>
+                <div class="feed-item__left">
+                  <span class="feed-pts">+{{ ev.points }} XP</span>
+                  <span class="feed-name">{{ ev.studentName }}</span>
                 </div>
-                <span class="feed-item__time">{{ item.timestamp }}</span>
+                <div class="feed-item__right">
+                  <span class="feed-reason">{{ ev.reason }}</span>
+                  <span class="feed-time">{{ ev.timestamp }}</span>
+                </div>
               </div>
             }
-          </div>
-        }
+          }
+        </div>
       </div>
 
-    </aside>
+    </section>
 
   </div>
 
-</div>
+  <!-- ── LIVE LEADERBOARD PRESENTATION MODAL ────────────────── -->
+  @if (showLiveLeaderboard()) {
+    <div class="modal-backdrop" (click)="showLiveLeaderboard.set(false)">
+      <div class="lb-modal-card" (click)="$event.stopPropagation()">
+        <div class="lb-modal-header">
+          <div>
+            <span class="lb-modal-subtitle">Real-Time Standings</span>
+            <h2 class="lb-modal-title">🏆 Live Class Leaderboard</h2>
+          </div>
+          <button type="button" class="btn-modal-close" (click)="showLiveLeaderboard.set(false)">
+            <app-icon name="x" [size]="20" />
+          </button>
+        </div>
 
-<!-- ── End Session Celebration Summary Modal ─────────────── -->
-@if (showSummaryModal()) {
-  <div class="modal-backdrop">
-    <div class="modal-card summary-card">
-      <div class="summary-header">
-        <div class="summary-icon-burst">🎉</div>
-        <h2 class="summary-title">Session Complete!</h2>
-        <p class="summary-sub">{{ sessionTitle() }} · {{ className() }}</p>
-      </div>
-
-      <div class="summary-stats-grid">
-        <div class="sum-stat">
-          <span class="sum-stat__num">{{ formatTimer(elapsedSeconds()) }}</span>
-          <span class="sum-stat__lbl">Duration</span>
-        </div>
-        <div class="sum-stat sum-stat--xp">
-          <span class="sum-stat__num">⭐ +{{ totalSessionXP() | number }}</span>
-          <span class="sum-stat__lbl">Total XP Distributed</span>
-        </div>
-        <div class="sum-stat">
-          <span class="sum-stat__num">{{ presentCount }} / {{ students().length }}</span>
-          <span class="sum-stat__lbl">Present Students</span>
-        </div>
-        <div class="sum-stat sum-stat--mvp">
-          <span class="sum-stat__num">👑 {{ mvpStudentName }}</span>
-          <span class="sum-stat__lbl">Session MVP</span>
-        </div>
-      </div>
-
-      <div class="summary-actions">
-        <button class="btn-secondary" (click)="showSummaryModal.set(false)">Return to Workspace</button>
-        <button class="btn-primary" [disabled]="isEnding()" (click)="confirmEndSession()">
-          @if (isEnding()) {
-            <app-icon name="loader-2" [size]="15" class="spinning" /> Finishing…
-          } @else {
-            <app-icon name="check" [size]="15" /> Save & Back to Sessions
+        <div class="lb-modal-body">
+          @for (s of sortedLiveLeaderboard; track s.id; let i = $index) {
+            <div class="lb-modal-row" [class.lb-modal-row--podium]="i < 3">
+              <span class="lb-rank">
+                @if (i === 0) { 🥇 }
+                @else if (i === 1) { 🥈 }
+                @else if (i === 2) { 🥉 }
+                @else { #{{ i + 1 }} }
+              </span>
+              <div class="lb-avatar">{{ s.full_name.charAt(0).toUpperCase() }}</div>
+              <div class="lb-info">
+                <strong>{{ s.full_name }}</strong>
+                <span class="lb-sub">Level {{ s.level }}</span>
+              </div>
+              <div class="lb-points">
+                @if (s.earnedSessionXp && s.earnedSessionXp > 0) {
+                  <span class="lb-session-xp">+{{ s.earnedSessionXp }} XP Session</span>
+                }
+                <span class="lb-total-xp">⭐ {{ s.xp_total | number }} XP</span>
+              </div>
+            </div>
           }
-        </button>
+        </div>
       </div>
     </div>
-  </div>
-}
+  }
 
-<!-- AI Assistant Drawer -->
-<app-ai-assistant-drawer
-  [isOpen]="isAiDrawerOpen()"
-  [className]="className()"
-  [sessionTitle]="sessionTitle()"
-  (closeDrawer)="closeAiDrawer()"
-/>
+  <!-- ── CELEBRATION SUMMARY MODAL (ON END SESSION) ────────── -->
+  @if (showSummaryModal()) {
+    <div class="modal-backdrop">
+      <div class="celebration-card">
+        <div class="celebration-badge">🎉 SESSION COMPLETE!</div>
+        <h2 class="celebration-title">{{ sessionTitle() }}</h2>
+        <p class="celebration-sub">{{ className() }}</p>
+
+        <div class="celebration-metrics">
+          <div class="metric-box">
+            <span class="metric-val">+{{ totalSessionXP() | number }}</span>
+            <span class="metric-lbl">Total XP Distributed</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-val">{{ presentCount }}</span>
+            <span class="metric-lbl">Students Present</span>
+          </div>
+          <div class="metric-box metric-box--mvp">
+            <span class="metric-val">👑 {{ mvpStudentName }}</span>
+            <span class="metric-lbl">Session MVP</span>
+          </div>
+        </div>
+
+        <div class="celebration-actions">
+          <button type="button" class="btn-confirm-end" [disabled]="isEnding()" (click)="confirmEndSession()">
+            @if (isEnding()) {
+              <app-icon name="loader-2" [size]="16" class="spinning" /> Saving…
+            } @else {
+              <app-icon name="check-circle" [size]="16" /> Save & Go to Class Leaderboard
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- AI Assistant Drawer -->
+  <app-ai-assistant-drawer
+    [isOpen]="isAiDrawerOpen()"
+    [classId]="classId()"
+    [className]="className()"
+    [sessionTitle]="sessionTitle()"
+    (closeDrawer)="closeAiDrawer()"
+  />
+
+</div>

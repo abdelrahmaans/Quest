@@ -167,20 +167,30 @@ export class ClassDetailComponent implements OnInit {
         .maybeSingle();
 
       if (clsErr) throw clsErr;
-      if (!cls) throw new Error('Class not found. Please verify the link or class ID.');
+      if (!cls) throw new Error('Class not found. Please verify the class link or ID.');
       
       this.classInfo.set(cls as ClassInfo);
       this.selectedGamificationMode = cls.gamification_mode || 'xp_levels';
 
-      // 2. Load Class Students
-      const { data: stds, error: stdErr } = await this.supabase.client
+      // 2. Load Class Students (via students.class_id AND class_members)
+      const { data: stds1 } = await this.supabase.client
         .from('students')
         .select('id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at')
-        .eq('class_id', id)
-        .order('full_name', { ascending: true });
+        .eq('class_id', id);
 
-      if (stdErr) console.warn('Students load warn:', stdErr);
-      this.students.set((stds ?? []) as StudentRow[]);
+      const { data: members } = await this.supabase.client
+        .from('class_members')
+        .select('student_id, student:students(id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at)')
+        .eq('class_id', id);
+
+      const studentMap = new Map<string, StudentRow>();
+      (stds1 ?? []).forEach((s: any) => studentMap.set(s.id, s));
+      (members ?? []).forEach((m: any) => {
+        const s = Array.isArray(m.student) ? m.student[0] : m.student;
+        if (s && s.id) studentMap.set(s.id, s);
+      });
+
+      this.students.set(Array.from(studentMap.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
 
       // 3. Load Class Sessions (ordered ascending by session_number)
       const { data: sess, error: sessErr } = await this.supabase.client
@@ -227,6 +237,7 @@ export class ClassDetailComponent implements OnInit {
         last_assigned_class_name: cls?.name,
       };
 
+      // 1. Update students table
       const { error } = await this.supabase.client
         .from('students')
         .update({
@@ -236,6 +247,11 @@ export class ClassDetailComponent implements OnInit {
         .eq('id', student.id);
 
       if (error) throw error;
+
+      // 2. Insert to class_members
+      await this.supabase.client
+        .from('class_members')
+        .upsert({ class_id: this.classId(), student_id: student.id, joined_at: new Date().toISOString() });
 
       const enrolledStudent = { ...student, class_id: this.classId(), metadata: updatedMeta };
       this.students.update(list => [...list, enrolledStudent]);
@@ -284,6 +300,10 @@ export class ClassDetailComponent implements OnInit {
       if (error) throw error;
 
       if (created) {
+        await this.supabase.client
+          .from('class_members')
+          .upsert({ class_id: this.classId(), student_id: created.id, joined_at: new Date().toISOString() });
+
         this.students.update(list => [...list, created as StudentRow]);
         this.allInstructorStudents.update(list => [...list, created as StudentRow]);
       }

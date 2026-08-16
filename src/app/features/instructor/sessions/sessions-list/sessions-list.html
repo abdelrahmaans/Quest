@@ -4,23 +4,23 @@
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Sessions & Gamification Hub</h1>
-      <p class="page-subtitle">Schedule sessions, view the calendar, and launch live gamified workspaces.</p>
+      <h1 class="page-title">Sessions & Gamification Calendar</h1>
+      <p class="page-subtitle">Schedule sessions, browse the interactive calendar, and launch live gamified workspaces.</p>
     </div>
     <div class="header-actions">
       <!-- View Mode Toggle -->
       <div class="view-toggle">
         <button type="button" class="view-btn"
-                [class.view-btn--active]="viewMode() === 'list'"
-                (click)="viewMode.set('list')">
-          <app-icon name="bar-chart-2" [size]="15" />
-          List View
-        </button>
-        <button type="button" class="view-btn"
                 [class.view-btn--active]="viewMode() === 'calendar'"
                 (click)="viewMode.set('calendar')">
           <app-icon name="calendar" [size]="15" />
           Calendar View
+        </button>
+        <button type="button" class="view-btn"
+                [class.view-btn--active]="viewMode() === 'list'"
+                (click)="viewMode.set('list')">
+          <app-icon name="bar-chart-2" [size]="15" />
+          List View
         </button>
       </div>
 
@@ -43,7 +43,7 @@
   @if (todaySessions().length > 0) {
     <section class="today-spotlight-card">
       <div class="today-header">
-        <span class="today-badge">📅 TODAY'S AGENDA</span>
+        <span class="today-badge">📅 TODAY'S SESSIONS AGENDA</span>
         <h3 class="today-title">You have {{ todaySessions().length }} session(s) scheduled for today</h3>
       </div>
 
@@ -63,7 +63,7 @@
             </div>
             <button class="btn-today-launch" (click)="startLiveSession(s)">
               <app-icon name="play" [size]="14" />
-              {{ s.status === 'live' ? 'Join Live' : 'Launch Live' }}
+              {{ s.status === 'live' ? 'Join Live Room' : 'Launch Live' }}
             </button>
           </div>
         }
@@ -144,7 +144,58 @@
     </div>
   }
 
-  <!-- ── VIEW 1: LIST VIEW ─────────────────────────────────── -->
+  <!-- ── VIEW 1: INTERACTIVE CALENDAR VIEW ─────────────────── -->
+  @if (viewMode() === 'calendar') {
+    <section class="calendar-card">
+      <div class="calendar-nav-bar">
+        <div class="calendar-nav-left">
+          <button type="button" class="btn-cal-arrow" (click)="prevMonth()" title="Previous Month">
+            <app-icon name="chevron-left" [size]="16" />
+          </button>
+          <h2 class="cal-month-title">{{ calendarMonthYear() }}</h2>
+          <button type="button" class="btn-cal-arrow" (click)="nextMonth()" title="Next Month">
+            <app-icon name="chevron-right" [size]="16" />
+          </button>
+        </div>
+        <button type="button" class="btn-today" (click)="goToToday()">Today</button>
+      </div>
+
+      <!-- Days of Week Header -->
+      <div class="cal-weekdays-row">
+        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      </div>
+
+      <!-- Calendar Matrix -->
+      <div class="cal-matrix">
+        @for (day of calendarDays(); track $index) {
+          <div class="cal-cell"
+               [class.cal-cell--other-month]="!day.isCurrentMonth"
+               [class.cal-cell--today]="day.isToday"
+               (click)="openDayModal(day)">
+            <div class="cal-cell__header">
+              <span class="cal-cell__day-num">{{ day.dayNum }}</span>
+              @if (day.sessions.length > 0) {
+                <span class="cal-cell__count">{{ day.sessions.length }} session{{ day.sessions.length > 1 ? 's' : '' }}</span>
+              }
+            </div>
+
+            <div class="cal-cell__sessions">
+              @for (sess of day.sessions; track sess.id) {
+                <div class="cal-session-chip"
+                     [class.cal-session-chip--live]="sess.status === 'live'"
+                     (click)="$event.stopPropagation(); startLiveSession(sess)">
+                  <span class="cal-chip-time">⏱️ {{ sess.scheduled_at || sess.started_at | date:'shortTime' }}</span>
+                  <span class="cal-chip-title">#{{ sess.session_number }} {{ sess.class_name }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ── VIEW 2: LIST VIEW ─────────────────────────────────── -->
   @if (viewMode() === 'list') {
     <!-- Filter Tabs -->
     <div class="tabs">
@@ -231,54 +282,50 @@
     }
   }
 
-  <!-- ── VIEW 2: INTERACTIVE CALENDAR VIEW ─────────────────── -->
-  @if (viewMode() === 'calendar') {
-    <section class="calendar-card">
-      <div class="calendar-nav-bar">
-        <div class="calendar-nav-left">
-          <button type="button" class="btn-cal-arrow" (click)="prevMonth()" title="Previous Month">
-            <app-icon name="chevron-left" [size]="16" />
-          </button>
-          <h2 class="cal-month-title">{{ calendarMonthYear() }}</h2>
-          <button type="button" class="btn-cal-arrow" (click)="nextMonth()" title="Next Month">
-            <app-icon name="chevron-right" [size]="16" />
+  <!-- ── DAY DETAILS MODAL / DRAWER ────────────────────────── -->
+  @if (selectedDayModal(); as day) {
+    <div class="modal-backdrop" (click)="closeDayModal()">
+      <div class="day-modal-card" (click)="$event.stopPropagation()">
+        <div class="day-modal-header">
+          <div>
+            <span class="day-modal-subtitle">Schedule Details</span>
+            <h3 class="day-modal-title">📅 {{ day.date | date:'fullDate' }}</h3>
+          </div>
+          <button type="button" class="btn-modal-close" (click)="closeDayModal()">
+            <app-icon name="x" [size]="18" />
           </button>
         </div>
-        <button type="button" class="btn-today" (click)="goToToday()">Today</button>
-      </div>
 
-      <!-- Days of Week Header -->
-      <div class="cal-weekdays-row">
-        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-      </div>
-
-      <!-- Calendar Matrix -->
-      <div class="cal-matrix">
-        @for (day of calendarDays(); track day.dateStr) {
-          <div class="cal-cell"
-               [class.cal-cell--other-month]="!day.isCurrentMonth"
-               [class.cal-cell--today]="day.isToday">
-            <div class="cal-cell__header">
-              <span class="cal-cell__day-num">{{ day.dayNum }}</span>
-              @if (day.sessions.length > 0) {
-                <span class="cal-cell__count">{{ day.sessions.length }}</span>
-              }
-            </div>
-
-            <div class="cal-cell__sessions">
-              @for (sess of day.sessions; track sess.id) {
-                <div class="cal-session-chip"
-                     [class.cal-session-chip--live]="sess.status === 'live'"
-                     (click)="startLiveSession(sess)">
-                  <span class="cal-chip-time">{{ sess.scheduled_at || sess.started_at | date:'shortTime' }}</span>
-                  <span class="cal-chip-title">#{{ sess.session_number }} {{ sess.class_name }}</span>
+        @if (day.sessions.length === 0) {
+          <div class="day-empty">
+            <app-icon name="calendar" [size]="28" />
+            <p>No sessions scheduled for this day.</p>
+          </div>
+        } @else {
+          <div class="day-sessions-list">
+            @for (s of day.sessions; track s.id) {
+              <div class="day-session-row" [class.day-session-row--live]="s.status === 'live'">
+                <div class="day-row-info">
+                  <div class="day-row-tags">
+                    <span class="day-tag-class">{{ s.class_name }}</span>
+                    <span class="day-tag-mode">{{ getModeName(s.gamification_mode) }}</span>
+                    <span class="status-badge" [class]="getStatusBadgeClass(s.status)">{{ s.status }}</span>
+                  </div>
+                  <h4 class="day-row-title">Session #{{ s.session_number }}: {{ s.title }}</h4>
+                  <span class="day-row-time">
+                    ⏱️ {{ s.scheduled_at || s.started_at | date:'shortTime' }} ({{ s.duration_minutes || 45 }} mins)
+                  </span>
                 </div>
-              }
-            </div>
+                <button type="button" class="btn-launch-day" (click)="startLiveSession(s)">
+                  <app-icon name="play" [size]="14" />
+                  {{ s.status === 'live' ? 'Join Live' : 'Launch' }}
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
-    </section>
+    </div>
   }
 
 </div>

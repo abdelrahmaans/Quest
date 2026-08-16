@@ -134,6 +134,66 @@
 .cal-chip-time { font-size: .625rem; opacity: .85; }
 .cal-chip-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* ── Day Details Modal ───────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15,23,42,.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+  animation: fade-in .2s ease;
+}
+
+.day-modal-card {
+  background: var(--clr-surface); border: 1.5px solid var(--clr-border); border-radius: var(--radius-xl);
+  width: 100%; max-width: 520px; box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  display: flex; flex-direction: column; overflow: hidden; animation: pop-up .25s ease;
+}
+
+.day-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--clr-border);
+  background: var(--clr-bg);
+}
+.day-modal-subtitle { font-size: .75rem; font-weight: 700; color: var(--clr-text-muted); text-transform: uppercase; }
+.day-modal-title { font-size: 1.125rem; font-weight: 800; color: var(--clr-text); margin: 0; }
+.btn-modal-close {
+  background: none; border: none; color: var(--clr-text-muted); cursor: pointer;
+  padding: .25rem; border-radius: var(--radius-sm); transition: all var(--t-fast);
+}
+.btn-modal-close:hover { color: var(--clr-text); background: rgba(0,0,0,.05); }
+
+.day-empty {
+  padding: 3rem 1.5rem; text-align: center; color: var(--clr-text-muted);
+  display: flex; flex-direction: column; align-items: center; gap: .75rem;
+}
+
+.day-sessions-list { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: .875rem; max-height: 400px; overflow-y: auto; }
+.day-session-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1rem; border-radius: var(--radius-lg); border: 1px solid var(--clr-border);
+  background: var(--clr-surface); transition: border-color var(--t-fast);
+}
+.day-session-row:hover { border-color: var(--clr-primary); }
+.day-session-row--live { border-color: #EF4444; background: #FEF2F2; }
+
+.day-row-info { display: flex; flex-direction: column; gap: .25rem; flex: 1; }
+.day-row-tags { display: flex; align-items: center; gap: .375rem; flex-wrap: wrap; }
+.day-tag-class { font-size: .6875rem; font-weight: 700; color: var(--clr-primary-dark); }
+.day-tag-mode { font-size: .6875rem; font-weight: 600; color: #6366F1; }
+.day-row-title { font-size: .9375rem; font-weight: 700; color: var(--clr-text); margin: 0; }
+.day-row-time { font-size: .75rem; color: var(--clr-text-muted); font-weight: 600; }
+
+.btn-launch-day {
+  display: inline-flex; align-items: center; gap: .375rem;
+  height: 34px; padding: 0 .875rem; border-radius: var(--radius-md); border: none;
+  background: var(--clr-primary); color: #fff; font-size: .8125rem; font-weight: 700;
+  cursor: pointer; transition: all var(--t-fast); font-family: inherit;
+}
+.btn-launch-day:hover { background: var(--clr-primary-dark); transform: translateY(-1px); }
+
+@keyframes pop-up {
+  from { opacity: 0; transform: scale(.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* ── Create Card ────────────────────────────────────────── */
 .create-card {
   background: var(--clr-surface);

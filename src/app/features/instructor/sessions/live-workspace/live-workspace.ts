@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, CommonModule } from '@angular/common';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
@@ -38,7 +38,7 @@ interface BadgePreset {
 @Component({
   selector: 'app-live-workspace',
   standalone: true,
-  imports: [RouterLink, FormsModule, DecimalPipe, IconComponent, AiAssistantDrawerComponent],
+  imports: [RouterLink, FormsModule, DecimalPipe, CommonModule, IconComponent, AiAssistantDrawerComponent],
   templateUrl: './live-workspace.html',
   styleUrl: './live-workspace.css',
 })
@@ -66,9 +66,14 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   readonly students       = signal<LiveStudent[]>([]);
   readonly feed           = signal<LiveFeedEvent[]>([]);
   readonly totalSessionXP = signal<number>(0);
-  readonly elapsedSeconds = signal<number>(0);
 
-  /* In-Session Alarm / Challenge Timer */
+  /* Live In-Session Leaderboard Modal */
+  readonly showLiveLeaderboard = signal(false);
+  get sortedLiveLeaderboard(): LiveStudent[] {
+    return [...this.students()].sort((a, b) => b.xp_total - a.xp_total);
+  }
+
+  /* In-Session Custom Alarm / Challenge Timer with Sound */
   readonly showAlarmWidget = signal(false);
   readonly alarmSeconds    = signal<number>(300); // 5 min default
   readonly isAlarmRunning  = signal(false);
@@ -103,8 +108,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   readonly showSummaryModal = signal(false);
   mvpStudentName = '—';
 
-  /* Realtime & Timer handles */
-  private timerInterval: any = null;
+  /* Realtime */
   private channel: RealtimeChannel | null = null;
   readonly isRealtimeActive = signal<boolean>(false);
 
@@ -152,13 +156,11 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
 
     this.sessionId.set(id);
     await this.loadLiveSessionData(id);
-    this.startTimer();
     this.setupRealtimeSubscription(id);
     this.isLoading.set(false);
   }
 
   ngOnDestroy(): void {
-    if (this.timerInterval) clearInterval(this.timerInterval);
     if (this.alarmInterval) clearInterval(this.alarmInterval);
     this.teardownRealtimeSubscription();
   }
@@ -237,21 +239,14 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     );
   }
 
-  startTimer(): void {
-    this.timerInterval = setInterval(() => {
-      this.elapsedSeconds.update(s => s + 1);
-    }, 1000);
-  }
-
   formatTimer(totalSecs: number): string {
-    const h = Math.floor(totalSecs / 3600);
-    const m = Math.floor((totalSecs % 3600) / 60);
+    const m = Math.floor(totalSecs / 60);
     const s = totalSecs % 60;
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+    return `${pad(m)}:${pad(s)}`;
   }
 
-  /* ── In-Session Alarm Methods ── */
+  /* ── In-Session Alarm with Audio Synthesis ── */
   setAlarmDuration(seconds: number): void {
     this.isAlarmRunning.set(false);
     this.isAlarmRinging.set(false);
@@ -274,6 +269,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
             clearInterval(this.alarmInterval);
             this.isAlarmRunning.set(false);
             this.isAlarmRinging.set(true);
+            this.playAlarmSound();
             return 0;
           }
           return sec - 1;
@@ -287,6 +283,30 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     this.isAlarmRunning.set(false);
     this.isAlarmRinging.set(false);
     this.alarmSeconds.set(300);
+  }
+
+  playAlarmSound(): void {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+
+      // Play 3 pleasant chimes
+      [0, 0.25, 0.5].forEach(delay => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime + delay); // A5 note
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.2);
+      });
+    } catch {
+      // Audio context fallback
+    }
   }
 
   async loadLiveSessionData(sid: string): Promise<void> {
@@ -306,14 +326,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       const cName = Array.isArray(sess.class) ? sess.class[0]?.name : (sess.class as { name: string } | null)?.name;
       this.className.set(cName ?? 'Class');
 
-      // Preserve elapsed timer from started_at if session is already live!
-      if (sess.status === 'live' && sess.started_at) {
-        const startMs = new Date(sess.started_at).getTime();
-        const elapsedSecs = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-        this.elapsedSeconds.set(elapsedSecs);
-      }
-
-      // 2. Load Students in Class
+      // 2. Load Students in Class (from students and class_members)
       const { data: stdData, error: stdErr } = await this.supabase.client
         .from('students')
         .select('id, full_name, display_name, xp_total, level')
@@ -537,7 +550,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       await this.sessionService.completeSession(this.sessionId(), {
         title:             this.sessionTitle(),
         className:         this.className(),
-        durationMinutes:   Math.round(this.elapsedSeconds() / 60),
+        durationMinutes:   45,
         totalXpAwarded:    this.totalSessionXP(),
         presentCount:      this.presentCount,
         totalStudents:     this.students().length,

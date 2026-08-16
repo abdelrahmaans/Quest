@@ -52,7 +52,7 @@ export class SessionsListComponent implements OnInit {
   readonly sessions    = signal<SessionRow[]>([]);
   readonly classes     = signal<ClassItem[]>([]);
   readonly activeTab   = signal<'all' | 'live' | 'scheduled' | 'completed'>('all');
-  readonly viewMode    = signal<'list' | 'calendar'>('list');
+  readonly viewMode    = signal<'list' | 'calendar'>('calendar'); // Default to calendar view as user requested!
   readonly showCreate  = signal(false);
   readonly isCreating  = signal(false);
   readonly error       = signal<string | null>(null);
@@ -60,6 +60,7 @@ export class SessionsListComponent implements OnInit {
   /* Calendar View State */
   currentCalendarDate = new Date();
   readonly calendarMonthYear = signal<string>('');
+  readonly selectedDayModal  = signal<CalendarDay | null>(null);
 
   /* Form */
   selectedClassId          = '';
@@ -78,11 +79,16 @@ export class SessionsListComponent implements OnInit {
 
   /* ── Today's Sessions Agenda ── */
   readonly todaySessions = computed(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const tYear = today.getFullYear();
+    const tMonth = today.getMonth();
+    const tDate = today.getDate();
+
     return this.sessions().filter(s => {
       const dateVal = s.scheduled_at || s.started_at;
       if (!dateVal) return false;
-      return new Date(dateVal).toISOString().split('T')[0] === todayStr;
+      const d = new Date(dateVal);
+      return d.getFullYear() === tYear && d.getMonth() === tMonth && d.getDate() === tDate;
     });
   });
 
@@ -93,7 +99,7 @@ export class SessionsListComponent implements OnInit {
     return this.sessions().filter(s => s.status === tab);
   }
 
-  /* ── Calendar Days Matrix ── */
+  /* ── Calendar Days Matrix with robust local date matching ── */
   readonly calendarDays = computed(() => {
     const all = this.sessions();
     const curr = this.currentCalendarDate;
@@ -104,34 +110,44 @@ export class SessionsListComponent implements OnInit {
     const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
     const prevMonthDays = new Date(year, month, 0).getDate();
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const isSameDate = (d1: Date, d2: Date) =>
+      d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+
+    const getSessionsForDate = (targetDate: Date) => {
+      return all.filter(s => {
+        const rawDate = s.scheduled_at || s.started_at;
+        if (!rawDate) return false;
+        const sDate = new Date(rawDate);
+        return isSameDate(sDate, targetDate);
+      });
+    };
+
     const days: CalendarDay[] = [];
 
     // Previous month padding
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const d = new Date(year, month - 1, prevMonthDays - i);
-      const dStr = d.toISOString().split('T')[0];
       days.push({
         date: d,
-        dateStr: dStr,
+        dateStr: d.toISOString(),
         dayNum: prevMonthDays - i,
         isCurrentMonth: false,
-        isToday: dStr === todayStr,
-        sessions: all.filter(s => (s.scheduled_at || s.started_at)?.startsWith(dStr)),
+        isToday: isSameDate(d, now),
+        sessions: getSessionsForDate(d),
       });
     }
 
     // Current month days
     for (let i = 1; i <= totalDaysInMonth; i++) {
       const d = new Date(year, month, i);
-      const dStr = d.toISOString().split('T')[0];
       days.push({
         date: d,
-        dateStr: dStr,
+        dateStr: d.toISOString(),
         dayNum: i,
         isCurrentMonth: true,
-        isToday: dStr === todayStr,
-        sessions: all.filter(s => (s.scheduled_at || s.started_at)?.startsWith(dStr)),
+        isToday: isSameDate(d, now),
+        sessions: getSessionsForDate(d),
       });
     }
 
@@ -139,14 +155,13 @@ export class SessionsListComponent implements OnInit {
     const remaining = (7 - (days.length % 7)) % 7;
     for (let i = 1; i <= remaining; i++) {
       const d = new Date(year, month + 1, i);
-      const dStr = d.toISOString().split('T')[0];
       days.push({
         date: d,
-        dateStr: dStr,
+        dateStr: d.toISOString(),
         dayNum: i,
         isCurrentMonth: false,
-        isToday: dStr === todayStr,
-        sessions: all.filter(s => (s.scheduled_at || s.started_at)?.startsWith(dStr)),
+        isToday: isSameDate(d, now),
+        sessions: getSessionsForDate(d),
       });
     }
 
@@ -177,6 +192,14 @@ export class SessionsListComponent implements OnInit {
   goToToday(): void {
     this.currentCalendarDate = new Date();
     this.updateCalendarLabel();
+  }
+
+  openDayModal(day: CalendarDay): void {
+    this.selectedDayModal.set(day);
+  }
+
+  closeDayModal(): void {
+    this.selectedDayModal.set(null);
   }
 
   async loadClasses(): Promise<void> {
