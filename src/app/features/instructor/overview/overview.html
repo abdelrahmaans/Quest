@@ -5,9 +5,9 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">
-      Good {{ getGreeting() }}, {{ (auth.currentProfile()?.full_name ?? 'Instructor').split(' ')[0] }} 👋
+        Good {{ getGreeting() }}, {{ (auth.currentProfile()?.full_name ?? 'Instructor').split(' ')[0] }} 👋
       </h1>
-      <p class="page-subtitle">Here's what's happening in your classes today.</p>
+      <p class="page-subtitle">Here's your classes, students, and live scheduled sessions today.</p>
     </div>
   </div>
 
@@ -37,6 +37,65 @@
     </div>
   }
 
+  <!-- ── Scheduled & Live Sessions Timeline ────────────────── -->
+  <section class="card session-schedule-card">
+    <div class="card__header-row">
+      <h2 class="card__title">
+        <app-icon name="calendar" [size]="18" />
+        Live & Scheduled Sessions Schedule
+      </h2>
+      <a routerLink="/instructor/sessions" class="link-more">View All Sessions →</a>
+    </div>
+
+    @if (isLoading()) {
+      <div class="skeleton-list">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="skeleton-row"></div>
+        }
+      </div>
+    } @else if (upcomingSessions().length === 0) {
+      <div class="empty-sessions">
+        <app-icon name="calendar" [size]="32" />
+        <p>No upcoming sessions scheduled yet.</p>
+        <a routerLink="/instructor/sessions" class="btn-sm btn-primary">Schedule a Session</a>
+      </div>
+    } @else {
+      <div class="sessions-timeline-table">
+        @for (sess of upcomingSessions(); track sess.id) {
+          <div class="timeline-row" [class.timeline-row--live]="sess.status === 'live'">
+            <div class="timeline-status-col">
+              <span class="status-dot status-dot--{{ sess.status }}"></span>
+              <span class="status-text status-text--{{ sess.status }}">{{ sess.status }}</span>
+            </div>
+
+            <div class="timeline-info-col">
+              <div class="timeline-class-tag">{{ sess.class_name }}</div>
+              <h4 class="timeline-title">Session #{{ sess.session_number }}: {{ sess.title }}</h4>
+            </div>
+
+            <div class="timeline-mode-col">
+              <span class="mode-badge">{{ getModeName(sess.gamification_mode) }}</span>
+              <span class="timeline-time">
+                @if (sess.started_at) {
+                  📅 {{ sess.started_at | date:'mediumDate' }} · {{ sess.started_at | date:'shortTime' }}
+                } @else {
+                  ⏱️ {{ sess.duration_minutes || 45 }} mins
+                }
+              </span>
+            </div>
+
+            <div class="timeline-action-col">
+              <button class="btn-live-launch" (click)="launchLive(sess)">
+                <app-icon name="play" [size]="14" />
+                Launch Live
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
   <!-- Bottom grid -->
   <div class="bottom-grid">
 
@@ -44,7 +103,7 @@
     <section class="card">
       <h2 class="card__title">
         <app-icon name="trophy" [size]="16" />
-        Top Students
+        Top Ranked Students
       </h2>
 
       @if (isLoading()) {
@@ -55,7 +114,7 @@
         </div>
       } @else if (recentStudents().length === 0) {
         <div class="empty-state">
-          <p>No students yet. <a href="/instructor/classes">Create a class</a> to get started.</p>
+          <p>No students enrolled yet. <a routerLink="/instructor/classes">Create a class</a> to get started.</p>
         </div>
       } @else {
         <ul class="student-list">
@@ -65,7 +124,7 @@
               <div class="student-avatar">{{ s.name.charAt(0) }}</div>
               <div class="student-info">
                 <span class="student-name">{{ s.name }}</span>
-                <span class="student-xp">{{ s.xp.toLocaleString() }} XP</span>
+                <span class="student-xp">⭐ {{ s.xp.toLocaleString() }} XP</span>
               </div>
               <span class="student-level">Lv. {{ s.level }}</span>
             </li>
@@ -78,22 +137,22 @@
     <section class="card">
       <h2 class="card__title">
         <app-icon name="zap" [size]="16" />
-        Quick Actions
+        Quick Management
       </h2>
       <div class="quick-actions">
-        <a href="/instructor/classes" class="action-btn">
+        <a routerLink="/instructor/classes" class="action-btn">
           <app-icon name="graduation-cap" [size]="18" />
-          <span>New Class</span>
+          <span>Classes & Roster</span>
         </a>
-        <a href="/instructor/challenges" class="action-btn">
-          <app-icon name="target" [size]="18" />
-          <span>Launch Challenge</span>
+        <a routerLink="/instructor/sessions" class="action-btn">
+          <app-icon name="radio" [size]="18" />
+          <span>Live Sessions</span>
         </a>
-        <a href="/instructor/gamification" class="action-btn">
+        <a routerLink="/instructor/gamification" class="action-btn">
           <app-icon name="zap" [size]="18" />
           <span>Award XP</span>
         </a>
-        <a href="/instructor/leaderboard" class="action-btn">
+        <a routerLink="/instructor/leaderboard" class="action-btn">
           <app-icon name="bar-chart-2" [size]="18" />
           <span>Leaderboard</span>
         </a>

@@ -51,12 +51,28 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
   readonly sessionTitle = signal<string>('Live Session Workspace');
   readonly className    = signal<string>('');
   readonly classId      = signal<string>('');
+  readonly gamificationMode = signal<string>('xp_levels');
 
   /* Session Stats */
   readonly students       = signal<LiveStudent[]>([]);
   readonly feed           = signal<LiveFeedEvent[]>([]);
   readonly totalSessionXP = signal<number>(0);
   readonly elapsedSeconds = signal<number>(0);
+
+  /* Team Battle State (for teams_duels mode) */
+  readonly activeTeamTab  = signal<'all' | 'red' | 'blue'>('all');
+  get teamRedStudents(): LiveStudent[] {
+    return this.students().filter((_, i) => i % 2 === 0);
+  }
+  get teamBlueStudents(): LiveStudent[] {
+    return this.students().filter((_, i) => i % 2 === 1);
+  }
+  get teamRedScore(): number {
+    return this.teamRedStudents.reduce((acc, s) => acc + s.xp_total, 0);
+  }
+  get teamBlueScore(): number {
+    return this.teamBlueStudents.reduce((acc, s) => acc + s.xp_total, 0);
+  }
 
   /* Realtime & Timer handles */
   private timerInterval: any = null;
@@ -208,7 +224,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
       // 1. Load Session & Class Name
       const { data: sess, error: sessErr } = await this.supabase.client
         .from('sessions')
-        .select('id, title, class_id, status, class:classes(name)')
+        .select('id, title, class_id, status, gamification_mode, class:classes(name)')
         .eq('id', sid)
         .single();
 
@@ -216,6 +232,7 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
 
       this.sessionTitle.set(sess.title);
       this.classId.set(sess.class_id);
+      this.gamificationMode.set(sess.gamification_mode || 'xp_levels');
       const cName = Array.isArray(sess.class) ? sess.class[0]?.name : (sess.class as { name: string } | null)?.name;
       this.className.set(cName ?? 'Class');
 

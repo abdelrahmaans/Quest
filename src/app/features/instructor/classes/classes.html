@@ -57,40 +57,101 @@
           </div>
         </div>
 
-        <!-- 1. Select from Existing Students -->
-        @if (allInstructorStudents().length > 0) {
-          <div class="form-field">
-            <label class="form-label">
-              👥 Attach Existing Students (Optional)
-              @if (selectedExistingIds.size > 0) {
-                <span class="selected-count">
-                  ({{ selectedExistingIds.size }} selected)
-                </span>
+        <!-- Smart Student Search & Enroll Section -->
+        <div class="form-field">
+          <label class="form-label" for="clsStdSearch">
+            👥 Enroll Students (Search Existing or Add New by Name)
+          </label>
+
+          <!-- Input Search Bar -->
+          <div class="search-input-wrapper">
+            <input id="clsStdSearch" type="text" class="form-input search-input"
+                   placeholder="Type to search existing student or enter new name…"
+                   [(ngModel)]="studentSearchQuery"
+                   (keyup.enter)="queueNewStudent()" />
+            @if (studentSearchQuery.trim()) {
+              <button class="btn-clear" (click)="studentSearchQuery = ''">
+                <app-icon name="x" [size]="14" />
+              </button>
+            }
+          </div>
+
+          <!-- Live Search Results Dropdown -->
+          @if (studentSearchQuery.trim()) {
+            <div class="search-results-panel">
+              <!-- Warning if already selected -->
+              @if (isAlreadySelectedOrQueued()) {
+                <div class="result-item result-item--enrolled">
+                  <app-icon name="check-circle" [size]="14" />
+                  <span>"{{ studentSearchQuery.trim() }}" is already selected for enrollment.</span>
+                </div>
               }
-            </label>
-            <div class="students-picker-box">
-              @for (std of allInstructorStudents(); track std.id) {
-                <label class="student-check-item" [class.student-check-item--active]="isStudentSelected(std.id)">
-                  <input type="checkbox"
-                         [checked]="isStudentSelected(std.id)"
-                         (change)="toggleStudentSelection(std.id)" />
-                  <span class="student-check-name">{{ std.full_name }}</span>
-                  <span class="student-check-lvl">Lvl {{ std.level }}</span>
-                </label>
+
+              <!-- Matches from existing students -->
+              @if (createSearchMatches().length > 0) {
+                <div class="results-group-title">Existing Students:</div>
+                @for (std of createSearchMatches(); track std.id) {
+                  <div class="result-item" (click)="selectExistingStudent(std)">
+                    <div class="result-item__info">
+                      <div class="student-avatar-xs">{{ std.full_name.charAt(0).toUpperCase() }}</div>
+                      <div>
+                        <strong>{{ std.full_name }}</strong>
+                        <span class="match-meta">
+                          Level {{ std.level }} · {{ std.xp_total }} XP
+                          @if (std.current_class_name) {
+                            · (In: {{ std.current_class_name }})
+                          }
+                        </span>
+                      </div>
+                    </div>
+                    <button class="btn-sm btn-sm--outline">
+                      <app-icon name="plus" [size]="12" /> Add
+                    </button>
+                  </div>
+                }
+              }
+
+              <!-- Option to create brand new student -->
+              @if (!isAlreadySelectedOrQueued()) {
+                <div class="result-item result-item--create" (click)="queueNewStudent()">
+                  <div class="create-new-prompt">
+                    <app-icon name="plus" [size]="15" />
+                    <span>➕ Create & Enroll brand new student: <strong>"{{ studentSearchQuery.trim() }}"</strong></span>
+                  </div>
+                  <button class="btn-sm btn-primary">Enroll New</button>
+                </div>
               }
             </div>
-          </div>
-        }
+          }
 
-        <!-- 2. Add New Students by Name -->
-        <div class="form-field">
-          <label class="form-label" for="initialStudents">
-            ➕ Add Brand New Students by Name (Optional — one per line)
-          </label>
-          <textarea id="initialStudents" class="form-textarea" rows="2"
-            placeholder="Youssef Ahmed&#10;Mariam Karim"
-            [(ngModel)]="initialStudentNames"></textarea>
-          <span class="form-hint">You can also add or import more students anytime inside the Class Hub.</span>
+          <!-- Enrolled Students Chips -->
+          @if (selectedExistingStudents().length > 0 || queuedNewStudentNames().length > 0) {
+            <div class="enrolled-chips-box">
+              <span class="chips-title">Enrolling in this class ({{ selectedExistingStudents().length + queuedNewStudentNames().length }}):</span>
+              <div class="chips-list">
+                <!-- Existing Students Chips -->
+                @for (s of selectedExistingStudents(); track s.id) {
+                  <span class="student-chip student-chip--existing">
+                    <span class="chip-dot"></span>
+                    {{ s.full_name }} (Lvl {{ s.level }})
+                    <button type="button" class="btn-chip-remove" (click)="removeSelectedExistingStudent(s.id)">
+                      <app-icon name="x" [size]="12" />
+                    </button>
+                  </span>
+                }
+                <!-- Queued New Students Chips -->
+                @for (name of queuedNewStudentNames(); track name) {
+                  <span class="student-chip student-chip--new">
+                    <span class="chip-badge-new">NEW</span>
+                    {{ name }}
+                    <button type="button" class="btn-chip-remove" (click)="removeQueuedNewStudent(name)">
+                      <app-icon name="x" [size]="12" />
+                    </button>
+                  </span>
+                }
+              </div>
+            </div>
+          }
         </div>
 
         <div class="create-actions">

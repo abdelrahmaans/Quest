@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -11,7 +11,8 @@ interface StudentItem {
   display_name: string;
   xp_total: number;
   level: number;
-  selected?: boolean;
+  class_id?: string | null;
+  current_class_name?: string | null;
   created_at: string;
 }
 
@@ -47,9 +48,29 @@ export class InstructorClassesComponent implements OnInit {
   className           = '';
   classSubject        = '';
   classGrade          = '';
-  initialStudentNames = '';
+  
+  /* Smart Search & Enrollment during creation */
+  studentSearchQuery  = '';
   readonly allInstructorStudents = signal<StudentItem[]>([]);
-  selectedExistingIds = new Set<string>();
+  readonly selectedExistingStudents = signal<StudentItem[]>([]);
+  readonly queuedNewStudentNames    = signal<string[]>([]);
+
+  readonly createSearchMatches = computed(() => {
+    const q = this.studentSearchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const selectedIds = new Set(this.selectedExistingStudents().map(s => s.id));
+    return this.allInstructorStudents().filter(
+      s => s.full_name.toLowerCase().includes(q) && !selectedIds.has(s.id),
+    );
+  });
+
+  readonly isAlreadySelectedOrQueued = computed(() => {
+    const q = this.studentSearchQuery.trim().toLowerCase();
+    if (!q) return false;
+    const inExisting = this.selectedExistingStudents().some(s => s.full_name.toLowerCase() === q);
+    const inQueued = this.queuedNewStudentNames().some(n => n.toLowerCase() === q);
+    return inExisting || inQueued;
+  });
 
   /* Active Class Modal / Drawer for Students Management */
   readonly activeClassModal = signal<ClassRow | null>(null);
@@ -103,26 +124,53 @@ export class InstructorClassesComponent implements OnInit {
     try {
       const { data } = await this.supabase.client
         .from('students')
-        .select('id, full_name, display_name, xp_total, level, created_at')
+        .select(`
+          id, full_name, display_name, xp_total, level, class_id, created_at,
+          class:classes(name)
+        `)
         .eq('instructor_id', user.id)
         .order('full_name', { ascending: true });
 
-      this.allInstructorStudents.set((data ?? []) as StudentItem[]);
+      const mapped = (data ?? []).map((s: any) => ({
+        id: s.id,
+        full_name: s.full_name,
+        display_name: s.display_name,
+        xp_total: s.xp_total,
+        level: s.level,
+        class_id: s.class_id,
+        current_class_name: Array.isArray(s.class) ? (s.class[0]?.name ?? null) : s.class?.name ?? null,
+        created_at: s.created_at,
+      }));
+
+      this.allInstructorStudents.set(mapped as StudentItem[]);
     } catch (e) {
       console.warn('Could not load all students:', e);
     }
   }
 
-  toggleStudentSelection(studentId: string): void {
-    if (this.selectedExistingIds.has(studentId)) {
-      this.selectedExistingIds.delete(studentId);
-    } else {
-      this.selectedExistingIds.add(studentId);
+  /* ── Smart Selection Helpers for Create Class ── */
+  selectExistingStudent(std: StudentItem): void {
+    if (!this.selectedExistingStudents().some(s => s.id === std.id)) {
+      this.selectedExistingStudents.update(list => [...list, std]);
     }
+    this.studentSearchQuery = '';
   }
 
-  isStudentSelected(studentId: string): boolean {
-    return this.selectedExistingIds.has(studentId);
+  removeSelectedExistingStudent(id: string): void {
+    this.selectedExistingStudents.update(list => list.filter(s => s.id !== id));
+  }
+
+  queueNewStudent(): void {
+    const name = this.studentSearchQuery.trim();
+    if (!name) return;
+    if (!this.queuedNewStudentNames().includes(name)) {
+      this.queuedNewStudentNames.update(list => [...list, name]);
+    }
+    this.studentSearchQuery = '';
+  }
+
+  removeQueuedNewStudent(name: string): void {
+    this.queuedNewStudentNames.update(list => list.filter(n => n !== name));
   }
 
   async createClass(): Promise<void> {
@@ -150,49 +198,50 @@ export class InstructorClassesComponent implements OnInit {
 
       if (error) throw error;
 
-      // 1. Attach selected existing students to this new class
-      if (newClass?.id && this.selectedExistingIds.size > 0) {
-        const ids = Array.from(this.selectedExistingIds);
+      // 1. Attach selected existing students
+      const existingIds = this.selectedExistingStudents().map(s => s.id);
+      if (newClass?.id && existingIds.length > 0) {
         await this.supabase.client
           .from('students')
-          .update({ class_id: newClass.id })
-          .in('id', ids);
-      }
-
-      // 2. Insert new students by name
-      if (newClass?.id && this.initialStudentNames.trim()) {
-        const names = this.initialStudentNames
-          .split('\n')
-          .map(n => n.trim())
-          .filter(n => n.length > 0);
-
-        if (names.length > 0) {
-          const studentInserts = names.map(name => ({
-            public_code:   `STD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-            display_name:  name,
-            full_name:     name,
-            class_id:      newClass.id,
-            instructor_id: user.id,
-            xp_total:      0,
-            level:         1,
-            current_streak: 0,
+          .update({
+            class_id: newClass.id,
             metadata: {
-              created_from_class_id:   newClass.id,
-              created_from_class_name: this.className.trim(),
-              created_at_timestamp:    new Date().toISOString(),
+              last_assigned_class_id: newClass.id,
+              last_assigned_class_name: this.className.trim(),
             },
-          }));
-
-          await this.supabase.client.from('students').insert(studentInserts);
-        }
+          })
+          .in('id', existingIds);
       }
 
-      this.successMsg.set(`✅ Class "${this.className.trim()}" created successfully!`);
+      // 2. Insert queued new students with origin class metadata
+      const newNames = this.queuedNewStudentNames();
+      if (newClass?.id && newNames.length > 0) {
+        const studentInserts = newNames.map(name => ({
+          public_code:   `STD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          display_name:  name,
+          full_name:     name,
+          class_id:      newClass.id,
+          instructor_id: user.id,
+          xp_total:      0,
+          level:         1,
+          current_streak: 0,
+          metadata: {
+            created_from_class_id:   newClass.id,
+            created_from_class_name: this.className.trim(),
+            created_at_timestamp:    new Date().toISOString(),
+          },
+        }));
+
+        await this.supabase.client.from('students').insert(studentInserts);
+      }
+
+      this.successMsg.set(`✅ Class "${this.className.trim()}" created successfully with ${existingIds.length + newNames.length} enrolled students!`);
       this.className = '';
       this.classSubject = '';
       this.classGrade = '';
-      this.initialStudentNames = '';
-      this.selectedExistingIds.clear();
+      this.studentSearchQuery = '';
+      this.selectedExistingStudents.set([]);
+      this.queuedNewStudentNames.set([]);
       this.showCreate.set(false);
       await this.loadClasses();
       await this.loadAllStudents();
@@ -205,9 +254,9 @@ export class InstructorClassesComponent implements OnInit {
     }
   }
 
-  /* ── Student Management Modal ── */
+  /* ── Student Management Quick Modal ── */
   async openStudentsModal(cls: ClassRow, event: MouseEvent): Promise<void> {
-    event.stopPropagation(); // prevent card click navigation
+    event.stopPropagation();
     this.activeClassModal.set(cls);
     this.loadingStudents.set(true);
     try {
