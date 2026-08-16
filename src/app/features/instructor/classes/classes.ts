@@ -176,6 +176,11 @@ export class InstructorClassesComponent implements OnInit {
             xp_total:      0,
             level:         1,
             current_streak: 0,
+            metadata: {
+              created_from_class_id:   newClass.id,
+              created_from_class_name: this.className.trim(),
+              created_at_timestamp:    new Date().toISOString(),
+            },
           }));
 
           await this.supabase.client.from('students').insert(studentInserts);
@@ -246,6 +251,11 @@ export class InstructorClassesComponent implements OnInit {
           xp_total:      0,
           level:         1,
           current_streak: 0,
+          metadata: {
+            created_from_class_id:   cls.id,
+            created_from_class_name: cls.name,
+            created_at_timestamp:    new Date().toISOString(),
+          },
         })
         .select('id, full_name, display_name, xp_total, level, created_at')
         .single();

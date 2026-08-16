@@ -10,13 +10,13 @@
 
   @if (error()) {
     <div class="alert-error">
-      <app-icon name="alert-circle" [size]="16" />
+      <app-icon name="alert-circle" [size]="15" />
       {{ error() }}
     </div>
   }
   @if (successMsg()) {
     <div class="alert-success">
-      <app-icon name="check-circle" [size]="16" />
+      <app-icon name="check-circle" [size]="15" />
       {{ successMsg() }}
     </div>
   }
@@ -93,48 +93,89 @@
       </button>
     </nav>
 
-    <!-- ── TAB 1: STUDENTS ROSTER ────────────────────────── -->
+    <!-- ── TAB 1: STUDENTS ROSTER (SMART SEARCH & ENROLL) ── -->
     @if (activeTab() === 'students') {
       <section class="tab-pane">
 
-        <!-- Add Student Bar -->
+        <!-- Smart Search & Auto-Enroll Bar -->
         <div class="action-bar-card">
-          <!-- Add by Name -->
-          <div class="add-box">
-            <label class="action-label">Enroll New Student by Name</label>
-            <div class="input-action-row">
-              <input type="text" class="form-input"
-                     placeholder="Enter student full name…"
-                     [(ngModel)]="newStudentName"
-                     (keyup.enter)="addNewStudent()" />
-              <button class="btn-primary" [disabled]="!newStudentName.trim() || isAddingStudent()" (click)="addNewStudent()">
-                @if (isAddingStudent()) {
-                  <app-icon name="loader-2" [size]="14" class="spinning" />
-                } @else {
-                  <app-icon name="plus" [size]="14" />
-                }
-                Add Student
-              </button>
-            </div>
-          </div>
-
-          <!-- Attach Existing Student -->
-          @if (availableStudents().length > 0) {
-            <div class="add-box">
-              <label class="action-label">Attach Existing Student</label>
-              <div class="input-action-row">
-                <select class="form-select" [(ngModel)]="selectedExistingStudentId">
-                  <option value="">Select student…</option>
-                  @for (s of availableStudents(); track s.id) {
-                    <option [value]="s.id">{{ s.full_name }} (Lvl {{ s.level }})</option>
-                  }
-                </select>
-                <button class="btn-secondary" [disabled]="!selectedExistingStudentId || isAttachingStudent()" (click)="attachExistingStudent()">
-                  <app-icon name="user-check" [size]="14" /> Attach
+          <div class="smart-search-box">
+            <label class="action-label" for="stdSearch">
+              🔍 Search Existing Students or Add New Student by Name
+            </label>
+            <div class="search-input-wrapper">
+              <input id="stdSearch" type="text" class="form-input search-input"
+                     placeholder="Type student name (e.g. Youssef, Mariam, Omar)…"
+                     [(ngModel)]="studentQuery" />
+              @if (studentQuery.trim()) {
+                <button class="btn-clear" (click)="studentQuery = ''">
+                  <app-icon name="x" [size]="14" />
                 </button>
-              </div>
+              }
             </div>
-          }
+
+            <!-- Live Matches Dropdown / Results -->
+            @if (studentQuery.trim()) {
+              <div class="search-results-panel">
+
+                <!-- 1. Already Enrolled Warning -->
+                @if (isAlreadyEnrolled()) {
+                  <div class="result-item result-item--enrolled">
+                    <app-icon name="check-circle" [size]="16" />
+                    <span><strong>{{ studentQuery.trim() }}</strong> is already enrolled in this class.</span>
+                  </div>
+                }
+
+                <!-- 2. Existing Found Students In Database -->
+                @if (searchMatches().length > 0) {
+                  <div class="results-group-title">Found in your existing students:</div>
+                  @for (match of searchMatches(); track match.id) {
+                    <div class="result-item result-item--match">
+                      <div class="result-item__info">
+                        <div class="student-avatar-xs">{{ match.full_name.charAt(0).toUpperCase() }}</div>
+                        <div>
+                          <strong>{{ match.full_name }}</strong>
+                          <span class="match-meta">
+                            Level {{ match.level }} · {{ match.xp_total }} XP
+                            @if (match.current_class_name) {
+                              · (Currently in: <em>{{ match.current_class_name }}</em>)
+                            }
+                          </span>
+                        </div>
+                      </div>
+                      <button class="btn-sm btn-sm--primary"
+                              [disabled]="isProcessingStudent()"
+                              (click)="attachExistingStudent(match)">
+                        <app-icon name="user-check" [size]="13" />
+                        Enroll Existing
+                      </button>
+                    </div>
+                  }
+                }
+
+                <!-- 3. Create Brand New Student Option -->
+                @if (!isAlreadyEnrolled()) {
+                  <div class="result-item result-item--create" (click)="createAndEnrollNewStudent()">
+                    <div class="create-new-prompt">
+                      <app-icon name="plus" [size]="16" />
+                      <div>
+                        <span>Create & Enroll brand new student: <strong>"{{ studentQuery.trim() }}"</strong></span>
+                        <small class="create-origin-hint">Will be registered in database tagged to class: {{ cls.name }}</small>
+                      </div>
+                    </div>
+                    <button class="btn-primary btn-sm" [disabled]="isProcessingStudent()">
+                      @if (isProcessingStudent()) {
+                        <app-icon name="loader-2" [size]="12" class="spinning" /> Creating…
+                      } @else {
+                        Create & Enroll
+                      }
+                    </button>
+                  </div>
+                }
+
+              </div>
+            }
+          </div>
         </div>
 
         <!-- Students Roster Table -->
@@ -142,7 +183,7 @@
           <div class="empty-state">
             <app-icon name="users" [size]="32" />
             <h3>No students in this class yet</h3>
-            <p>Type a student name above to enroll them into this class!</p>
+            <p>Use the search bar above to enroll existing students or create new ones!</p>
           </div>
         } @else {
           <div class="students-grid">
@@ -155,6 +196,13 @@
                     <span class="student-card__sub">Enrolled {{ s.created_at | date:'shortDate' }}</span>
                   </div>
                 </div>
+
+                <!-- Origin / Enrolled Class Tag -->
+                @if (getOriginClass(s); as origin) {
+                  <div class="student-origin-tag">
+                    🏷️ Origin: {{ origin }}
+                  </div>
+                }
 
                 <div class="student-card__stats">
                   <span class="pill pill--level">Level {{ s.level || 1 }}</span>

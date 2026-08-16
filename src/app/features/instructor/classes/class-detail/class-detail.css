@@ -81,17 +81,84 @@
 
 .tab-pane { display: flex; flex-direction: column; gap: 1.25rem; }
 
-/* ── Action Bar Card ─────────────────────────────────────── */
+/* ── Smart Search & Action Bar ──────────────────────────── */
 .action-bar-card {
   background: var(--clr-surface);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-xl);
   padding: 1.25rem 1.5rem;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,.03);
 }
-.action-label { font-size: .8125rem; font-weight: 700; color: var(--clr-text); margin-bottom: .375rem; display: block; }
-.input-action-row { display: flex; gap: .5rem; }
-.input-action-row .form-input, .input-action-row .form-select { flex: 1; height: 40px; }
+
+.smart-search-box { display: flex; flex-direction: column; gap: .5rem; position: relative; }
+.action-label { font-size: .875rem; font-weight: 700; color: var(--clr-text); display: block; }
+
+.search-input-wrapper { position: relative; display: flex; align-items: center; }
+.search-input {
+  width: 100%; height: 44px; padding: 0 2.5rem 0 1rem;
+  border: 1.5px solid var(--clr-border); border-radius: var(--radius-md);
+  font-size: .9375rem; color: var(--clr-text); background: var(--clr-bg);
+  transition: all var(--t-fast);
+}
+.search-input:focus { border-color: var(--clr-primary); box-shadow: 0 0 0 3px rgba(20,184,166,.12); background: var(--clr-surface); }
+
+.btn-clear {
+  position: absolute; right: .75rem; background: none; border: none;
+  color: var(--clr-text-muted); cursor: pointer; padding: .25rem;
+}
+.btn-clear:hover { color: var(--clr-text); }
+
+/* Search Results Dropdown Panel */
+.search-results-panel {
+  background: var(--clr-surface);
+  border: 1.5px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,.1);
+  overflow: hidden; display: flex; flex-direction: column;
+  animation: fade-in .15s ease;
+}
+
+.results-group-title {
+  padding: .5rem 1rem; background: var(--clr-bg);
+  font-size: .75rem; font-weight: 700; color: var(--clr-text-muted); text-transform: uppercase;
+}
+
+.result-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .75rem 1rem; border-bottom: 1px solid var(--clr-border);
+  transition: background var(--t-fast);
+}
+.result-item:last-child { border-bottom: none; }
+.result-item:hover { background: rgba(0,0,0,.02); }
+
+.result-item__info { display: flex; align-items: center; gap: .75rem; }
+.student-avatar-xs {
+  width: 32px; height: 32px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-primary-dark));
+  color: #fff; font-weight: 700; font-size: .8125rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.match-meta { display: block; font-size: .75rem; color: var(--clr-text-muted); margin-top: .15rem; }
+
+.result-item--enrolled {
+  background: #F0FDF4; color: #166534; font-size: .875rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+
+.result-item--create {
+  background: var(--clr-surface-mint); border-top: 1px solid var(--clr-primary-light);
+  cursor: pointer;
+}
+.result-item--create:hover { background: #CCFBF1; }
+.create-new-prompt { display: flex; align-items: center; gap: .625rem; color: var(--clr-primary-dark); font-size: .875rem; }
+.create-origin-hint { display: block; font-size: .75rem; color: var(--clr-text-muted); margin-top: .15rem; }
+
+/* Student Card Origin Tag */
+.student-origin-tag {
+  font-size: .75rem; color: var(--clr-text-muted);
+  background: var(--clr-bg); padding: .25rem .5rem; border-radius: var(--radius-sm);
+  border: 1px dashed var(--clr-border); width: fit-content;
+}
 
 /* ── Students Grid ───────────────────────────────────────── */
 .students-grid {

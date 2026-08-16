@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, DecimalPipe } from '@angular/common';
@@ -25,6 +25,9 @@ interface StudentRow {
   xp_total: number;
   level: number;
   current_streak: number;
+  class_id?: string | null;
+  current_class_name?: string | null;
+  metadata?: Record<string, any>;
   created_at: string;
 }
 
@@ -65,14 +68,27 @@ export class ClassDetailComponent implements OnInit {
   /* Active Tab */
   readonly activeTab = signal<'students' | 'sessions' | 'leaderboard'>('students');
 
-  /* Add Student Form */
-  newStudentName   = '';
-  isAddingStudent  = signal(false);
+  /* Smart Search & Enroll State */
+  studentQuery             = '';
+  readonly allInstructorStudents = signal<StudentRow[]>([]);
+  isProcessingStudent      = signal(false);
 
-  /* Existing Students to attach */
-  readonly availableStudents = signal<StudentRow[]>([]);
-  selectedExistingStudentId = '';
-  isAttachingStudent        = signal(false);
+  /* Filtered Search Results */
+  readonly searchMatches = computed(() => {
+    const q = this.studentQuery.trim().toLowerCase();
+    if (!q) return [];
+    const enrolledIds = new Set(this.students().map(s => s.id));
+    return this.allInstructorStudents().filter(
+      s => s.full_name.toLowerCase().includes(q) && !enrolledIds.has(s.id),
+    );
+  });
+
+  /* Check if query is already enrolled in this class */
+  readonly isAlreadyEnrolled = computed(() => {
+    const q = this.studentQuery.trim().toLowerCase();
+    if (!q) return false;
+    return this.students().some(s => s.full_name.toLowerCase() === q);
+  });
 
   /* Create Session Form */
   readonly showCreateSession = signal(false);
@@ -130,7 +146,7 @@ export class ClassDetailComponent implements OnInit {
       // 2. Load Class Students
       const { data: stds, error: stdErr } = await this.supabase.client
         .from('students')
-        .select('id, full_name, display_name, xp_total, level, current_streak, created_at')
+        .select('id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at')
         .eq('class_id', id)
         .order('full_name', { ascending: true });
 
@@ -150,15 +166,30 @@ export class ClassDetailComponent implements OnInit {
         gamification_mode: s.gamification_mode || 'xp_levels',
       })) as SessionRow[]);
 
-      // 4. Load available students (not in this class)
+      // 4. Load all students belonging to this instructor (with their class names)
       if (user) {
         const { data: allStds } = await this.supabase.client
           .from('students')
-          .select('id, full_name, display_name, xp_total, level, current_streak, created_at')
-          .eq('instructor_id', user.id)
-          .neq('class_id', id);
+          .select(`
+            id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at,
+            class:classes(name)
+          `)
+          .eq('instructor_id', user.id);
 
-        this.availableStudents.set((allStds ?? []) as StudentRow[]);
+        const mappedAll = (allStds ?? []).map((s: any) => ({
+          id: s.id,
+          full_name: s.full_name,
+          display_name: s.display_name,
+          xp_total: s.xp_total,
+          level: s.level,
+          current_streak: s.current_streak,
+          class_id: s.class_id,
+          current_class_name: Array.isArray(s.class) ? (s.class[0]?.name ?? null) : s.class?.name ?? null,
+          metadata: s.metadata,
+          created_at: s.created_at,
+        }));
+
+        this.allInstructorStudents.set(mappedAll as StudentRow[]);
       }
     } catch (e: unknown) {
       this.error.set((e as Error).message);
@@ -167,15 +198,57 @@ export class ClassDetailComponent implements OnInit {
     }
   }
 
-  /* ── Add New Student by Name ── */
-  async addNewStudent(): Promise<void> {
-    if (!this.newStudentName.trim()) return;
-    this.isAddingStudent.set(true);
+  /* ── Attach Existing Found Student ── */
+  async attachExistingStudent(student: StudentRow): Promise<void> {
+    this.isProcessingStudent.set(true);
     this.error.set(null);
-    const user = this.auth.currentUser();
+    const cls = this.classInfo();
 
     try {
-      const name = this.newStudentName.trim();
+      const updatedMeta = {
+        ...(student.metadata || {}),
+        last_assigned_class_id: this.classId(),
+        last_assigned_class_name: cls?.name,
+      };
+
+      const { error } = await this.supabase.client
+        .from('students')
+        .update({
+          class_id: this.classId(),
+          metadata: updatedMeta,
+        })
+        .eq('id', student.id);
+
+      if (error) throw error;
+
+      const enrolledStudent = { ...student, class_id: this.classId(), metadata: updatedMeta };
+      this.students.update(list => [...list, enrolledStudent]);
+      this.studentQuery = '';
+      this.showToast(`✅ Existing student "${student.full_name}" enrolled in ${cls?.name}!`);
+    } catch (e: unknown) {
+      this.error.set((e as Error).message);
+    } finally {
+      this.isProcessingStudent.set(false);
+    }
+  }
+
+  /* ── Create Brand New Student with Origin Class Tag ── */
+  async createAndEnrollNewStudent(): Promise<void> {
+    const name = this.studentQuery.trim();
+    if (!name) return;
+
+    this.isProcessingStudent.set(true);
+    this.error.set(null);
+    const user = this.auth.currentUser();
+    const cls = this.classInfo();
+
+    try {
+      const initialMeta = {
+        created_from_class_id:   this.classId(),
+        created_from_class_name: cls?.name,
+        created_at_timestamp:    new Date().toISOString(),
+      };
+
       const { data: created, error } = await this.supabase.client
         .from('students')
         .insert({
@@ -187,48 +260,23 @@ export class ClassDetailComponent implements OnInit {
           xp_total:      0,
           level:         1,
           current_streak: 0,
+          metadata:      initialMeta,
         })
-        .select('id, full_name, display_name, xp_total, level, current_streak, created_at')
+        .select('id, full_name, display_name, xp_total, level, current_streak, class_id, metadata, created_at')
         .single();
 
       if (error) throw error;
+
       if (created) {
         this.students.update(list => [...list, created as StudentRow]);
+        this.allInstructorStudents.update(list => [...list, created as StudentRow]);
       }
-      this.newStudentName = '';
-      this.showToast(`✅ Student "${name}" enrolled successfully!`);
+      this.studentQuery = '';
+      this.showToast(`✨ Brand new student "${name}" created and enrolled into ${cls?.name}!`);
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {
-      this.isAddingStudent.set(false);
-    }
-  }
-
-  /* ── Attach Existing Student ── */
-  async attachExistingStudent(): Promise<void> {
-    if (!this.selectedExistingStudentId) return;
-    this.isAttachingStudent.set(true);
-    this.error.set(null);
-
-    try {
-      const { error } = await this.supabase.client
-        .from('students')
-        .update({ class_id: this.classId() })
-        .eq('id', this.selectedExistingStudentId);
-
-      if (error) throw error;
-
-      const attached = this.availableStudents().find(s => s.id === this.selectedExistingStudentId);
-      if (attached) {
-        this.students.update(list => [...list, attached]);
-        this.availableStudents.update(list => list.filter(s => s.id !== attached.id));
-      }
-      this.selectedExistingStudentId = '';
-      this.showToast(`✅ Student added to class!`);
-    } catch (e: unknown) {
-      this.error.set((e as Error).message);
-    } finally {
-      this.isAttachingStudent.set(false);
+      this.isProcessingStudent.set(false);
     }
   }
 
@@ -326,5 +374,9 @@ export class ClassDetailComponent implements OnInit {
       case 'hybrid_quest':   return '🎯 Custom Hybrid Quest';
       default:               return '⚡ XP & Levels';
     }
+  }
+
+  getOriginClass(student: StudentRow): string | null {
+    return student.metadata?.['created_from_class_name'] || student.metadata?.['last_assigned_class_name'] || null;
   }
 }
