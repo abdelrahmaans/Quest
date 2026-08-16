@@ -5,6 +5,7 @@ import { DecimalPipe } from '@angular/common';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
+import { XpService } from '../../../../core/services/xp.service';
 import { IconComponent } from '../../../../shared/ui/icon/icon';
 import { AiAssistantDrawerComponent } from '../../../../shared/ui/ai-assistant-drawer/ai-assistant-drawer';
 import type { IconName } from '../../../../shared/ui/icon/icons.constants';
@@ -34,8 +35,9 @@ interface LiveFeedEvent {
   styleUrl: './live-workspace.css',
 })
 export class LiveWorkspaceComponent implements OnInit, OnDestroy {
-  readonly auth     = inject(AuthService);
-  readonly supabase = inject(SupabaseService);
+  readonly auth      = inject(AuthService);
+  readonly supabase  = inject(SupabaseService);
+  readonly xpService = inject(XpService);
 
   /* AI Assistant State */
   readonly isAiDrawerOpen = signal<boolean>(false);
@@ -287,17 +289,17 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
     const reason = this.finalReason;
 
     try {
-      // Insert XP events for each selected student
-      const inserts = selected.map(s => ({
-        student_id:  s.id,
-        session_id:  this.sessionId(),
-        class_id:    this.classId(),
+      // Award XP using centralized XpService
+      const batchPayloads = selected.map(s => ({
+        studentId:  s.id,
+        sessionId:  this.sessionId(),
+        classId:    this.classId(),
         points,
         reason:      `[Live Session] ${reason}`,
-        source_type: 'live_session',
+        sourceType: 'live_session',
       }));
 
-      await this.supabase.client.from('xp_events').insert(inserts);
+      await this.xpService.awardBatchXp(batchPayloads);
 
       // Update local state XP totals
       this.students.update(list =>

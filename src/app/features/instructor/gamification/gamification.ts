@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { XpService } from '../../../core/services/xp.service';
 import { IconComponent } from '../../../shared/ui/icon/icon';
 import { AiAssistantDrawerComponent } from '../../../shared/ui/ai-assistant-drawer/ai-assistant-drawer';
 
@@ -34,6 +35,7 @@ const XP_REASONS = [
 export class GamificationComponent implements OnInit {
   readonly auth     = inject(AuthService);
   readonly supabase = inject(SupabaseService);
+  readonly xpService = inject(XpService);
   readonly route    = inject(ActivatedRoute);
 
   /* AI Assistant State */
@@ -155,11 +157,12 @@ export class GamificationComponent implements OnInit {
     if (!user) return;
 
     try {
-      const { error } = await this.supabase.client.from('xp_events').insert({
-        student_id:  this.selectedStudentId,
+      const { error } = await this.xpService.awardXp({
+        studentId:  this.selectedStudentId,
+        classId:    this.selectedClassId || null,
         points:      this.finalXP,
         reason:      this.finalReason,
-        source_type: 'manual',
+        sourceType: 'manual',
       });
 
       if (error) throw error;

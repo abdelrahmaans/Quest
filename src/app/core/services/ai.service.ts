@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { XpService } from './xp.service';
 
 export interface AiRequestPayload {
   sessionContext?: {
@@ -35,6 +36,7 @@ export interface AiStructuredResponse {
 @Injectable({ providedIn: 'root' })
 export class AIService {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly xpService       = inject(XpService);
 
   /**
    * Calls the secure Supabase Edge Function 'ai-gamification-assistant'
@@ -103,20 +105,16 @@ export class AIService {
       return { error: fetchErr as Error | null };
     }
 
-    // 2. Insert batch xp_events
-    const xpInserts = students.map((std) => ({
-      student_id:  std.id,
-      class_id:    classId,
+    // 2. Award batch XP using centralized XpService
+    const batchPayloads = students.map((std) => ({
+      studentId:  std.id,
+      classId:    classId,
       points,
       reason:      `[AI Suggestion] ${reason}`,
-      source_type: 'challenge',
+      sourceType: 'challenge',
     }));
 
-    const { error: insertErr } = await this.supabaseService.client
-      .from('xp_events')
-      .insert(xpInserts);
-
-    return { error: insertErr as Error | null };
+    return await this.xpService.awardBatchXp(batchPayloads);
   }
 
   private generateClientFallback(payload: AiRequestPayload): AiStructuredResponse {
