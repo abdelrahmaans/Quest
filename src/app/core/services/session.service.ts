@@ -180,18 +180,23 @@ export class SessionService {
 
       const user = this.auth.currentUser();
       if (summary && user) {
-        await this.supabase.client
-          .from('audit_logs')
-          .insert({
-            actor_id:   user.id,
-            action:     'session_completed',
-            target_id:  sessionId,
-            metadata:   summary,
-            created_at: new Date().toISOString(),
-          });
+        try {
+          await this.supabase.client
+            .from('audit_log')
+            .insert({
+              actor_id:   user.id,
+              action:     'COMPLETE_SESSION',
+              entity:     'sessions',
+              entity_id:  sessionId,
+              metadata:   summary,
+              created_at: new Date().toISOString(),
+            });
+        } catch (auditErr) {
+          console.warn('[SessionService] audit_log insert non-blocking warning:', auditErr);
+        }
       }
 
-      return { data: res.data, error: null };
+      return { data: res?.data, error: null };
     } catch (e: unknown) {
       console.warn('[SessionService] completeSession error:', e);
       return { data: null, error: null };

@@ -557,15 +557,17 @@ export class LiveWorkspaceComponent implements OnInit, OnDestroy {
         gamificationMode:  this.gamificationMode() as any,
         mvpStudentName:    this.mvpStudentName,
       });
+    } catch (e: unknown) {
+      console.warn('confirmEndSession non-blocking error:', e);
+    } finally {
+      this.showSummaryModal.set(false);
+      this.isEnding.set(false);
 
-      // Route back to the specific Class Hub so the updated Leaderboard is shown!
       if (this.classId()) {
         await this.router.navigate(['/instructor/classes', this.classId()]);
       } else {
         await this.router.navigate(['/instructor/sessions']);
       }
-    } catch {
-      this.isEnding.set(false);
     }
   }
 

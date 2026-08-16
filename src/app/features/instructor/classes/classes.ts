@@ -1,11 +1,22 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
 import { SessionService } from '../../../core/services/session.service';
 import { IconComponent } from '../../../shared/ui/icon/icon';
 import type { GamificationModeId } from '../sessions/sessions-list/sessions-list';
+
+interface ClassRow {
+  id: string;
+  name: string;
+  subject: string | null;
+  grade_level: string | null;
+  student_count: number;
+  session_count: number;
+  created_at: string;
+}
 
 interface StudentItem {
   id: string;
@@ -18,20 +29,10 @@ interface StudentItem {
   created_at: string;
 }
 
-interface ClassRow {
-  id: string;
-  name: string;
-  subject: string | null;
-  grade_level: string | null;
-  student_count: number;
-  session_count?: number;
-  created_at: string;
-}
-
 @Component({
   selector: 'app-instructor-classes',
   standalone: true,
-  imports: [RouterLink, FormsModule, IconComponent],
+  imports: [RouterLink, FormsModule, DatePipe, DecimalPipe, IconComponent],
   templateUrl: './classes.html',
   styleUrl: './classes.css',
 })
@@ -41,57 +42,72 @@ export class InstructorClassesComponent implements OnInit {
   readonly sessionService = inject(SessionService);
   readonly router         = inject(Router);
 
-  readonly isLoading    = signal(true);
-  readonly classes      = signal<ClassRow[]>([]);
-  readonly showCreate   = signal(false);
-  readonly creating     = signal(false);
-  readonly error        = signal<string | null>(null);
-  readonly successMsg   = signal<string | null>(null);
+  readonly isLoading  = signal(true);
+  readonly classes    = signal<ClassRow[]>([]);
+  readonly allStudents = signal<StudentItem[]>([]);
+  readonly showCreate = signal(false);
+  readonly creating   = signal(false);
+  readonly error      = signal<string | null>(null);
+  readonly successMsg = signal<string | null>(null);
 
-  /* Create class form */
-  className           = '';
-  classSubject        = '';
-  classGrade          = '';
-  
-  /* Schedule & Auto Sessions Generation */
-  autoGenerateSessions    = true;
-  startDate               = new Date().toISOString().split('T')[0];
-  scheduleTime            = '16:00';
-  selectedScheduleDays    = ['Sunday', 'Tuesday'];
-  totalSessions           = 8;
+  /* Form */
+  className    = '';
+  classSubject = '';
+  classGrade   = '';
+
+  /* Gamification Mode */
   selectedGamificationMode: GamificationModeId = 'xp_levels';
 
-  readonly daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
   readonly gamificationModes = [
-    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Points, streaks, & rankings' },
-    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Phoenix vs Titans battles' },
-    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Special badges unlocking' },
-    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Full hybrid interactive mix' },
+    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Points, streaks, levels & leaderboard' },
+    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Divide into Phoenix & Titans teams' },
+    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Unlock skill badges & milestones' },
+    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Full hybrid interactive gamification' },
   ];
 
-  /* Smart Search & Enrollment during creation */
-  studentSearchQuery  = '';
-  readonly allInstructorStudents = signal<StudentItem[]>([]);
+  /* Auto Schedule Configuration */
+  autoGenerateSessions = true;
+  startDate: string    = new Date().toISOString().split('T')[0];
+  scheduleTime: string = '16:00';
+  totalSessions: number = 8;
+  readonly daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  readonly availableDays = [
+    { key: 'Sun', label: 'Sunday' },
+    { key: 'Mon', label: 'Monday' },
+    { key: 'Tue', label: 'Tuesday' },
+    { key: 'Wed', label: 'Wednesday' },
+    { key: 'Thu', label: 'Thursday' },
+    { key: 'Fri', label: 'Friday' },
+    { key: 'Sat', label: 'Saturday' },
+  ];
+  selectedScheduleDays: string[] = ['Sun', 'Tue'];
+
+  /* Student Search & Quick Add State during Class Creation */
+  studentSearchQuery             = '';
   readonly selectedExistingStudents = signal<StudentItem[]>([]);
   readonly queuedNewStudentNames    = signal<string[]>([]);
 
-  readonly createSearchMatches = computed(() => {
+  /* Filtered Search Results */
+  readonly studentSearchResults = computed(() => {
     const q = this.studentSearchQuery.trim().toLowerCase();
     if (!q) return [];
     const selectedIds = new Set(this.selectedExistingStudents().map(s => s.id));
-    return this.allInstructorStudents().filter(
+    return this.allStudents().filter(
       s => s.full_name.toLowerCase().includes(q) && !selectedIds.has(s.id),
     );
   });
 
-  readonly isAlreadySelectedOrQueued = computed(() => {
+  readonly createSearchMatches = computed(() => this.studentSearchResults());
+
+  readonly isAlreadySelected = computed(() => {
     const q = this.studentSearchQuery.trim().toLowerCase();
     if (!q) return false;
     const inExisting = this.selectedExistingStudents().some(s => s.full_name.toLowerCase() === q);
     const inQueued = this.queuedNewStudentNames().some(n => n.toLowerCase() === q);
     return inExisting || inQueued;
   });
+
+  readonly isAlreadySelectedOrQueued = computed(() => this.isAlreadySelected());
 
   /* Active Class Modal / Drawer for Students Management */
   readonly activeClassModal = signal<ClassRow | null>(null);
@@ -101,8 +117,7 @@ export class InstructorClassesComponent implements OnInit {
   addingStudent             = false;
 
   async ngOnInit(): Promise<void> {
-    await this.loadClasses();
-    await this.loadAllStudents();
+    await Promise.all([this.loadClasses(), this.loadAllStudents()]);
   }
 
   async loadClasses(): Promise<void> {
@@ -132,8 +147,8 @@ export class InstructorClassesComponent implements OnInit {
             .eq('class_id', cls.id);
 
           const uniqueStudentIds = new Set([
-            ...(stds ?? []).map(s => s.id),
-            ...(members ?? []).map(m => m.student_id),
+            ...(stds ?? []).map((s: any) => s.id),
+            ...(members ?? []).map((m: any) => m.student_id),
           ]);
 
           const { count: sessCount } = await this.supabase.client
@@ -158,76 +173,86 @@ export class InstructorClassesComponent implements OnInit {
     if (!user) return;
 
     try {
-      const { data } = await this.supabase.client
-        .from('students')
-        .select(`
-          id, full_name, display_name, xp_total, level, class_id, created_at,
-          class:classes(name)
-        `)
-        .eq('instructor_id', user.id)
-        .order('full_name', { ascending: true });
+      const [stdsRes, clsRes] = await Promise.all([
+        this.supabase.client
+          .from('students')
+          .select('id, full_name, display_name, xp_total, level, class_id, created_at')
+          .eq('instructor_id', user.id)
+          .order('full_name', { ascending: true }),
+        this.supabase.client
+          .from('classes')
+          .select('id, name')
+          .eq('instructor_id', user.id),
+      ]);
 
-      const mapped = (data ?? []).map((s: any) => ({
+      const classMap = new Map<string, string>();
+      (clsRes.data ?? []).forEach((c: { id: string; name: string }) => classMap.set(c.id, c.name));
+
+      const mapped = (stdsRes.data ?? []).map((s: any) => ({
         id: s.id,
         full_name: s.full_name,
         display_name: s.display_name,
         xp_total: s.xp_total,
         level: s.level,
         class_id: s.class_id,
-        current_class_name: Array.isArray(s.class) ? (s.class[0]?.name ?? null) : s.class?.name ?? null,
+        current_class_name: s.class_id ? classMap.get(s.class_id) || null : null,
         created_at: s.created_at,
       }));
 
-      this.allInstructorStudents.set(mapped as StudentItem[]);
-    } catch (e) {
-      console.warn('Could not load all students:', e);
+      this.allStudents.set(mapped as StudentItem[]);
+    } catch (e: unknown) {
+      console.warn('[Classes] loadAllStudents warning:', e);
     }
   }
 
-  toggleScheduleDay(day: string): void {
-    if (this.selectedScheduleDays.includes(day)) {
-      this.selectedScheduleDays = this.selectedScheduleDays.filter(d => d !== day);
+  toggleScheduleDay(dayKey: string): void {
+    if (this.selectedScheduleDays.includes(dayKey)) {
+      this.selectedScheduleDays = this.selectedScheduleDays.filter(d => d !== dayKey);
     } else {
-      this.selectedScheduleDays = [...this.selectedScheduleDays, day];
+      this.selectedScheduleDays = [...this.selectedScheduleDays, dayKey];
     }
   }
 
-  /* ── Smart Selection Helpers for Create Class ── */
-  selectExistingStudent(std: StudentItem): void {
-    if (!this.selectedExistingStudents().some(s => s.id === std.id)) {
-      this.selectedExistingStudents.update(list => [...list, std]);
-    }
+  /* ── Student Selection Handlers ── */
+  selectExistingStudent(student: StudentItem): void {
+    this.selectedExistingStudents.update(list => [...list, student]);
     this.studentSearchQuery = '';
   }
 
-  removeSelectedExistingStudent(id: string): void {
-    this.selectedExistingStudents.update(list => list.filter(s => s.id !== id));
+  removeSelectedExisting(studentId: string): void {
+    this.selectedExistingStudents.update(list => list.filter(s => s.id !== studentId));
+  }
+
+  removeSelectedExistingStudent(studentId: string): void {
+    this.removeSelectedExisting(studentId);
   }
 
   queueNewStudent(): void {
     const name = this.studentSearchQuery.trim();
     if (!name) return;
-    if (!this.queuedNewStudentNames().includes(name)) {
-      this.queuedNewStudentNames.update(list => [...list, name]);
-    }
+    this.queuedNewStudentNames.update(list => [...list, name]);
     this.studentSearchQuery = '';
   }
 
-  removeQueuedNewStudent(name: string): void {
+  removeQueuedNew(name: string): void {
     this.queuedNewStudentNames.update(list => list.filter(n => n !== name));
   }
 
+  removeQueuedNewStudent(name: string): void {
+    this.removeQueuedNew(name);
+  }
+
+  /* ── Create Class & Enroll Students & Auto-Schedule ── */
   async createClass(): Promise<void> {
     if (!this.className.trim()) return;
     this.creating.set(true);
     this.error.set(null);
-    this.successMsg.set(null);
-
     const user = this.auth.currentUser();
     if (!user) return;
 
     try {
-      const publicCode = `CLS-${Date.now().toString(36).toUpperCase()}`;
+      const publicCode = `CLS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
       const { data: newClass, error } = await this.supabase.client
         .from('classes')
         .insert({
@@ -260,6 +285,13 @@ export class InstructorClassesComponent implements OnInit {
             },
           })
           .in('id', existingIds);
+
+        const memberRows = existingIds.map(sid => ({
+          class_id: newClass.id,
+          student_id: sid,
+          joined_at: new Date().toISOString(),
+        }));
+        await this.supabase.client.from('class_members').upsert(memberRows);
       }
 
       // 2. Insert queued new students with origin class metadata
@@ -281,7 +313,19 @@ export class InstructorClassesComponent implements OnInit {
           },
         }));
 
-        await this.supabase.client.from('students').insert(studentInserts);
+        const { data: insertedStds } = await this.supabase.client
+          .from('students')
+          .insert(studentInserts)
+          .select('id');
+
+        if (insertedStds && insertedStds.length > 0) {
+          const memberRows = insertedStds.map((s: { id: string }) => ({
+            class_id: newClass.id,
+            student_id: s.id,
+            joined_at: new Date().toISOString(),
+          }));
+          await this.supabase.client.from('class_members').upsert(memberRows);
+        }
       }
 
       // 3. Auto-generate scheduled sessions for this class
@@ -358,19 +402,18 @@ export class InstructorClassesComponent implements OnInit {
   async addStudentToActiveClass(): Promise<void> {
     const cls = this.activeClassModal();
     const user = this.auth.currentUser();
-    if (!cls || !user || !this.newStudentName.trim()) return;
+    if (!cls || !this.newStudentName.trim()) return;
 
     this.addingStudent = true;
     try {
-      const name = this.newStudentName.trim();
-      const { data: newStd, error } = await this.supabase.client
+      const { data: created, error } = await this.supabase.client
         .from('students')
         .insert({
-          public_code:   `STD-${Date.now().toString(36).toUpperCase()}`,
-          display_name:  name,
-          full_name:     name,
+          public_code:   `STD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          display_name:  this.newStudentName.trim(),
+          full_name:     this.newStudentName.trim(),
           class_id:      cls.id,
-          instructor_id: user.id,
+          instructor_id: user?.id ?? null,
           xp_total:      0,
           level:         1,
           current_streak: 0,
@@ -385,12 +428,16 @@ export class InstructorClassesComponent implements OnInit {
 
       if (error) throw error;
 
-      if (newStd) {
-        this.classStudents.update(list => [...list, newStd as StudentItem]);
+      if (created) {
+        await this.supabase.client
+          .from('class_members')
+          .upsert({ class_id: cls.id, student_id: created.id, joined_at: new Date().toISOString() });
+
+        this.classStudents.update(list => [...list, created as StudentItem]);
+        await this.loadClasses();
+        await this.loadAllStudents();
       }
       this.newStudentName = '';
-      await this.loadClasses();
-      await this.loadAllStudents();
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {
@@ -402,12 +449,12 @@ export class InstructorClassesComponent implements OnInit {
     this.router.navigate(['/instructor/classes', cls.id]);
   }
 
-  goToCreateSession(cls: ClassRow, event?: MouseEvent): void {
-    if (event) event.stopPropagation();
-    this.router.navigate(['/instructor/sessions'], { queryParams: { class: cls.id } });
+  goToCreateSession(cls: ClassRow, event: MouseEvent): void {
+    event.stopPropagation();
+    this.router.navigate(['/instructor/classes', cls.id]);
   }
 
-  formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString();
   }
 }
