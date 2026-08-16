@@ -4,8 +4,8 @@
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Classes</h1>
-      <p class="page-subtitle">Manage your classes and enrolled students.</p>
+      <h1 class="page-title">Classes & Quests</h1>
+      <p class="page-subtitle">Manage your classes, enroll students, and launch gamified sessions.</p>
     </div>
     <button class="btn-create" (click)="showCreate.update(v => !v)">
       <app-icon [name]="showCreate() ? 'x' : 'plus'" [size]="16" />
@@ -13,42 +13,60 @@
     </button>
   </div>
 
-  <!-- Error -->
+  <!-- Messages -->
   @if (error()) {
     <div class="alert-error">
       <app-icon name="alert-circle" [size]="15" />
       {{ error() }}
     </div>
   }
+  @if (successMsg()) {
+    <div class="alert-success">
+      <app-icon name="check-circle" [size]="15" />
+      {{ successMsg() }}
+    </div>
+  }
 
-  <!-- Create Form -->
+  <!-- Create Class Form -->
   @if (showCreate()) {
     <div class="create-card">
       <h2 class="create-card__title">
-        <app-icon name="graduation-cap" [size]="16" />
+        <app-icon name="graduation-cap" [size]="18" />
         Create New Class
       </h2>
       <div class="create-form">
         <div class="form-field">
-          <label class="form-label" for="className">Class Name <span class="required">*</span></label>
+          <label class="form-label" for="className">Class / Track Name <span class="required">*</span></label>
           <input id="className" type="text" class="form-input"
-            placeholder="e.g. Mathematics — Grade 10A"
+            placeholder="e.g. Scratch Game Dev — Cohort A"
             [(ngModel)]="className" />
         </div>
+
         <div class="form-row">
           <div class="form-field">
-            <label class="form-label" for="classSubject">Subject</label>
+            <label class="form-label" for="classSubject">Subject / Topic</label>
             <input id="classSubject" type="text" class="form-input"
-              placeholder="e.g. Algebra"
+              placeholder="e.g. Game Development"
               [(ngModel)]="classSubject" />
           </div>
           <div class="form-field">
-            <label class="form-label" for="classGrade">Grade Level</label>
+            <label class="form-label" for="classGrade">Age / Grade Level</label>
             <input id="classGrade" type="text" class="form-input"
-              placeholder="e.g. Grade 10"
+              placeholder="e.g. Ages 9-12"
               [(ngModel)]="classGrade" />
           </div>
         </div>
+
+        <div class="form-field">
+          <label class="form-label" for="initialStudents">
+            Students Names (Optional — one name per line)
+          </label>
+          <textarea id="initialStudents" class="form-textarea" rows="3"
+            placeholder="Youssef Ahmed&#10;Mariam Karim&#10;Omar Khaled"
+            [(ngModel)]="initialStudentNames"></textarea>
+          <span class="form-hint">You can also add students individually later at any time.</span>
+        </div>
+
         <div class="create-actions">
           <button class="btn-primary" [disabled]="!className.trim() || creating()" (click)="createClass()">
             @if (creating()) {
@@ -56,7 +74,7 @@
               Creating…
             } @else {
               <app-icon name="plus" [size]="15" />
-              Create Class
+              Create Class & Enroll Students
             }
           </button>
         </div>
@@ -64,7 +82,7 @@
     </div>
   }
 
-  <!-- Classes List -->
+  <!-- Classes Grid -->
   @if (isLoading()) {
     <div class="classes-grid">
       @for (_ of [1,2,3]; track $index) {
@@ -74,10 +92,10 @@
   } @else if (classes().length === 0) {
     <div class="empty">
       <div class="empty__icon">
-        <app-icon name="graduation-cap" [size]="28" />
+        <app-icon name="graduation-cap" [size]="32" />
       </div>
-      <h3 class="empty__title">No classes yet</h3>
-      <p class="empty__desc">Create your first class to start managing students and awarding XP.</p>
+      <h3 class="empty__title">No classes created yet</h3>
+      <p class="empty__desc">Create your first class to enroll students, organize gamified live sessions, and award XP.</p>
       <button class="btn-primary" (click)="showCreate.set(true)">
         <app-icon name="plus" [size]="15" />
         Create First Class
@@ -96,33 +114,107 @@
               @if (cls.grade_level) { <span class="class-card__grade">{{ cls.grade_level }}</span> }
             </div>
           </div>
+
           <h3 class="class-card__name">{{ cls.name }}</h3>
+
           <div class="class-card__stats">
             <span class="class-card__stat">
-              <app-icon name="users" [size]="13" />
-              {{ cls.student_count }} students
+              <app-icon name="users" [size]="14" />
+              <strong>{{ cls.student_count }}</strong> students
             </span>
             <span class="class-card__stat">
-              <app-icon name="calendar" [size]="13" />
+              <app-icon name="calendar" [size]="14" />
               {{ formatDate(cls.created_at) }}
             </span>
           </div>
+
+          <!-- Quick Action Buttons -->
           <div class="class-card__actions">
-            <a [routerLink]="['/instructor/students']"
-               [queryParams]="{ class: cls.id }"
-               class="btn-sm btn-sm--outline">
+            <button type="button" class="btn-sm btn-sm--outline" (click)="openStudentsModal(cls)">
               <app-icon name="users" [size]="13" />
-              Students
-            </a>
+              Students ({{ cls.student_count }})
+            </button>
+            <button type="button" class="btn-sm btn-sm--secondary" (click)="goToCreateSession(cls)">
+              <app-icon name="radio" [size]="13" />
+              New Session
+            </button>
             <a [routerLink]="['/instructor/gamification']"
                [queryParams]="{ class: cls.id }"
                class="btn-sm btn-sm--primary">
               <app-icon name="zap" [size]="13" />
-              Award XP
+              XP
             </a>
           </div>
         </article>
       }
+    </div>
+  }
+
+  <!-- ── Students Management Modal ────────────────────────────── -->
+  @if (activeClassModal()) {
+    <div class="modal-backdrop" (click)="closeStudentsModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h3 class="modal-title">
+              <app-icon name="users" [size]="18" />
+              {{ activeClassModal()?.name }} — Students
+            </h3>
+            <p class="modal-subtitle">Enrolled students and quick enrollment</p>
+          </div>
+          <button class="btn-icon" (click)="closeStudentsModal()">
+            <app-icon name="x" [size]="18" />
+          </button>
+        </div>
+
+        <!-- Add Student Input -->
+        <div class="modal-add-form">
+          <input type="text" class="form-input"
+                 placeholder="Enter student full name…"
+                 [(ngModel)]="newStudentName"
+                 (keyup.enter)="addStudentToActiveClass()" />
+          <button class="btn-primary" [disabled]="!newStudentName.trim() || addingStudent" (click)="addStudentToActiveClass()">
+            @if (addingStudent) {
+              <app-icon name="loader-2" [size]="14" class="spinning" />
+            } @else {
+              <app-icon name="plus" [size]="14" />
+            }
+            Add Student
+          </button>
+        </div>
+
+        <!-- Students List -->
+        <div class="modal-students-list">
+          @if (loadingStudents()) {
+            <div class="loading-state">Loading students…</div>
+          } @else if (classStudents().length === 0) {
+            <div class="empty-state-sm">No students enrolled in this class yet. Add students above!</div>
+          } @else {
+            <div class="students-table">
+              @for (s of classStudents(); track s.id; let i = $index) {
+                <div class="student-row">
+                  <div class="student-row__info">
+                    <span class="student-row__index">{{ i + 1 }}</span>
+                    <span class="student-row__name">{{ s.full_name }}</span>
+                  </div>
+                  <div class="student-row__badges">
+                    <span class="badge-level">Lvl {{ s.level || 1 }}</span>
+                    <span class="badge-xp">⭐ {{ s.xp_total || 0 }} XP</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeStudentsModal()">Close</button>
+          <button class="btn-primary" (click)="goToCreateSession(activeClassModal()!)">
+            <app-icon name="radio" [size]="14" />
+            Launch Gamified Session For This Class
+          </button>
+        </div>
+      </div>
     </div>
   }
 
