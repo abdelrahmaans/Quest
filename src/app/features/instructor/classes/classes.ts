@@ -82,7 +82,9 @@ export class InstructorClassesComponent implements OnInit {
     if (!user) return;
 
     try {
+      const publicCode = `CLS-${Date.now().toString(36).toUpperCase()}`;
       const { error } = await this.supabase.client.from('classes').insert({
+        public_code:  publicCode,
         name:         this.className.trim(),
         subject:      this.classSubject.trim() || null,
         grade_level:  this.classGrade.trim()   || null,

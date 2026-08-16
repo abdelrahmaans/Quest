@@ -1,10 +1,11 @@
 -- =========================================================
--- MIGRATION 0006: INSTRUCTOR RLS FIXES & GAMIFICATION MODES
--- 1. Adds gamification_mode to classes and sessions tables
--- 2. Grants full RLS permissions to instructors on students, xp_events, sessions
+-- MIGRATION 0006: INSTRUCTOR RLS FIXES, CLASSES COLUMNS & GAMIFICATION MODES
+-- 1. Adds gamification_mode, subject, grade_level to classes and sessions tables
+-- 2. Sets default generator for classes.public_code to prevent null constraint error
+-- 3. Grants full RLS permissions to instructors on students, xp_events, sessions
 -- =========================================================
 
--- 1. Gamification Mode Column on classes and sessions
+-- 1. Classes and Sessions Columns
 do $$
 begin
   if not exists (
@@ -16,10 +17,27 @@ begin
 
   if not exists (
     select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'classes' and column_name = 'subject'
+  ) then
+    alter table public.classes add column subject text null;
+  end if;
+
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'classes' and column_name = 'grade_level'
+  ) then
+    alter table public.classes add column grade_level text null;
+  end if;
+
+  if not exists (
+    select 1 from information_schema.columns
     where table_schema = 'public' and table_name = 'sessions' and column_name = 'gamification_mode'
   ) then
     alter table public.sessions add column gamification_mode text not null default 'xp_levels';
   end if;
+
+  -- Set default value for public_code so inserts without public_code generate one automatically
+  alter table public.classes alter column public_code set default ('CLS-' || upper(substr(md5(random()::text), 1, 8)));
 end;
 $$;
 
