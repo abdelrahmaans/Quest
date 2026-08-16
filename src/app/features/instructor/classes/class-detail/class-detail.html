@@ -28,6 +28,34 @@
     </div>
   } @else if (classInfo(); as cls) {
 
+    <!-- ── Upcoming Session 30-Min Notification Alert ───── -->
+    @if (upcomingSessionAlert(); as alert) {
+      <div class="session-alert-banner" [class.session-alert-banner--live]="alert.isLive">
+        <div class="alert-content">
+          <span class="alert-icon-wrap">
+            @if (alert.isLive) { 🔴 } @else { 🔔 }
+          </span>
+          <div class="alert-text">
+            <strong>
+              @if (alert.isLive) {
+                Live Session in Progress: {{ alert.session.title }}
+              } @else if (alert.minsLeft <= 0) {
+                Session starting right now: {{ alert.session.title }}
+              } @else {
+                Upcoming Session in {{ alert.minsLeft }} minutes: {{ alert.session.title }}
+              }
+            </strong>
+            <span class="alert-sub">Gamification Mode: {{ getModeName(alert.session.gamification_mode) }}</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-alert-join" (click)="launchLiveSession(alert.session)">
+          <app-icon name="play" [size]="14" />
+          {{ alert.isLive ? 'Join Live Room' : 'Launch Live Now' }}
+        </button>
+      </div>
+    }
+
     <!-- Class Header Banner -->
     <header class="hub-header">
       <div class="hub-header__main">

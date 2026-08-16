@@ -3,7 +3,9 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SupabaseService } from '../../../core/services/supabase.service';
+import { SessionService } from '../../../core/services/session.service';
 import { IconComponent } from '../../../shared/ui/icon/icon';
+import type { GamificationModeId } from '../sessions/sessions-list/sessions-list';
 
 interface StudentItem {
   id: string;
@@ -22,6 +24,7 @@ interface ClassRow {
   subject: string | null;
   grade_level: string | null;
   student_count: number;
+  session_count?: number;
   created_at: string;
 }
 
@@ -33,9 +36,10 @@ interface ClassRow {
   styleUrl: './classes.css',
 })
 export class InstructorClassesComponent implements OnInit {
-  readonly auth     = inject(AuthService);
-  readonly supabase = inject(SupabaseService);
-  readonly router   = inject(Router);
+  readonly auth           = inject(AuthService);
+  readonly supabase       = inject(SupabaseService);
+  readonly sessionService = inject(SessionService);
+  readonly router         = inject(Router);
 
   readonly isLoading    = signal(true);
   readonly classes      = signal<ClassRow[]>([]);
@@ -49,6 +53,23 @@ export class InstructorClassesComponent implements OnInit {
   classSubject        = '';
   classGrade          = '';
   
+  /* Schedule & Auto Sessions Generation */
+  autoGenerateSessions    = true;
+  startDate               = new Date().toISOString().split('T')[0];
+  scheduleTime            = '16:00';
+  selectedScheduleDays    = ['Sunday', 'Tuesday'];
+  totalSessions           = 8;
+  selectedGamificationMode: GamificationModeId = 'xp_levels';
+
+  readonly daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  readonly gamificationModes = [
+    { id: 'xp_levels'     as GamificationModeId, name: '⚡ XP & Level Progression', desc: 'Points, streaks, & rankings' },
+    { id: 'teams_duels'   as GamificationModeId, name: '🛡️ Team Quests & Duels',    desc: 'Phoenix vs Titans battles' },
+    { id: 'badges_mastery' as GamificationModeId, name: '🏆 Badges & Mastery',        desc: 'Special badges unlocking' },
+    { id: 'hybrid_quest'  as GamificationModeId, name: '🎯 Custom Hybrid Quest',     desc: 'Full hybrid interactive mix' },
+  ];
+
   /* Smart Search & Enrollment during creation */
   studentSearchQuery  = '';
   readonly allInstructorStudents = signal<StudentItem[]>([]);
@@ -98,14 +119,19 @@ export class InstructorClassesComponent implements OnInit {
 
       if (error) throw error;
 
-      // Enrich with student counts
       const enriched = await Promise.all(
         (data ?? []).map(async (cls: { id: string; name: string; subject: string | null; grade_level: string | null; created_at: string }) => {
-          const { count } = await this.supabase.client
+          const { count: stdCount } = await this.supabase.client
             .from('students')
             .select('id', { count: 'exact', head: true })
             .eq('class_id', cls.id);
-          return { ...cls, student_count: count ?? 0 };
+
+          const { count: sessCount } = await this.supabase.client
+            .from('sessions')
+            .select('id', { count: 'exact', head: true })
+            .eq('class_id', cls.id);
+
+          return { ...cls, student_count: stdCount ?? 0, session_count: sessCount ?? 0 };
         }),
       );
 
@@ -148,6 +174,14 @@ export class InstructorClassesComponent implements OnInit {
     }
   }
 
+  toggleScheduleDay(day: string): void {
+    if (this.selectedScheduleDays.includes(day)) {
+      this.selectedScheduleDays = this.selectedScheduleDays.filter(d => d !== day);
+    } else {
+      this.selectedScheduleDays = [...this.selectedScheduleDays, day];
+    }
+  }
+
   /* ── Smart Selection Helpers for Create Class ── */
   selectExistingStudent(std: StudentItem): void {
     if (!this.selectedExistingStudents().some(s => s.id === std.id)) {
@@ -187,11 +221,16 @@ export class InstructorClassesComponent implements OnInit {
       const { data: newClass, error } = await this.supabase.client
         .from('classes')
         .insert({
-          public_code:  publicCode,
-          name:         this.className.trim(),
-          subject:      this.classSubject.trim() || null,
-          grade_level:  this.classGrade.trim()   || null,
-          instructor_id: user.id,
+          public_code:       publicCode,
+          name:              this.className.trim(),
+          subject:           this.classSubject.trim() || null,
+          grade_level:       this.classGrade.trim()   || null,
+          instructor_id:     user.id,
+          gamification_mode: this.selectedGamificationMode,
+          schedule_days:     this.selectedScheduleDays,
+          schedule_time:     this.scheduleTime,
+          start_date:        this.startDate,
+          total_sessions:    this.totalSessions,
         })
         .select('id')
         .single();
@@ -235,7 +274,22 @@ export class InstructorClassesComponent implements OnInit {
         await this.supabase.client.from('students').insert(studentInserts);
       }
 
-      this.successMsg.set(`✅ Class "${this.className.trim()}" created successfully with ${existingIds.length + newNames.length} enrolled students!`);
+      // 3. Auto-generate scheduled sessions for this class
+      if (newClass?.id && this.autoGenerateSessions && this.selectedScheduleDays.length > 0) {
+        await this.sessionService.autoGenerateClassSessions({
+          classId:                 newClass.id,
+          className:               this.className.trim(),
+          startDate:               this.startDate,
+          scheduleDays:            this.selectedScheduleDays,
+          scheduleTime:            this.scheduleTime,
+          totalSessions:           this.totalSessions || 8,
+          defaultGamificationMode: this.selectedGamificationMode,
+        });
+      }
+
+      const totalEnrolled = existingIds.length + newNames.length;
+      this.successMsg.set(`✅ Class "${this.className.trim()}" created with ${totalEnrolled} students and ${this.totalSessions} scheduled sessions!`);
+      
       this.className = '';
       this.classSubject = '';
       this.classGrade = '';
@@ -246,7 +300,7 @@ export class InstructorClassesComponent implements OnInit {
       await this.loadClasses();
       await this.loadAllStudents();
 
-      setTimeout(() => this.successMsg.set(null), 4000);
+      setTimeout(() => this.successMsg.set(null), 5000);
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {

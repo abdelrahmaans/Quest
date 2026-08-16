@@ -5,6 +5,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SupabaseService } from '../../../../core/services/supabase.service';
 import { XpService } from '../../../../core/services/xp.service';
+import { SessionService } from '../../../../core/services/session.service';
 import { IconComponent } from '../../../../shared/ui/icon/icon';
 import type { GamificationModeId } from '../../sessions/sessions-list/sessions-list';
 
@@ -37,6 +38,7 @@ interface SessionRow {
   title: string;
   description: string | null;
   status: 'draft' | 'scheduled' | 'live' | 'completed' | 'cancelled';
+  scheduled_at: string | null;
   started_at: string | null;
   duration_minutes: number | null;
   gamification_mode: GamificationModeId;
@@ -51,11 +53,12 @@ interface SessionRow {
   styleUrl: './class-detail.css',
 })
 export class ClassDetailComponent implements OnInit {
-  readonly route     = inject(ActivatedRoute);
-  readonly router    = inject(Router);
-  readonly auth      = inject(AuthService);
-  readonly supabase  = inject(SupabaseService);
-  readonly xpService = inject(XpService);
+  readonly route          = inject(ActivatedRoute);
+  readonly router         = inject(Router);
+  readonly auth           = inject(AuthService);
+  readonly supabase       = inject(SupabaseService);
+  readonly xpService      = inject(XpService);
+  readonly sessionService = inject(SessionService);
 
   readonly classId = signal<string>('');
   readonly classInfo = signal<ClassInfo | null>(null);
@@ -67,6 +70,27 @@ export class ClassDetailComponent implements OnInit {
 
   /* Active Tab */
   readonly activeTab = signal<'students' | 'sessions' | 'leaderboard'>('students');
+
+  /* Next Upcoming Session Alert */
+  readonly upcomingSessionAlert = computed(() => {
+    const live = this.sessions().find(s => s.status === 'live');
+    if (live) return { session: live, isLive: true, minsLeft: 0 };
+
+    const now = new Date().getTime();
+    const scheduled = this.sessions()
+      .filter(s => s.status === 'scheduled' && (s.scheduled_at || s.started_at))
+      .map(s => {
+        const time = new Date(s.scheduled_at || s.started_at!).getTime();
+        return { session: s, time, diffMins: Math.round((time - now) / 60000) };
+      })
+      .filter(s => s.diffMins >= -15 && s.diffMins <= 45) // within 45 mins
+      .sort((a, b) => a.diffMins - b.diffMins)[0];
+
+    if (scheduled) {
+      return { session: scheduled.session, isLive: false, minsLeft: scheduled.diffMins };
+    }
+    return null;
+  });
 
   /* Smart Search & Enroll State */
   studentQuery             = '';
@@ -156,7 +180,7 @@ export class ClassDetailComponent implements OnInit {
       // 3. Load Class Sessions
       const { data: sess, error: sessErr } = await this.supabase.client
         .from('sessions')
-        .select('id, session_number, title, description, status, started_at, duration_minutes, gamification_mode, created_at')
+        .select('id, session_number, title, description, status, scheduled_at, started_at, duration_minutes, gamification_mode, created_at')
         .eq('class_id', id)
         .order('session_number', { ascending: false });
 
@@ -309,27 +333,14 @@ export class ClassDetailComponent implements OnInit {
     this.error.set(null);
 
     try {
-      const { count } = await this.supabase.client
-        .from('sessions')
-        .select('id', { count: 'exact', head: true })
-        .eq('class_id', this.classId());
-
-      const nextNum = (count ?? 0) + 1;
-
-      const { data: newSess, error } = await this.supabase.client
-        .from('sessions')
-        .insert({
-          class_id:          this.classId(),
-          session_number:    nextNum,
-          title:             this.sessionTitle.trim(),
-          description:       this.sessionDesc.trim() || null,
-          started_at:        this.sessionDate ? new Date(this.sessionDate).toISOString() : null,
-          duration_minutes:  this.sessionDuration || 45,
-          status:            this.sessionDate ? 'scheduled' : 'draft',
-          gamification_mode: this.selectedGamificationMode,
-        })
-        .select('id, session_number, title, description, status, started_at, duration_minutes, gamification_mode, created_at')
-        .single();
+      const { data: newSess, error } = await this.sessionService.createSession({
+        classId:          this.classId(),
+        title:            this.sessionTitle,
+        description:      this.sessionDesc,
+        scheduledAt:      this.sessionDate,
+        durationMinutes:  this.sessionDuration || 45,
+        gamificationMode: this.selectedGamificationMode,
+      });
 
       if (error) throw error;
 
@@ -341,7 +352,7 @@ export class ClassDetailComponent implements OnInit {
       this.sessionDesc = '';
       this.sessionDate = '';
       this.showCreateSession.set(false);
-      this.showToast(`🎮 Session #${nextNum} created with ${this.selectedGamificationMode} mode!`);
+      this.showToast(`🎮 Session created with ${this.selectedGamificationMode} mode!`);
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {
@@ -351,11 +362,7 @@ export class ClassDetailComponent implements OnInit {
 
   async launchLiveSession(session: SessionRow): Promise<void> {
     try {
-      await this.supabase.client
-        .from('sessions')
-        .update({ status: 'live' })
-        .eq('id', session.id);
-
+      await this.sessionService.launchSession(session.id);
       await this.router.navigate(['/instructor/sessions', session.id, 'live']);
     } catch (e: unknown) {
       this.error.set((e as Error).message);

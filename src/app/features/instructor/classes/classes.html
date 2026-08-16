@@ -154,14 +154,70 @@
           }
         </div>
 
+        <!-- ── Auto Sessions & Schedule Setup ─────────────── -->
+        <div class="schedule-setup-box">
+          <div class="schedule-toggle-row">
+            <label class="schedule-toggle-label">
+              <input type="checkbox" [(ngModel)]="autoGenerateSessions" />
+              <span>📅 Auto-Generate Sessions Schedule on Creation</span>
+            </label>
+          </div>
+
+          @if (autoGenerateSessions) {
+            <div class="schedule-fields">
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label" for="startDate">Start Date</label>
+                  <input id="startDate" type="date" class="form-input" [(ngModel)]="startDate" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="scheduleTime">Session Time</label>
+                  <input id="scheduleTime" type="time" class="form-input" [(ngModel)]="scheduleTime" />
+                </div>
+                <div class="form-field">
+                  <label class="form-label" for="totalSessions">Total Sessions</label>
+                  <input id="totalSessions" type="number" class="form-input" min="1" max="50" [(ngModel)]="totalSessions" />
+                </div>
+              </div>
+
+              <!-- Days of Week Chips -->
+              <div class="form-field">
+                <label class="form-label">Weekly Schedule Days</label>
+                <div class="days-chips-row">
+                  @for (d of daysOfWeek; track d) {
+                    <button type="button" class="day-chip"
+                            [class.day-chip--active]="selectedScheduleDays.includes(d)"
+                            (click)="toggleScheduleDay(d)">
+                      {{ d.substring(0, 3) }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Gamification Mode Selection -->
+              <div class="form-field">
+                <label class="form-label">Default Gamification Style</label>
+                <div class="modes-grid-sm">
+                  @for (m of gamificationModes; track m.id) {
+                    <label class="mode-pill" [class.mode-pill--active]="selectedGamificationMode === m.id">
+                      <input type="radio" name="clsGMode" [value]="m.id" [(ngModel)]="selectedGamificationMode" />
+                      <span>{{ m.name }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
         <div class="create-actions">
           <button class="btn-primary" [disabled]="!className.trim() || creating()" (click)="createClass()">
             @if (creating()) {
               <app-icon name="loader-2" [size]="15" class="spinning" />
-              Creating Class…
+              Creating Class & Generating Sessions…
             } @else {
               <app-icon name="plus" [size]="15" />
-              Create Class & Enroll
+              Create Class & Generate Schedule
             }
           </button>
         </div>
