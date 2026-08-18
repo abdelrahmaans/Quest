@@ -52,15 +52,20 @@ export class SessionsListComponent implements OnInit {
   readonly sessions    = signal<SessionRow[]>([]);
   readonly classes     = signal<ClassItem[]>([]);
   readonly activeTab   = signal<'all' | 'live' | 'scheduled' | 'completed'>('all');
-  readonly viewMode    = signal<'list' | 'calendar'>('calendar'); // Default to calendar view as user requested!
+  readonly viewMode    = signal<'list' | 'calendar'>('calendar');
   readonly showCreate  = signal(false);
   readonly isCreating  = signal(false);
   readonly error       = signal<string | null>(null);
 
-  /* Calendar View State */
-  currentCalendarDate = new Date();
-  readonly calendarMonthYear = signal<string>('');
-  readonly selectedDayModal  = signal<CalendarDay | null>(null);
+  /* Reactive Calendar View State */
+  readonly currentCalendarDate = signal<Date>(new Date());
+  readonly selectedDayModal    = signal<CalendarDay | null>(null);
+
+  readonly calendarMonthYear = computed(() => {
+    const d = this.currentCalendarDate();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+  });
 
   /* Form */
   selectedClassId          = '';
@@ -99,10 +104,10 @@ export class SessionsListComponent implements OnInit {
     return this.sessions().filter(s => s.status === tab);
   }
 
-  /* ── Calendar Days Matrix with robust local date matching ── */
+  /* ── Dynamic Calendar Days Matrix ── */
   readonly calendarDays = computed(() => {
     const all = this.sessions();
-    const curr = this.currentCalendarDate;
+    const curr = this.currentCalendarDate();
     const year = curr.getFullYear();
     const month = curr.getMonth();
 
@@ -169,29 +174,22 @@ export class SessionsListComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    this.updateCalendarLabel();
     await Promise.all([this.loadClasses(), this.loadSessions()]);
     this.isLoading.set(false);
   }
 
-  updateCalendarLabel(): void {
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    this.calendarMonthYear.set(`${monthNames[this.currentCalendarDate.getMonth()]} ${this.currentCalendarDate.getFullYear()}`);
-  }
-
   prevMonth(): void {
-    this.currentCalendarDate = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() - 1, 1);
-    this.updateCalendarLabel();
+    const c = this.currentCalendarDate();
+    this.currentCalendarDate.set(new Date(c.getFullYear(), c.getMonth() - 1, 1));
   }
 
   nextMonth(): void {
-    this.currentCalendarDate = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() + 1, 1);
-    this.updateCalendarLabel();
+    const c = this.currentCalendarDate();
+    this.currentCalendarDate.set(new Date(c.getFullYear(), c.getMonth() + 1, 1));
   }
 
   goToToday(): void {
-    this.currentCalendarDate = new Date();
-    this.updateCalendarLabel();
+    this.currentCalendarDate.set(new Date());
   }
 
   openDayModal(day: CalendarDay): void {
@@ -203,7 +201,7 @@ export class SessionsListComponent implements OnInit {
   }
 
   async loadClasses(): Promise<void> {
-    const user = this.auth.currentUser();
+    const user = this.auth.currentUser() || (await this.supabase.client.auth.getUser()).data.user;
     if (!user) return;
     const { data } = await this.supabase.client
       .from('classes').select('id, name').eq('instructor_id', user.id).order('name');
@@ -211,8 +209,7 @@ export class SessionsListComponent implements OnInit {
   }
 
   async loadSessions(): Promise<void> {
-    const user = this.auth.currentUser();
-    if (!user) return;
+    const user = this.auth.currentUser() || (await this.supabase.client.auth.getUser()).data.user;
 
     try {
       const { data, error } = await this.supabase.client
@@ -227,8 +224,9 @@ export class SessionsListComponent implements OnInit {
 
       const mapped: SessionRow[] = (data ?? [])
         .filter((s: any) => {
+          if (!user) return true;
           const instId = Array.isArray(s.class) ? s.class[0]?.instructor_id : s.class?.instructor_id;
-          return instId === user.id;
+          return !instId || instId === user.id;
         })
         .map((s: any) => ({
           id:               s.id,
@@ -240,7 +238,7 @@ export class SessionsListComponent implements OnInit {
           started_at:       s.started_at,
           duration_minutes: s.duration_minutes,
           class_id:         s.class_id,
-          class_name:       Array.isArray(s.class) ? (s.class[0]?.name ?? '—') : (s.class as { name: string } | null)?.name ?? '—',
+          class_name:       Array.isArray(s.class) ? (s.class[0]?.name ?? 'Class') : (s.class as { name: string } | null)?.name ?? 'Class',
           gamification_mode: s.gamification_mode || 'xp_levels',
           created_at:       s.created_at,
         }));

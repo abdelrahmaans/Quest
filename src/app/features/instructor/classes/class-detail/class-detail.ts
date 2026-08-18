@@ -157,6 +157,7 @@ export class ClassDetailComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
     const id = this.classId();
+    const user = this.auth.currentUser() || (await this.supabase.client.auth.getUser()).data.user;
 
     try {
       // 1. Load Class Info

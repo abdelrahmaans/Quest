@@ -38,6 +38,10 @@ export class AiAssistantDrawerComponent {
     { label: '🎯 Suggest XP rewards', text: 'Suggest balanced XP rewards for active participation' },
   ];
 
+  onClose(): void {
+    this.closeDrawer.emit();
+  }
+
   setPreset(text: string): void {
     this.promptText.set(text);
     this.generate();
@@ -122,9 +126,5 @@ export class AiAssistantDrawerComponent {
         this.errorMessage.set('Failed to award XP bonus.');
       }
     }
-  }
-
-  onClose(): void {
-    this.closeDrawer.emit();
   }
 }
