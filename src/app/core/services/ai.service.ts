@@ -74,13 +74,17 @@ export class AIService {
     durationMinutes: number
   ): Promise<{ error: Error | null }> {
     const publicCode = `CHAL-${Date.now().toString(36).toUpperCase()}`;
+    const user = (await this.supabaseService.client.auth.getUser()).data.user;
+
     const { error } = await this.supabaseService.client.from('challenges').insert({
       public_code: publicCode,
       title: `[AI] ${title}`,
       description,
       xp_reward: xpReward,
       duration_minutes: durationMinutes,
-      is_active: true,
+      status: 'published',
+      configuration: { class_id: classId },
+      created_by: user?.id ?? null,
     });
 
     return { error: error as Error | null };

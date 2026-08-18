@@ -75,6 +75,20 @@ export class AdminUsersComponent implements OnInit {
       this.users.update(list =>
         list.map(u => u.id === user.id ? { ...u, role: newRole } : u),
       );
+
+      // Audit Log
+      const actor = this.auth.currentUser();
+      if (actor) {
+        await this.supabase.client.from('audit_log').insert({
+          actor_id:  actor.id,
+          action:    'CHANGE_USER_ROLE',
+          entity:    'profiles',
+          entity_id: user.id,
+          old_data:  { role: user.role },
+          new_data:  { role: newRole },
+          metadata:  { target_name: user.full_name },
+        });
+      }
     } catch (e: unknown) {
       this.errorMsg.set((e as Error).message);
     }
@@ -93,6 +107,20 @@ export class AdminUsersComponent implements OnInit {
       this.users.update(list =>
         list.map(u => u.id === user.id ? { ...u, is_active: newStatus } : u),
       );
+
+      // Audit Log
+      const actor = this.auth.currentUser();
+      if (actor) {
+        await this.supabase.client.from('audit_log').insert({
+          actor_id:  actor.id,
+          action:    'CHANGE_USER_STATUS',
+          entity:    'profiles',
+          entity_id: user.id,
+          old_data:  { is_active: user.is_active },
+          new_data:  { is_active: newStatus },
+          metadata:  { target_name: user.full_name },
+        });
+      }
     } catch (e: unknown) {
       this.errorMsg.set((e as Error).message);
     }
