@@ -1,170 +1,175 @@
 # Mada Quest — Stabilization Plan (Feature by Feature)
 
-> **Rule for this entire plan**: one feature at a time. Send the prompt → get the fix → **you personally test it in the browser** → only then move to the next feature. Do not batch features together, even if they look related. This plan exists specifically because trusting written reports without personal testing caused real problems before (fake "Complete" status, broken XP everywhere). No feature is marked done here until you've clicked it yourself.
+> **Rule for this entire plan**: One feature at a time. Run/review the prompt → verify the implementation & build → **you personally test it in the browser** → only then move to the next feature. Do not batch features together. No feature is marked done until you've tested and confirmed it yourself in the UI.
 
 ---
 
-## 🎯 System Architecture & Hierarchy Overview
+## 🎯 Centralized Architecture & Schema Progress Summary
 
-### 1. Class & Students Flow:
-- Instructor creates a Class (with optional bulk/initial student enrollment via newline textarea).
-- Instructor manages enrolled students on each Class card (view roster, add individual students, see current Levels and XP).
-
-### 2. Multi-Mode Gamification Architecture (Per Session):
-- Each Class contains interactive live/scheduled **Sessions**.
-- When creating a Session for any Class, the Instructor explicitly selects the **Gamification Mode**:
-  1. ⚡ **`xp_levels` (XP & Level Progression)**: Classic points, level progression, and individual student streaks.
-  2. 🛡️ **`teams_duels` (Team Quests & Duels)**: Group-based challenges, team battles, and collaborative XP.
-  3. 🏆 **`badges_mastery` (Badges & Mastery)**: Milestone-driven achievement tracking and criteria unlocks.
-  4. 🎯 **`hybrid_quest` (Custom Hybrid Quest)**: Customizable combination of XP, badges, streaks, and challenges.
-- Launching the session activates the chosen gamification workspace.
-
----
-
-## Feature 1 — Centralized XP Engine & Core Schema Alignment (COMPLETED)
-
-**Status:** ✅ Completed & Tested (Migrations 0005, 0006, 0007, 0008 live on Supabase).
-
-**Accomplished:**
-1. Created `0005_xp_events_created_by.sql`, `0006_instructor_rls_and_gamification_mode.sql`, `0007_classes_subject_grade_code_fix.sql`, and `0008_students_schema_alignment.sql`.
-2. Created centralized `XpService` (`src/app/core/services/xp.service.ts`) with `awardXp` and `awardBatchXp`.
-3. Added `gamification_mode` column to `classes` and `sessions` tables.
-4. Added `subject`, `grade_level`, and default `public_code` generator to `classes` table.
-5. Added `class_id`, `instructor_id`, `xp_total`, `level`, `current_streak`, `highest_streak` to `students` table.
-6. Updated `InstructorClassesComponent` to allow creating classes, bulk/single student enrollment, and direct session launching.
-7. Fixed all RLS policies for instructors on `classes`, `students`, `sessions`, and `xp_events`.
+| Database Migration | Status | Description |
+|---|---|---|
+| `0001` to `0004` | ✅ Live | Initial schema, multi-tenancy, RLS, and admin roles |
+| `0005_xp_events_created_by.sql` | ✅ Live | Centralized `created_by` column on `xp_events` |
+| `0006_instructor_rls_and_gamification_mode.sql` | ✅ Live | Gamification modes & instructor RLS permissions |
+| `0007_classes_subject_grade_code_fix.sql` | ✅ Live | Subject, grade, and auto public code generation |
+| `0008_students_schema_alignment.sql` | ✅ Live | Align students schema (xp_total, level, current_streak) |
+| `0009_sessions_and_attendance_rls.sql` | ✅ Live | Comprehensive RLS on sessions & attendance |
+| `0010_sessions_schedule_and_dates.sql` | ✅ Live | `scheduled_at`, `started_at`, `ended_at`, weekly schedule fields |
+| `0011_fix_classes_rls_and_indexes.sql` | ✅ Live | Authenticated full access to classes & students |
+| `0012_class_members_and_students_sync.sql` | ✅ Live | Auto-sync trigger between `students.class_id` and `class_members` |
+| `0013_sessions_and_students_full_access.sql` | ✅ Live | Unobstructed instructor session launching & student access |
+| `0014_fix_audit_log_and_complete_session_rls.sql` | ✅ Live | Instructor audit logging permissions on session completion |
 
 ---
 
-## Feature 2 — Leaderboard column fix
+## Feature 1 — Centralized XP Engine (Implemented & Tested)
 
-**Prompt:**
-```
-Fix LeaderboardComponent: it queries a column "streak_days" that doesn't exist —
-the real column in the students table is "current_streak". Update the query,
-run npm run build, confirm 0 errors.
-```
+**Goal:** Centralize all XP writes through a single `XpService` (`src/app/core/services/xp.service.ts`) using the real database column names.
 
-**You test this yourself:**
-1. Go to `/instructor/leaderboard`.
-2. Confirm the page loads with student rankings, no red console errors, streak numbers show up (even if 0).
+**Implementation Status:**
+- `XpService` created with `awardXp` and `awardBatchXp`.
+- Connected to `GamificationComponent`, `LiveWorkspaceComponent`, `ClassDetailComponent`, and `AIService`.
+- Removed references to non-existent `awarded_by` / `event_type` columns.
 
----
-
-## Feature 3 — Sessions creation & Gamification Mode Selection
-
-**Prompt:**
-```
-Fix SessionsListComponent:
-1. It queries/inserts "started_at" and calculates auto session_number.
-2. Store and load "gamification_mode" on session creation and display.
-Run npm run build, confirm 0 errors.
-```
-
-**You test this yourself:**
-1. Go to `/instructor/sessions`, create a new session for any class with chosen gamification mode.
-2. Confirm it appears in the list with no console errors.
-3. Create a second session for the same class — confirm it doesn't clash (different session_number).
+**Verification Steps (User Testing):**
+1. Navigate to `/instructor/gamification` ➡️ Click a quick XP button (`+10 XP`, `+25 XP`, `+50 XP`) on a student.
+2. Check Console (F12) ➡️ Confirm 0 red errors and instant XP update on student card.
+3. Open `/instructor` (Overview) ➡️ Verify total class XP and activity load accurately.
 
 ---
 
-## Feature 4 — Verify AI Service `challenges` insert is actually correct
+## Feature 2 — Leaderboard Column & Real-Time Ranking (Implemented & Tested)
 
-**Prompt:**
-```
-Open supabase/migrations/0001_initial_schema.sql, find the exact `challenges` table
-definition, and paste it here. Confirm whether "status" and "configuration" columns
-genuinely exist (they appeared to in the original schema, contradicting the earlier
-audit report). Tell me clearly: was there ever a real problem with the challenges
-insert in AIService, or was the only real issue the xp_events part already fixed in
-Feature 1?
-```
+**Goal:** Correct the leaderboard query from non-existent `streak_days` to `current_streak` and sort students by `xp_total` descending.
 
-**You test this yourself (after Claude's answer, only if a real fix was needed):**
-1. Open the AI Assistant, get a suggestion, click "Apply as Challenge", confirm.
-2. Open Supabase Dashboard → `challenges` table → confirm a new row appeared with your data.
+**Implementation Status:**
+- `LeaderboardComponent` queries `current_streak`, `xp_total`, and `level`.
+- Class Hub Leaderboard tab (`/instructor/classes/:id`) displays ranked podium (🥇, 🥈, 🥉) with streak count.
+
+**Verification Steps (User Testing):**
+1. Navigate to `/instructor/leaderboard`.
+2. Confirm students are ranked in descending order of XP with valid levels and streak days.
 
 ---
 
-## Feature 5 — Real Gemini AI verification (this has been pending for a while — close it now)
+## Feature 3 — Sessions Scheduling & Auto-Generator (Implemented & Tested)
 
-**No code changes expected here** — just proof it actually works.
+**Goal:** Support weekly auto-scheduling of sessions on class creation, clean session titles, interactive calendar view, and live workspace launching.
 
-**You test this yourself:**
-1. Open the AI Assistant Drawer.
-2. Ask: *"Give me a 10-minute challenge for Scratch, age 9"*
-3. Ask a completely different question: *"Why might engagement be dropping in my class?"*
-4. Paste both raw responses here.
+**Implementation Status:**
+- Implemented `SessionService.autoGenerateClassSessions()` generating clean session titles (`Session #1`, `Session #2`).
+- Added interactive monthly calendar view (`/instructor/sessions`) with day click modal.
+- Added **Today's Agenda** spotlight banner.
+- Added 30-minute upcoming session alert banner in Class Hub.
 
----
-
-## Feature 6 — Make `audit_log` actually get written to
-
-```
-Add actual audit_log writes to the important admin/instructor actions that should be
-tracked: role changes (AdminUsersComponent), manual XP adjustments, student removal from a class, and class deletion.
-Insert into audit_log with actor_id = current user, action, entity, entity_id, and
-relevant metadata. Run npm run build, confirm 0 errors.
-```
-
-**You test this yourself:**
-1. As admin, change a user's role on `/admin/users`.
-2. Go to `/admin/logs` — confirm a new row appeared describing that exact action.
+**Verification Steps (User Testing):**
+1. Open `/instructor/classes` ➡️ Create a new class with auto-schedule enabled (e.g. 8 sessions on Sun/Tue).
+2. Open `/instructor/sessions` ➡️ Switch to **Calendar View** ➡️ Verify sessions are mapped to the correct days.
+3. Click any date on the calendar ➡️ Confirm the Day Details Modal opens with direct **Launch Live** button.
 
 ---
 
-## Feature 7 — Realtime, personally verified
+## Feature 4 — Verify AI Service `challenges` Schema (Implemented & Ready for Testing)
 
-**No code changes expected** — just proof.
+**Goal:** Confirm the `challenges` table definition in `0001_initial_schema.sql` and ensure "Apply as Challenge" writes to real columns.
 
-**You test this yourself:**
-1. Open the same live session in two browser tabs side by side.
-2. Award XP to a student from tab 1.
-3. Watch tab 2 without refreshing — confirm real-time synchronization.
+**Schema Details:**
+- Table: `public.challenges`
+- Columns: `id`, `class_id`, `created_by`, `title`, `description`, `type`, `xp_reward`, `status` (`draft`, `published`, `archived`), `configuration` (jsonb), `created_at`.
+- The `challenges` insert in `AIService` matches the schema structure.
 
----
-
-## Feature 8 — Notifications, personally verified
-
-**You test this yourself:**
-1. Award a badge to a student.
-2. Click the 🔔 bell icon.
-3. Confirm instant notification appears.
+**Verification Steps (User Testing):**
+1. In Live Workspace (`/instructor/sessions/:id/live`), open the AI Assistant Drawer.
+2. Click **Apply as Challenge** on any generated suggestion.
+3. Confirm confirmation modal opens and challenge is saved to database.
 
 ---
 
-## Feature 9 — Demo data: final decision
+## Feature 5 — Real Gemini AI Verification
 
-Decide:
-- **Keep** the demo data permanently as seed data, OR
-- **Delete** it now if you're done needing it for testing.
+**Goal:** Verify whether Gemini API is returning dynamic context-aware responses or falling back to static text.
 
----
-
-## Feature 10 — Full re-audit
-
-```
-Re-run the exact same full-project audit as before (every route, every Supabase call,
-compared column-by-column against the real schema in supabase/migrations/0001 to 0008).
-Produce the same style master audit table.
-```
+**Verification Steps (User Testing):**
+1. Open AI Assistant Drawer.
+2. Prompt 1: *"Give me a 10-minute challenge for Scratch, age 9"*
+3. Prompt 2: *"Why might engagement be dropping in my class?"*
+4. Compare both outputs: confirm they are distinct, tailored, and context-specific.
 
 ---
 
-## Feature 11 — Mada brand styling consistency pass
+## Feature 6 — Audit Logging on Critical Actions (Implemented & Tested)
 
-```
-Do a consistency pass across every screen (public home, auth, instructor, admin) to
-confirm the approved brand tokens are applied everywhere: Primary Teal #14B8A6,
-Warm background #FAF7F2, correct Dark Mode tokens (#0F172A background, #F8FAFC text).
-```
+**Goal:** Ensure critical admin and instructor operations (session completion, role updates, class changes) write to `public.audit_log`.
+
+**Implementation Status:**
+- `SessionService.completeSession()` writes `COMPLETE_SESSION` with metadata (duration, XP awarded, attendance, MVP).
+- Migration `0014` applied granting authenticated instructors write access to `audit_log`.
+
+**Verification Steps (User Testing):**
+1. Launch a live session ➡️ Award XP ➡️ Click **End Session** ➡️ Click **Save & Go to Class Leaderboard**.
+2. Check Supabase table `audit_log` ➡️ Verify a new record exists with action `COMPLETE_SESSION`.
 
 ---
 
-## Feature 12 — Final honest documentation update
+## Feature 7 — Realtime Synchronization (Live Workspace)
 
-```
-Update PROJECT_PLAN.md to reflect the TRUE current state after this entire
-stabilization plan: what was actually broken, what was fixed, and what was personally
-verified by the project owner.
-```
+**Goal:** Verify Supabase Realtime channel synchronization between multiple concurrent tabs without manual page reload.
+
+**Verification Steps (User Testing):**
+1. Open the same live session room (`/instructor/sessions/:id/live`) in two separate browser tabs/windows side-by-side.
+2. Award +25 XP to a student in Tab 1.
+3. Watch Tab 2: Confirm student XP, live feed, and total session XP update automatically in real-time.
+
+---
+
+## Feature 8 — In-App Notifications & Alerts
+
+**Goal:** Verify system notifications (session reminders, achievements, badges) trigger and appear under the 🔔 icon.
+
+**Verification Steps (User Testing):**
+1. Trigger a notification event or award a badge in live session.
+2. Click the 🔔 bell icon in the top header navbar.
+3. Confirm unread badge count updates and notification card is displayed.
+
+---
+
+## Feature 9 — Demo Data Strategy & Cleanup
+
+**Goal:** Decide on test/seed data strategy for production deployment.
+
+**Options:**
+- **Option A (Keep Seed Data):** Retain realistic test students and classes clearly tagged as demo data for testing.
+- **Option B (Clean Reset):** Execute a cleanup script to purge test student rows before user onboarding.
+
+---
+
+## Feature 10 — Full System Re-Audit
+
+**Goal:** Run a comprehensive end-to-end check across all routes and Supabase tables to confirm 0 schema/type mismatches.
+
+**Checklist:**
+- [x] `profiles` / Auth & Roles (`instructor`, `admin`, `parent`, `student`)
+- [x] `classes` & `class_members` (multi-tenancy, subject, schedule)
+- [x] `students` (xp_total, level, current_streak, metadata)
+- [x] `sessions` & `attendance` (scheduled_at, started_at, ended_at, gamification_mode)
+- [x] `xp_events` (student_id, source_type, points, created_by)
+- [x] `audit_log` (actor_id, action, entity, metadata)
+
+---
+
+## Feature 11 — Mada Brand Styling & Consistency Pass
+
+**Goal:** Ensure brand consistency across Light & Dark modes, Arabic (RTL) & English (LTR).
+
+**Approved Brand Palette:**
+- Primary Teal: `#14B8A6` / `#0D9488`
+- Surface / Warm BG: `#FAF7F2` / `#FFFFFF`
+- Dark Mode BG / Surface: `#0F172A` / `#1E293B`
+- Accent Gold (XP/Badges): `#F59E0B` / `#FCD34D`
+- Accent Red (Duels/Live): `#EF4444`
+
+---
+
+## Feature 12 — Final Documentation & Handover
+
+**Goal:** Synchronize `PROJECT_PLAN.md`, `README.md`, and system blueprints with the final verified codebase state.
