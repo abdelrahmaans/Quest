@@ -344,6 +344,7 @@ export class ClassDetailComponent implements OnInit {
     if (!this.sessionTitle.trim()) return;
     this.isCreatingSession.set(true);
     this.error.set(null);
+    const mode = this.classInfo()?.gamification_mode || 'xp_levels';
 
     try {
       const { data: newSess, error } = await this.sessionService.createSession({
@@ -352,7 +353,7 @@ export class ClassDetailComponent implements OnInit {
         description:      this.sessionDesc,
         scheduledAt:      this.sessionDate,
         durationMinutes:  this.sessionDuration || 45,
-        gamificationMode: this.selectedGamificationMode,
+        gamificationMode: mode,
       });
 
       if (error) throw error;
@@ -365,28 +366,11 @@ export class ClassDetailComponent implements OnInit {
       this.sessionDesc = '';
       this.sessionDate = '';
       this.showCreateSession.set(false);
-      this.showToast(`🎮 Session created with ${this.selectedGamificationMode} mode!`);
+      this.showToast(`🎮 Session added to class schedule!`);
     } catch (e: unknown) {
       this.error.set((e as Error).message);
     } finally {
       this.isCreatingSession.set(false);
-    }
-  }
-
-  /* ── Update Gamification Mode for a Session ── */
-  async updateSessionGamificationMode(sess: SessionRow, newMode: GamificationModeId): Promise<void> {
-    try {
-      await this.supabase.client
-        .from('sessions')
-        .update({ gamification_mode: newMode })
-        .eq('id', sess.id);
-
-      this.sessions.update(list =>
-        list.map(s => s.id === sess.id ? { ...s, gamification_mode: newMode } : s),
-      );
-      this.showToast(`🎮 Updated session gamification mode to ${this.getModeName(newMode)}`);
-    } catch (e: unknown) {
-      this.error.set((e as Error).message);
     }
   }
 

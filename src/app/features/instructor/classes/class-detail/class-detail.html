@@ -293,22 +293,6 @@
                 </div>
               </div>
 
-              <!-- Gamification Mode Selector -->
-              <div class="form-field">
-                <label class="form-label">🎮 Gamification Style / Mode for this Session</label>
-                <div class="modes-grid">
-                  @for (m of gamificationModes; track m.id) {
-                    <label class="mode-card" [class.mode-card--selected]="selectedGamificationMode === m.id">
-                      <input type="radio" name="gMode" [value]="m.id" [(ngModel)]="selectedGamificationMode" />
-                      <div class="mode-card__content">
-                        <strong class="mode-card__name">{{ m.name }}</strong>
-                        <span class="mode-card__desc">{{ m.desc }}</span>
-                      </div>
-                    </label>
-                  }
-                </div>
-              </div>
-
               <div class="create-actions">
                 <button class="btn-primary" [disabled]="!sessionTitle.trim() || isCreatingSession()" (click)="createSession()">
                   @if (isCreatingSession()) {
@@ -354,16 +338,6 @@
                 </div>
 
                 <div class="session-item__actions">
-                  <!-- Mode Switcher -->
-                  <select class="form-select mode-select-sm"
-                          [ngModel]="sess.gamification_mode"
-                          (ngModelChange)="updateSessionGamificationMode(sess, $event)">
-                    <option value="xp_levels">⚡ XP & Levels</option>
-                    <option value="teams_duels">🛡️ Team Duels</option>
-                    <option value="badges_mastery">🏆 Badges</option>
-                    <option value="hybrid_quest">🎯 Hybrid</option>
-                  </select>
-
                   <button class="btn-launch" (click)="launchLiveSession(sess)">
                     <app-icon name="play" [size]="15" />
                     {{ sess.status === 'live' ? 'Join Live Room' : 'Launch Live' }}

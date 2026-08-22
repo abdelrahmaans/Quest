@@ -108,22 +108,6 @@
           </div>
         </div>
 
-        <!-- Gamification Mode Selector -->
-        <div class="form-field">
-          <label class="form-label">🎮 Gamification Style / Mode for this Session</label>
-          <div class="modes-grid">
-            @for (m of gamificationModes; track m.id) {
-              <label class="mode-card" [class.mode-card--selected]="selectedGamificationMode === m.id">
-                <input type="radio" name="sessGMode" [value]="m.id" [(ngModel)]="selectedGamificationMode" />
-                <div class="mode-card__content">
-                  <strong class="mode-card__name">{{ m.name }}</strong>
-                  <span class="mode-card__desc">{{ m.desc }}</span>
-                </div>
-              </label>
-            }
-          </div>
-        </div>
-
         <div class="form-field">
           <label class="form-label" for="sessionDesc">Description / Objectives (Optional)</label>
           <textarea id="sessionDesc" class="form-textarea" rows="2"

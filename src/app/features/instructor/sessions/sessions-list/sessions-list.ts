@@ -7,7 +7,7 @@ import { SupabaseService } from '../../../../core/services/supabase.service';
 import { SessionService } from '../../../../core/services/session.service';
 import { IconComponent } from '../../../../shared/ui/icon/icon';
 
-interface ClassItem { id: string; name: string; }
+interface ClassItem { id: string; name: string; gamification_mode?: GamificationModeId; }
 
 export type GamificationModeId = 'xp_levels' | 'teams_duels' | 'badges_mastery' | 'hybrid_quest';
 
@@ -204,7 +204,7 @@ export class SessionsListComponent implements OnInit {
     const user = this.auth.currentUser() || (await this.supabase.client.auth.getUser()).data.user;
     if (!user) return;
     const { data } = await this.supabase.client
-      .from('classes').select('id, name').eq('instructor_id', user.id).order('name');
+      .from('classes').select('id, name, gamification_mode').eq('instructor_id', user.id).order('name');
     this.classes.set(data ?? []);
   }
 
@@ -254,6 +254,9 @@ export class SessionsListComponent implements OnInit {
     this.isCreating.set(true);
     this.error.set(null);
 
+    const selectedCls = this.classes().find(c => c.id === this.selectedClassId);
+    const mode = selectedCls?.gamification_mode || 'xp_levels';
+
     try {
       const { error } = await this.sessionService.createSession({
         classId:          this.selectedClassId,
@@ -261,7 +264,7 @@ export class SessionsListComponent implements OnInit {
         description:      this.sessionDesc,
         scheduledAt:      this.scheduledDate,
         durationMinutes:  this.durationMins,
-        gamificationMode: this.selectedGamificationMode,
+        gamificationMode: mode,
       });
 
       if (error) throw error;
