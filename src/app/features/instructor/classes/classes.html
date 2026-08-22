@@ -154,12 +154,28 @@
           }
         </div>
 
+        <!-- ── Gamification Mode Selection ─────────────── -->
+        <div class="form-field">
+          <label class="form-label">🎮 Class Gamification Engine</label>
+          <div class="modes-grid-sm">
+            @for (m of gamificationModes; track m.id) {
+              <label class="mode-pill" [class.mode-pill--active]="selectedGamificationMode === m.id">
+                <input type="radio" name="clsGMode" [value]="m.id" [(ngModel)]="selectedGamificationMode" />
+                <div class="mode-pill-content">
+                  <span class="mode-pill-title">{{ m.name }}</span>
+                  <span class="mode-pill-desc">{{ m.desc }}</span>
+                </div>
+              </label>
+            }
+          </div>
+        </div>
+
         <!-- ── Auto Sessions & Schedule Setup ─────────────── -->
         <div class="schedule-setup-box">
           <div class="schedule-toggle-row">
             <label class="schedule-toggle-label">
               <input type="checkbox" [(ngModel)]="autoGenerateSessions" />
-              <span>📅 Auto-Generate Sessions Schedule on Creation</span>
+              <span>📅 Recurring Class Schedule (Auto-generate sessions)</span>
             </label>
           </div>
 
@@ -175,6 +191,10 @@
                   <input id="scheduleTime" type="time" class="form-input" [(ngModel)]="scheduleTime" />
                 </div>
                 <div class="form-field">
+                  <label class="form-label" for="sessionDuration">Duration (Minutes)</label>
+                  <input id="sessionDuration" type="number" class="form-input" min="15" max="240" step="5" [(ngModel)]="sessionDurationMinutes" />
+                </div>
+                <div class="form-field">
                   <label class="form-label" for="totalSessions">Total Sessions</label>
                   <input id="totalSessions" type="number" class="form-input" min="1" max="50" [(ngModel)]="totalSessions" />
                 </div>
@@ -188,21 +208,8 @@
                     <button type="button" class="day-chip"
                             [class.day-chip--active]="selectedScheduleDays.includes(d)"
                             (click)="toggleScheduleDay(d)">
-                      {{ d.substring(0, 3) }}
+                      {{ d }}
                     </button>
-                  }
-                </div>
-              </div>
-
-              <!-- Gamification Mode Selection -->
-              <div class="form-field">
-                <label class="form-label">Default Gamification Style</label>
-                <div class="modes-grid-sm">
-                  @for (m of gamificationModes; track m.id) {
-                    <label class="mode-pill" [class.mode-pill--active]="selectedGamificationMode === m.id">
-                      <input type="radio" name="clsGMode" [value]="m.id" [(ngModel)]="selectedGamificationMode" />
-                      <span>{{ m.name }}</span>
-                    </label>
                   }
                 </div>
               </div>

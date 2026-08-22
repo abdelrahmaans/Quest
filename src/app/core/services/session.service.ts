@@ -35,6 +35,16 @@ export interface SessionSummary {
   mvpStudentName?: string | null;
 }
 
+const DAY_MAP: Record<string, number> = {
+  sun: 0, sunday: 0,
+  mon: 1, monday: 1,
+  tue: 2, tuesday: 2,
+  wed: 3, wednesday: 3,
+  thu: 4, thursday: 4,
+  fri: 5, friday: 5,
+  sat: 6, saturday: 6,
+};
+
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 @Injectable({ providedIn: 'root' })
@@ -92,8 +102,16 @@ export class SessionService {
         return { count: 0, error: new Error('Please select at least one schedule day.') };
       }
 
-      // Convert day names to day indexes (0 for Sunday, 1 for Monday...)
-      const targetDayIndexes = new Set(scheduleDays.map(d => DAY_NAMES.indexOf(d)).filter(idx => idx >= 0));
+      // Convert day names (e.g. 'Sun', 'Tuesday') to day indexes (0 for Sunday, 1 for Monday...)
+      const targetDayIndexes = new Set(
+        scheduleDays
+          .map(d => DAY_MAP[d.toLowerCase().trim()])
+          .filter(idx => idx !== undefined && idx >= 0)
+      );
+
+      if (targetDayIndexes.size === 0) {
+        return { count: 0, error: new Error('Invalid schedule days provided.') };
+      }
 
       const [hoursStr, minsStr] = (scheduleTime || '16:00').split(':');
       const hours = parseInt(hoursStr, 10) || 16;
@@ -103,7 +121,7 @@ export class SessionService {
       let currentDate = new Date(startDate || new Date().toISOString().split('T')[0]);
       let sessionIndex = 1;
 
-      // Loop up to 180 days ahead to find all match dates
+      // Loop up to 365 days ahead to find all match dates
       let safetyCounter = 0;
       while (sessionsToInsert.length < totalSessions && safetyCounter < 365) {
         const dayOfWeek = currentDate.getDay();

@@ -69,6 +69,7 @@ export class InstructorClassesComponent implements OnInit {
   autoGenerateSessions = true;
   startDate: string    = new Date().toISOString().split('T')[0];
   scheduleTime: string = '16:00';
+  sessionDurationMinutes: number = 45;
   totalSessions: number = 8;
   readonly daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   readonly availableDays = [
@@ -253,22 +254,38 @@ export class InstructorClassesComponent implements OnInit {
     try {
       const publicCode = `CLS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-      const { data: newClass, error } = await this.supabase.client
+      const classPayload: Record<string, any> = {
+        public_code:       publicCode,
+        name:              this.className.trim(),
+        subject:           this.classSubject.trim() || null,
+        grade_level:       this.classGrade.trim()   || null,
+        instructor_id:     user.id,
+        gamification_mode: this.selectedGamificationMode,
+        schedule_days:     this.selectedScheduleDays,
+        schedule_time:     this.scheduleTime,
+        start_date:        this.startDate,
+        total_sessions:    this.totalSessions,
+      };
+      if (this.sessionDurationMinutes) {
+        classPayload['duration_minutes'] = this.sessionDurationMinutes;
+      }
+
+      let { data: newClass, error } = await this.supabase.client
         .from('classes')
-        .insert({
-          public_code:       publicCode,
-          name:              this.className.trim(),
-          subject:           this.classSubject.trim() || null,
-          grade_level:       this.classGrade.trim()   || null,
-          instructor_id:     user.id,
-          gamification_mode: this.selectedGamificationMode,
-          schedule_days:     this.selectedScheduleDays,
-          schedule_time:     this.scheduleTime,
-          start_date:        this.startDate,
-          total_sessions:    this.totalSessions,
-        })
+        .insert(classPayload)
         .select('id')
         .single();
+
+      if (error && (error as any).message?.includes('duration_minutes')) {
+        delete classPayload['duration_minutes'];
+        const retry = await this.supabase.client
+          .from('classes')
+          .insert(classPayload)
+          .select('id')
+          .single();
+        newClass = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 
@@ -337,6 +354,7 @@ export class InstructorClassesComponent implements OnInit {
           scheduleDays:            this.selectedScheduleDays,
           scheduleTime:            this.scheduleTime,
           totalSessions:           this.totalSessions || 8,
+          durationMinutes:         this.sessionDurationMinutes || 45,
           defaultGamificationMode: this.selectedGamificationMode,
         });
       }
