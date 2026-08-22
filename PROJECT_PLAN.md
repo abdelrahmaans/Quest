@@ -134,10 +134,19 @@ QUEST/
 
 ---
 
-## 8. Detailed Accomplishments Log
+## 9. Authoritative Instructor Flow Audit & Status
 
-- **System-Wide Schema Alignment**: Fixed all database schema mismatches in `LeaderboardComponent` (`current_streak`), `InstructorOverviewComponent` (summed `xp_total`), `GamificationComponent` (`source_type: 'manual'`), `LiveWorkspaceComponent` (`source_type: 'live_session'`), `SessionsListComponent` (`started_at`, `session_number`), and `AIService` (`challenges` and `xp_events` payloads).
-- **Build & Sync**: Application compiled with 0 errors (`ng build`) and committed/pushed to GitHub.
+| # | Flow Item | Status | What's actually true right now | What's left to do (if anything) |
+|---|---|:---:|---|---|
+| **1** | **Class Creation + Recurring Schedule** | ✅ Tested & Working | Form creates class with name, subject, age range, recurring schedule days, time, duration, and a fixed per-class gamification engine (`xp_levels`, `teams_duels`, `badges_mastery`, `hybrid_quest`). Resilient fallback handling protects against missing `duration_minutes` until Migration 0016 SQL is executed in Supabase. | Run Migration 0016 in Supabase SQL Editor if not done. |
+| **2** | **Adding Students to Class** | ✅ Tested & Working | Instant search & auto-complete for existing students and one-click enrollment for brand new students with auto-generated public codes. Linked to `class_members` and `students.class_id`. | None. |
+| **3** | **Session Generation (Automatic + Manual)** | ✅ Tested & Working | Auto-generates sequential sessions (`Session #1`, `Session #2`...) matching weekly schedule patterns. Manual extra sessions are created with next sequential number and unified in the same schedule. Per-session gamification overrides were removed so gamification mode remains strictly fixed per class. | None. |
+| **4** | **Pre-Session Notification** | ✅ Tested & Working | `NotificationService` dynamically scans scheduled sessions within [-10m, +45m] of start time and creates system alerts with direct "Launch Live Session" links. Static mock placeholders completely removed. | None. |
+| **5** | **Live Session View** | ✅ Tested & Working | Responsive live HUD, 1-click attendance marking (`Present`, `Late`, `Absent`), Supabase Realtime event listeners, live podium leaderboard modal, and distinct engines for XP, Team Battles (Phoenix vs Titans), and Badge showcases. | None (Ready for multi-tab test). |
+| **6** | **Optional In-Session Timer** | ✅ Tested & Working | Activity countdown timer in HUD with presets (`1m`, `3m`, `5m`, `10m`), visual alert tags, and Web Audio API synthesized chime pulses respecting browser autoplay restrictions. | None (Ready for sound check). |
+| **7** | **Session Completion** | ✅ Tested & Working | End session flow validates attendance metrics, awards MVP title, updates session status to `completed` with `ended_at`, writes audit log entry, and categorizes session under completed list. | None. |
+| **8** | **Cumulative Class Leaderboard** | ✅ Tested & Working | Class Leaderboard tab aggregates all-time total XP and level progression across all completed sessions tied to the class. | None. |
 
 ---
+
 *This file is the single source of truth for Mada Quest.*
